@@ -1,8 +1,6 @@
 import math
 from pathlib import Path
 from PIL import Image
-import torch
-import torch.nn.functional as F
 import numpy as np
 import matplotlib.pyplot as plt
 

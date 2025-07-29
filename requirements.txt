@@ -2,7 +2,7 @@ numpy
 matplotlib
 opencv-python
 tifffile
-torch
+# torch
 csbdeep
 bm3d
 scikit-image
