@@ -7,9 +7,11 @@ import matplotlib.pyplot as plt
 import logging
 from termcolor import colored
 
-logging.basicConfig(level="INFO", format="%(message)s"
-                    # , handlers=[RichHandler(markup=True, show_path=False)]
-                    )
+logging.basicConfig(
+    level="INFO",
+    format="%(message)s",
+    # , handlers=[RichHandler(markup=True, show_path=False)]
+)
 logger = logging.getLogger("src")
 
 COLORS = [
@@ -56,10 +58,12 @@ def log(*vals, use_log=True):
 def cprint(*vals):
     log(*vals, use_log=False)
 
+
 def imshow(
     images: list[Image.Image | np.ndarray | str | Path] | dict[str, Image.Image | np.ndarray | str | Path],
     size=3,
     cols: int = None,
+    cmap=None,
 ):
     """Plot a list of PIL images in a grid
 
@@ -94,7 +98,7 @@ def imshow(
     else:
         axes = [axes]
     for i, img in enumerate(images):
-        axes[i].imshow(img)
+        axes[i].imshow(img, cmap=cmap)
         if titles:
             axes[i].set_title(titles[i])
         axes[i].axis("off")
