@@ -178,7 +178,7 @@ class training_class():
         for im_name in list(os.walk(self.datasets_path, topdown=False))[-1][-1]:
             print('Noise image name -----> ', im_name)
             im_dir = self.datasets_path + '//' + im_name
-            noise_im = tiff.imread(im_dir)[:1000]
+            noise_im = tiff.imread(im_dir)
             if noise_im.shape[0] > self.select_img_num:
                 noise_im = noise_im[0:self.select_img_num, :, :]
             self.whole_x = noise_im.shape[2]
@@ -357,15 +357,15 @@ class training_class():
             torch.save(self.local_model.module.state_dict(), model_save_name)  # parallel
         else:
             torch.save(self.local_model.state_dict(), model_save_name)  # not parallel
-        if not self.colab_display:
-            # covert pth to onnx
-            onnx_save_name = self.onnx_path + '//E_' + str(epoch + 1).zfill(2) + '_Iter_' + str(iteration + 1).zfill(
-                4) + '_Patch_'+ str(self.patch_x) + '_' + str(self.patch_y) + '_' + str(self.patch_t) + '.onnx'
-            input_name = ['input']
-            output_name = ['output']
+        # if not self.colab_display:
+        #     # covert pth to onnx
+        #     onnx_save_name = self.onnx_path + '//E_' + str(epoch + 1).zfill(2) + '_Iter_' + str(iteration + 1).zfill(
+        #         4) + '_Patch_'+ str(self.patch_x) + '_' + str(self.patch_y) + '_' + str(self.patch_t) + '.onnx'
+        #     input_name = ['input']
+        #     output_name = ['output']
 
-            input = torch.randn(1, 1, self.patch_t, self.patch_x,  self.patch_y, requires_grad=True).cuda()
-            torch.onnx.export(self.local_model.module, input, onnx_save_name, export_params=True,input_names=input_name, output_names=output_name,opset_version=11, verbose=False)
+        #     input = torch.randn(1, 1, self.patch_t, self.patch_x,  self.patch_y, requires_grad=True).cuda()
+        #     torch.onnx.export(self.local_model.module, input, onnx_save_name, export_params=True,input_names=input_name, output_names=output_name,opset_version=11, verbose=False)
 
 
     def test(self, train_epoch, train_iteration):

@@ -4,6 +4,7 @@
 - What is the FPS?
 - How were the *denoised* version obtained?
 - What do "good" and "bad" refer to in the OneDrive hierarchy?
+- Hyperparams for DeepCAD, or code used
 
 # Questions for us
 - How do we quantitatively compare predictions?
