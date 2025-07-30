@@ -8,3 +8,9 @@
 # Questions for us
 - How do we quantitatively compare predictions?
 - How do we provide RT if using diffusion model?
+
+# Ideas
+- Marigold
+- RGB2RAW
+- Benchmark on segmentation
+- DiffDenoise
