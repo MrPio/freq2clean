@@ -8,6 +8,7 @@
 # Questions for us
 - How do we quantitatively compare predictions?
 - How do we provide RT if using diffusion model?
+- Does DeepCAD RT training trains DeepCAD then distillation
 
 # Ideas
 - Marigold
