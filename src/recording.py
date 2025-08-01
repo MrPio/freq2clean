@@ -25,7 +25,7 @@ class Recording:
     def render(self, path: Path | str, start=None, end=None, bitrate=5000, fps=30):
         iio.imwrite(
             uri=str(path),
-            image=self.normalized,
+            image=(self.normalized * 255).astype(np.uint8),
             fps=fps,
             codec="libx264",
             bitrate=f"{bitrate}k",
