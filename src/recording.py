@@ -22,7 +22,7 @@ class Recording:
     def save_sample(self, path: Path | str, length=500):
         tiff.imwrite(str(path), self.video[:length], dtype=np.float64)
 
-    def render(self, path: Path | str, start=None, end=None, bitrate=5000, fps=30):
+    def render(self, path: Path | str, start=None, end=None, bitrate=4500, fps=30):
         iio.imwrite(
             uri=str(path),
             image=(self.normalized * 255).astype(np.uint8),
