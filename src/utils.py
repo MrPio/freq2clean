@@ -61,7 +61,7 @@ def cprint(*vals):
 
 def imshow(
     images: list[Image.Image | np.ndarray | str | Path] | dict[str, Image.Image | np.ndarray | str | Path],
-    size=3,
+    size=4,
     cols: int = None,
     cmap=None,
 ):
