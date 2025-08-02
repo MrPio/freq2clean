@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 __ROOT_DIR = Path(__file__).parents[1]
-DATASETS_DIR = {
-    "oabf_astro": __ROOT_DIR / "dataset/oabf/mini2p_astro/2024Feb06-007",
-    "oabf_vpm": __ROOT_DIR / "dataset/oabf/mini2p_vpm/2024Oct28-388",
+DATASETS = {
+    "oabf_astro": __ROOT_DIR / "dataset/oabf/astro",
+    "oabf_vpm": __ROOT_DIR / "dataset/oabf/vpm",
     "oabf_resonant_neuro": __ROOT_DIR / "dataset/oabf/resonant_neuro",
 }
 SAMPLE_DIR = __ROOT_DIR / "dataset/sample"

@@ -66,6 +66,7 @@ class training_class:
         self.result_display = ""
         self.set_params(params_dict)
         self.UNet_type = "UNet3D"
+        self.max_frames = None
 
     def run(self):
         """
@@ -178,7 +179,7 @@ class training_class:
         for im_name in list(os.walk(self.datasets_path, topdown=False))[-1][-1]:
             print("Noise image name -----> ", im_name)
             im_dir = self.datasets_path + "//" + im_name
-            noise_im = tiff.imread(im_dir)
+            noise_im = tiff.imread(im_dir, key=range(self.max_frames) if self.max_frames else None)
             if noise_im.shape[0] > self.select_img_num:
                 noise_im = noise_im[0 : self.select_img_num, :, :]
             self.whole_x = noise_im.shape[2]

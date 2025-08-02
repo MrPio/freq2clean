@@ -7,11 +7,11 @@ from os import PathLike
 
 
 class Recording:
-    def __init__(self, video: PathLike | np.ndarray, max_length: int = 1000):
+    def __init__(self, video: PathLike | np.ndarray, max_frames: int = 300):
         self.video = (
             video
             if isinstance(video, np.ndarray)
-            else tiff.imread(str(video), key=range(max_length) if max_length else None)
+            else tiff.imread(str(video), key=range(max_frames) if max_frames else None)
         )
         self.video = (self.video / np.max(self.video)).astype(np.float32)
 
