@@ -10,3 +10,8 @@ bm3d
 scikit-image
 requests
 termcolor
+diffusers
+accelerate
+transformers
+einops
+torchvision
