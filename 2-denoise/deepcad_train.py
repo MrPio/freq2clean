@@ -32,5 +32,6 @@ training_class(
         "num_workers": 0,  # if you use Windows system, set this to 0.
         "visualize_images_per_epoch": False,  # whether to show result images after each epoch
         "save_test_images_per_epoch": True,  # whether to save result images after each epoch
+        "UNet_type": "ResidualUNet3D",
     }
 ).run()

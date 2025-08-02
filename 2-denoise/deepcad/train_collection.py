@@ -136,7 +136,9 @@ class training_class:
            self.local_model: the denoise network
 
         """
-        denoise_generator = Network_3D_Unet(in_channels=1, out_channels=1, f_maps=self.fmap, final_sigmoid=True)
+        denoise_generator = Network_3D_Unet(
+            in_channels=1, out_channels=1, f_maps=self.fmap, final_sigmoid=True, UNet_type=self.UNet_type
+        )
         self.local_model = denoise_generator
 
     def get_gap_t(self):
