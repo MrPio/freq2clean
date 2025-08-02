@@ -41,8 +41,13 @@ class Recording:
         return Video(path)
 
     def hist(self, figsize=(12, 5), bins=100):
-        ax= pd.Series(self.np.flatten()).hist(figsize=figsize, bins=bins, edgecolor="white")
+        ax = pd.Series(self.np.flatten()).hist(figsize=figsize, bins=bins, edgecolor="white")
         ax.set_yscale("log")
+
+    def avg(self, frame: int, window=1) -> np.ndarray:
+        start = max(0, frame - window // 2)
+        end = min(self.frames, frame + (window - (frame - start)))
+        return np.mean(self.np[start:end], axis=0)
 
     def __getitem__(self, i):
         return Recording(self.np[i])

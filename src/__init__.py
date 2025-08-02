@@ -5,16 +5,18 @@ __license__ = "Apache-2.0"
 
 from .recording import Recording
 from .utils import imshow, cprint, log
+from .diffusion.conditioned_unet import ConditionedUNet
+from .diffusion.dataset import Dataset2PM
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-__ROOT_DIR = Path(__file__).parents[1]
+_ROOT_DIR = Path(__file__).parents[1]
 DATASETS = {
-    "oabf_astro": __ROOT_DIR / "dataset/oabf/astro",
-    "oabf_vpm": __ROOT_DIR / "dataset/oabf/vpm",
-    "oabf_resonant_neuro": __ROOT_DIR / "dataset/oabf/resonant_neuro",
+    "oabf_astro": _ROOT_DIR / "dataset/oabf/astro",
+    "oabf_vpm": _ROOT_DIR / "dataset/oabf/vpm",
+    "oabf_resonant_neuro": _ROOT_DIR / "dataset/oabf/resonant_neuro",
 }
-SAMPLE_DIR = __ROOT_DIR / "dataset/sample"
+SAMPLE_DIR = _ROOT_DIR / "dataset/sample"
 
 plt.rcParams.update(
     {

@@ -4,3 +4,5 @@
 /**/onnx
 *.tif
 *.tiff
+3-diffusion_training/dataset/
+3-diffusion_training/dataset.zip

@@ -33,4 +33,4 @@ Compute the residual image for each denoiser. Check that the residual:
 If one algorithm leaves structured features in the residual, it’s over‑smoothing; if it leaves heavy tails, it’s under‑denoising.
 
 ## Evaluate Downstream Task Performance
-Segmentation
+Segmentation is the downstream task. That is supervised, so given a good Seg. Net, we can see if its predictions improve when changing upstream denoiser.
