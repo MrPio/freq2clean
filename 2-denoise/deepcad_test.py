@@ -1,3 +1,4 @@
+import torch
 from deepcad.test_collection import testing_class
 
 testing_class(
@@ -14,7 +15,7 @@ testing_class(
         "output_dir": "./results",  # result file root path
         # network related parameters
         "fmap": 16,  # number of feature maps
-        "GPU": 0,  # GPU index
+        "GPU": ",".join(map(str, range(torch.cuda.device_count()))),  # GPU index
         "num_workers": 0,  # if you use Windows system, set this to 0.
         "visualize_images_per_epoch": False,  # whether to display inference performance after each epoch
         "save_test_images_per_epoch": True,  # whether to save inference image after each epoch in pth path
