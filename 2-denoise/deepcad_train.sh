@@ -5,8 +5,8 @@
 #SBATCH --error=deepcad_train.log
 #SBATCH --time=04:00:00
 #SBATCH --partition=boost_usr_prod
-#SBATCH --gres=gpu:3
-#SBATCH --mem=24G
+#SBATCH --gres=gpu:2
+#SBATCH --mem=32G
 
 cd /leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/2-denoise
 
