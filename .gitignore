@@ -6,3 +6,5 @@
 *.tiff
 3-diffusion_training/dataset/
 3-diffusion_training/dataset.zip
+3-diffusion_training/pth
+3-diffusion_training/results

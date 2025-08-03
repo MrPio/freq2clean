@@ -1,0 +1,101 @@
+--------------------------------------------------------------------------------In which compute environment are you running?
+Please select a choice using the arrow or number keys, and selecting with enter
+ ➔  [32mThis machine[0m
+    AWS (Amazon SageMaker)
+[2A[?25l[?25hTraceback (most recent call last):
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/bin/accelerate", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/lib/python3.11/site-packages/accelerate/commands/accelerate_cli.py", line 50, in main
+    args.func(args)
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/lib/python3.11/site-packages/accelerate/commands/config/config.py", line 67, in config_command
+    config = get_user_input()
+             ^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/lib/python3.11/site-packages/accelerate/commands/config/config.py", line 32, in get_user_input
+    compute_environment = _ask_options(
+                          ^^^^^^^^^^^^^
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/lib/python3.11/site-packages/accelerate/commands/config/config_utils.py", line 63, in _ask_options
+    result = menu.run(default_choice=default)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/lib/python3.11/site-packages/accelerate/commands/menu/selection_menu.py", line 137, in run
+    choice = self.handle_input()
+             ^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/lib/python3.11/site-packages/accelerate/commands/menu/input.py", line 71, in handle_input
+    char = get_character()
+           ^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/lib/python3.11/site-packages/accelerate/commands/menu/keymap.py", line 114, in get_character
+    char = get_raw_chars()
+           ^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/lib/python3.11/site-packages/accelerate/commands/menu/keymap.py", line 103, in get_raw_chars
+    old_settings = termios.tcgetattr(fd)
+                   ^^^^^^^^^^^^^^^^^^^^^
+termios.error: (25, 'Inappropriate ioctl for device')
+ipex flag is deprecated, will be removed in Accelerate v1.10. From 2.7.0, PyTorch has all needed optimizations for Intel CPU and XPU.
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--num_processes` was set to a value of `2`
+		More than one GPU was found, enabling multi-GPU training.
+		If this was unintended please pass in `--num_processes=1`.
+	`--num_machines` was set to a value of `1`
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+Loading model...
+Loading model...
+Loading dataset...Loading dataset...
+
+Traceback (most recent call last):
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/3-diffusion_training/trainer.py", line 76, in <module>
+Traceback (most recent call last):
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/3-diffusion_training/trainer.py", line 76, in <module>
+    dataset = Dataset2PM(TRAINSET)
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/src/diffusion/dataset.py", line 67, in __init__
+    dataset = Dataset2PM(TRAINSET)
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/src/diffusion/dataset.py", line 67, in __init__
+    self.noisy_paths = sorted(os.listdir(os.path.join(dir, "noisy")))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'dataset/astro/noisy'
+    self.noisy_paths = sorted(os.listdir(os.path.join(dir, "noisy")))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'dataset/astro/noisy'
+E0803 18:05:42.117000 2453512 torch/distributed/elastic/multiprocessing/api.py:874] failed (exitcode: 1) local_rank: 0 (pid: 2453525) of binary: /leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/bin/python
+Traceback (most recent call last):
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/bin/accelerate", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/lib/python3.11/site-packages/accelerate/commands/accelerate_cli.py", line 50, in main
+    args.func(args)
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/lib/python3.11/site-packages/accelerate/commands/launch.py", line 1190, in launch_command
+    multi_gpu_launcher(args)
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/lib/python3.11/site-packages/accelerate/commands/launch.py", line 815, in multi_gpu_launcher
+    distrib_run.run(args)
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/lib/python3.11/site-packages/torch/distributed/run.py", line 883, in run
+    elastic_launch(
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 139, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/.venv/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 270, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+trainer.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2025-08-03_18:05:42
+  host      : lrdn3456-net11-3.leonardo.local
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 2453526)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2025-08-03_18:05:42
+  host      : lrdn3456.leonardo.local
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 2453525)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

@@ -4,7 +4,7 @@ __license__ = "Apache-2.0"
 
 
 from .recording import Recording
-from .utils import imshow, cprint, log
+from .utils import imshow, cprint, log, get_gpu_memory, tensor2pil
 from .diffusion.conditioned_unet import ConditionedUNet
 from .diffusion.dataset import Dataset2PM
 import matplotlib.pyplot as plt

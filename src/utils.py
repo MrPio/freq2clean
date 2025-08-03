@@ -3,9 +3,11 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
-
 import logging
 from termcolor import colored
+import subprocess as sp
+from torchvision.transforms import ToPILImage
+import torch
 
 logging.basicConfig(
     level="INFO",
@@ -104,3 +106,19 @@ def imshow(
         axes[i].axis("off")
     plt.tight_layout()
     plt.show()
+
+
+def get_gpu_memory():
+    command = "nvidia-smi --query-gpu=memory.free --format=csv"
+    memory_free_info = sp.check_output(command.split()).decode("ascii").split("\n")[:-1][1:]
+    memory_free_values = [int(x.split()[0]) for i, x in enumerate(memory_free_info)]
+    return memory_free_values
+
+
+to_pil = ToPILImage()
+
+
+def tensor2pil(tensor: torch.Tensor):
+    tensor = tensor.cpu()
+    tensor -= torch.min(tensor)
+    return to_pil(tensor / torch.max(tensor))
