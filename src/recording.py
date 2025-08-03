@@ -16,7 +16,7 @@ class Recording:
             if isinstance(video, np.ndarray)
             else tiff.imread(str(video), key=range(max_frames) if max_frames else None)
         )
-        self.np = (self.np / np.max(self.np)).astype(np.float32)
+        # self.np = (self.np / np.max(self.np)).astype(np.float32)
 
     @property
     def frames(self) -> int:
