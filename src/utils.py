@@ -122,3 +122,27 @@ def tensor2pil(tensor: torch.Tensor):
     tensor = tensor.cpu()
     tensor -= torch.min(tensor)
     return to_pil(tensor / torch.max(tensor))
+
+
+def pil_stack(imgs, bg_color=(0, 0, 0)):
+    """
+    Stacks a list of PIL Images horizontally.
+
+    Args:
+        imgs (List[Image.Image]): List of PIL Image objects.
+        bg_color (tuple): Background color (for any padding), e.g. (0,0,0) for black.
+
+    Returns:
+        Image.Image: New PIL image with all inputs concatenated side by side.
+    """
+    imgs=list(imgs)
+    widths, heights = zip(*(im.size for im in imgs))
+    total_width = sum(widths)
+    max_height = max(heights)
+    new_img = Image.new(imgs[0].mode, (total_width, max_height), color=bg_color)
+    x_offset = 0
+    for im in imgs:
+        new_img.paste(im, (x_offset, 0))
+        x_offset += im.width
+
+    return new_img
