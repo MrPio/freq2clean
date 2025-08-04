@@ -16,3 +16,4 @@ transformers
 einops
 torchvision
 fastparquet
+pytorch_msssim

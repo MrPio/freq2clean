@@ -8,6 +8,7 @@ from termcolor import colored
 import subprocess as sp
 from torchvision.transforms import ToPILImage
 import torch
+from csbdeep.utils import normalize
 
 logging.basicConfig(
     level="INFO",
@@ -115,16 +116,15 @@ def get_gpu_memory():
     return memory_free_values
 
 
-to_pil = ToPILImage()
-
-
 def tensor2pil(tensor: torch.Tensor):
-    tensor = tensor.cpu()
-    tensor -= torch.min(tensor)
-    return to_pil(tensor / torch.max(tensor))
+    img = tensor.cpu().detach().numpy()
+    img -= np.min(img)
+    img /= np.max(img)
+    img = np.clip(normalize(img, 1, 99.5), min=0, max=1)
+    return Image.fromarray(np.uint8(img[0] * 255), mode="L")
 
 
-def pil_stack(imgs, bg_color=(0, 0, 0)):
+def pil_stack(imgs):
     """
     Stacks a list of PIL Images horizontally.
 
@@ -135,11 +135,11 @@ def pil_stack(imgs, bg_color=(0, 0, 0)):
     Returns:
         Image.Image: New PIL image with all inputs concatenated side by side.
     """
-    imgs=list(imgs)
+    imgs = list(imgs)
     widths, heights = zip(*(im.size for im in imgs))
     total_width = sum(widths)
     max_height = max(heights)
-    new_img = Image.new(imgs[0].mode, (total_width, max_height), color=bg_color)
+    new_img = Image.new(imgs[0].mode, (total_width, max_height))
     x_offset = 0
     for im in imgs:
         new_img.paste(im, (x_offset, 0))

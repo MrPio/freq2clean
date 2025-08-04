@@ -24,9 +24,10 @@ class DeepCADImprovementUNet(UNet2DModel):
             in_channels=1,
             out_channels=1,
             sample_size=512,
-            block_out_channels=(32, 64, 128, 256),  # (64,128,256,512)
+            block_out_channels=(32, 64, 128, 256),
             layers_per_block=2,
             down_block_types=("DownBlock2D",) * 4,
             up_block_types=("UpBlock2D",) * 4,
             add_attention=False,
+            # norm_num_groups=16,
         )

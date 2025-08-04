@@ -8,3 +8,7 @@
 3-deepcad_improvement_with_diffusion/dataset.zip
 3-deepcad_improvement_with_diffusion/pth
 3-deepcad_improvement_with_diffusion/results
+
+4-simple_unet/dataset/
+4-simple_unet/pth
+4-simple_unet/results
