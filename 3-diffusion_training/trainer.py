@@ -10,16 +10,16 @@ from pathlib import Path
 import pandas as pd
 from torchvision.transforms import ToPILImage
 import numpy as np
+import torch
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from src import *
 
-EPOCHS = 100
-BS = 8
-TRAINSET = "dataset/astro"
+EPOCHS = 10
+BS = 14
+TRAINSET = "dataset/astro_192"
 DDPM_STEPS = 1_000
 
-import torch
 
 def remove_noise(noisy_t: torch.Tensor, 
                  eps: torch.Tensor, 
@@ -63,9 +63,9 @@ cprint("red:Loading model...")
 train_name = datetime.now().strftime("%Y%m%d%H%M")
 model = ConditionedUNet(
     sample_size=512,  # 512×512
-    # block_out_channels=(32, 64, 128, 256),
-    block_out_channels=(64, 128, 256, 512),
-    layers_per_block=2,
+    block_out_channels=(32, 64, 128, 256),
+    # block_out_channels=(64, 128, 256, 512),
+    layers_per_block=3,
     down_block_types=("DownBlock2D",) * 4,
     up_block_types=("UpBlock2D",) * 4,
 )
@@ -88,7 +88,7 @@ pth_dir = Path(f"pth/{train_name}")
 
 cprint("yellow:Starting training...")
 for epoch in tqdm(range(EPOCHS), desc="Epochs"):
-    with tqdm(dataloader, leave=False) as pbar:
+    with tqdm(dataloader, leave=False, disable=not accelerator.is_main_process) as pbar:
         for noisy, cond in pbar:
             # clean, cond: [B,1,512,512]
             eps = torch.randn_like(noisy)
@@ -125,15 +125,15 @@ for epoch in tqdm(range(EPOCHS), desc="Epochs"):
             metrics.loc[len(metrics)] = [loss.item(), vram_free]
 
             # Preview images
-            if (len(metrics) - 1) % 50 == 0:
+            if (len(metrics) - 1) % 50 == 0 and accelerator.is_main_process:
                 recovered = remove_noise(noisy_t, noise_pred, t, noise_scheduler)
                 tensor2pil(recovered[0]).save(f"pth/{train_name}/snaps/pred_{len(metrics)}.png")
                 tensor2pil(noisy[0]).save(f"pth/{train_name}/snaps/noisy_{len(metrics)}.png")
                 tensor2pil(noisy_t[0]).save(f"pth/{train_name}/snaps/noisy_t_{len(metrics)}_{t.cpu()[0].item()}.png")
                 tensor2pil(cond[0]).save(f"pth/{train_name}/snaps/cond_{len(metrics)}.png")
 
-        metrics.to_parquet(pth_dir / f"metrics.parquet")
         accelerator.wait_for_everyone()
         if accelerator.is_main_process:
+            metrics.to_parquet(pth_dir / f"metrics.parquet")
             cprint(f"cyan:Saving checkpoint [{epoch+1}/{EPOCHS}]")
             torch.save(model.state_dict(), pth_dir / f"{epoch}.pt")

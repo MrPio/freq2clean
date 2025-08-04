@@ -18,11 +18,8 @@ def random_transform(input, target):
     Return:
         input, target : the input and target patch after data augmentation
     """
-    p_trans = random.randrange(8)
-    if p_trans == 0:  # no transformation
-        input = input
-        target = target
-    elif p_trans == 1:  # left rotate 90
+    p_trans = random.randrange(1,8)
+    if p_trans == 1:  # left rotate 90
         input = torch.rot90(input, k=1, dims=(1, 2))
         target = torch.rot90(target, k=1, dims=(1, 2))
     elif p_trans == 2:  # left rotate 180
@@ -77,5 +74,6 @@ class Dataset2PM(Dataset):
         noisy = self.transforms(noisy)
         cond = self.transforms(cond)
         if self.augument:
-            noisy, cond = random_transform(noisy, cond)
+            if random.random()<0.67:
+                noisy, cond = random_transform(noisy, cond)
         return noisy, cond

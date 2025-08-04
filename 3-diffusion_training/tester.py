@@ -1,9 +1,8 @@
 """
 Usage:
 python tester.py \
-    --checkpoint="pth/202508031808/11.pt" \
-    --dataset="dataset/astro" \
-    --samples=2 \
+    --checkpoint="pth/202508041042/9.pt" \
+    --dataset="dataset/astro_1" \
     --steps=120
 """
 
@@ -12,7 +11,6 @@ from pathlib import Path
 import sys
 import torch
 from diffusers import DDPMScheduler, DDIMScheduler
-from torch.utils.data import DataLoader
 import numpy as np
 from tqdm import tqdm
 
@@ -26,7 +24,6 @@ def parse_args():
         "--checkpoint", type=Path, required=True, help="Path to the .pt file (e.g. pth/202508030044/99.pt)"
     )
     parser.add_argument("--dataset", type=Path, default="dataset/astro", help="Testset folder")
-    parser.add_argument("--samples", type=int, default=5, help="Number of samples to take from the dataset")
     parser.add_argument("--ddpm_steps", type=int, default=1000, help="Number of DDPM timesteps (must match training)")
     parser.add_argument("--steps", type=int, default=50, help="Number of DDIM timesteps (must match training)")
     args = parser.parse_args()
@@ -42,13 +39,13 @@ for folder in ["noisy", "cond", "pred"]:
 cprint("red:Loading model...")
 model = ConditionedUNet(
     sample_size=512,  # 512×512
-    # block_out_channels=(32, 64, 128, 256),
-    block_out_channels=(64, 128, 256, 512),
-    layers_per_block=2,
+    block_out_channels=(32, 64, 128, 256),
+    # block_out_channels=(64, 128, 256, 512),
+    layers_per_block=3,
     down_block_types=("DownBlock2D",) * 4,
     up_block_types=("UpBlock2D",) * 4,
 )
-model = torch.nn.DataParallel(model)
+# model = torch.nn.DataParallel(model)
 # scheduler = DDPMScheduler(num_train_timesteps=args.ddpm_steps)
 scheduler = DDIMScheduler(num_train_timesteps=args.ddpm_steps, beta_schedule="linear", clip_sample=False)
 scheduler.set_timesteps(args.steps)
