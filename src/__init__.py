@@ -4,9 +4,9 @@ __license__ = "Apache-2.0"
 
 
 from .recording import Recording
-from .utils import imshow, cprint, log, get_gpu_memory, tensor2pil,pil_stack
-from .networks import DiffDenoiseUNet, DeepCADImprovementUNet
-from .dataset import Dataset2PM
+from .utils import imshow, cprint, log, get_gpu_memory, tensor2pil, pil_stack
+from .networks import DiffDenoiseUNet, DeepCADImprovementUNet, NextFrameUNet
+from .dataset import Dataset2PM, DatasetNextFrame
 import matplotlib.pyplot as plt
 from pathlib import Path
 

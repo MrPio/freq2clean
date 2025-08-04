@@ -4,6 +4,10 @@ from torchvision import transforms
 from PIL import Image
 import os
 import random
+import sys
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from src import *
 
 
 def random_transform(input, target):
@@ -18,7 +22,7 @@ def random_transform(input, target):
     Return:
         input, target : the input and target patch after data augmentation
     """
-    p_trans = random.randrange(1,8)
+    p_trans = random.randrange(1, 8)
     if p_trans == 1:  # left rotate 90
         input = torch.rot90(input, k=1, dims=(1, 2))
         target = torch.rot90(target, k=1, dims=(1, 2))
@@ -74,6 +78,20 @@ class Dataset2PM(Dataset):
         noisy = self.transforms(noisy)
         cond = self.transforms(cond)
         if self.augument:
-            if random.random()<0.67:
+            if random.random() < 0.67:
                 noisy, cond = random_transform(noisy, cond)
         return noisy, cond
+
+
+class DatasetNextFrame(Dataset):
+    def __init__(self, tiff, frames_per_patch=1):
+        self.rec = Recording(tiff, max_frames=None).normalized
+        self.frames_per_patch = frames_per_patch
+
+    def __len__(self):
+        return len(self.rec.frames - self.frames_per_patch * 2)
+
+    def __getitem__(self, idx):
+        even = self.rec[idx : idx + self.frames_per_patch * 2 : 2]
+        odd = self.rec[idx + 1 : idx + self.frames_per_patch * 2 : 2]
+        return torch.tensor(even), torch.tensor(odd)
