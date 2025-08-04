@@ -21,13 +21,10 @@ TRAINSET = "dataset/astro_192"
 DDPM_STEPS = 1_000
 
 
-def remove_noise(noisy_t: torch.Tensor, 
-                 eps: torch.Tensor, 
-                 t: torch.LongTensor, 
-                 scheduler) -> torch.Tensor:
+def remove_noise(noisy_t: torch.Tensor, eps: torch.Tensor, t: torch.LongTensor, scheduler) -> torch.Tensor:
     """
     Invert scheduler.add_noise: recover the clean `noisy` from `noisy_t`.
-    
+
     Args:
         noisy_t:  Tensor of shape (B, C, H, W), the noisy image at time t.
         eps:      Tensor of shape (B, C, H, W), the noise that was added.
@@ -40,20 +37,20 @@ def remove_noise(noisy_t: torch.Tensor,
     # gather the scalars for each batch element
     # alphas_cumprod is a 1D tensor of shape (num_train_timesteps,)
     alpha_prod = scheduler.alphas_cumprod.to(noisy_t.device)
-    
+
     # alpha_prod_t and one_minus_alpha_t have shape (B,)
-    alpha_prod_t      = alpha_prod[t]
+    alpha_prod_t = alpha_prod[t]
     one_minus_alpha_t = 1.0 - alpha_prod_t
-    
+
     # take square roots
-    sqrt_alpha_prod      = torch.sqrt(alpha_prod_t)       # (B,)
+    sqrt_alpha_prod = torch.sqrt(alpha_prod_t)  # (B,)
     sqrt_one_minus_alpha = torch.sqrt(one_minus_alpha_t)  # (B,)
-    
+
     # reshape to broadcast over (C, H, W)
     for _ in range(noisy_t.ndim - 1):
-        sqrt_alpha_prod      = sqrt_alpha_prod.unsqueeze(-1)
+        sqrt_alpha_prod = sqrt_alpha_prod.unsqueeze(-1)
         sqrt_one_minus_alpha = sqrt_one_minus_alpha.unsqueeze(-1)
-    
+
     # invert the noising
     noisy = (noisy_t - sqrt_one_minus_alpha * eps) / sqrt_alpha_prod
     return noisy
@@ -61,14 +58,7 @@ def remove_noise(noisy_t: torch.Tensor,
 
 cprint("red:Loading model...")
 train_name = datetime.now().strftime("%Y%m%d%H%M")
-model = ConditionedUNet(
-    sample_size=512,  # 512×512
-    block_out_channels=(32, 64, 128, 256),
-    # block_out_channels=(64, 128, 256, 512),
-    layers_per_block=3,
-    down_block_types=("DownBlock2D",) * 4,
-    up_block_types=("UpBlock2D",) * 4,
-)
+model = DiffDenoiseUNet()
 noise_scheduler = DDPMScheduler(num_train_timesteps=DDPM_STEPS)
 optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
 

@@ -37,14 +37,7 @@ for folder in ["noisy", "cond", "pred"]:
     (out_dir / folder).mkdir(parents=True, exist_ok=True)
 
 cprint("red:Loading model...")
-model = ConditionedUNet(
-    sample_size=512,  # 512×512
-    block_out_channels=(32, 64, 128, 256),
-    # block_out_channels=(64, 128, 256, 512),
-    layers_per_block=3,
-    down_block_types=("DownBlock2D",) * 4,
-    up_block_types=("UpBlock2D",) * 4,
-)
+model = DiffDenoiseUNet()
 # model = torch.nn.DataParallel(model)
 # scheduler = DDPMScheduler(num_train_timesteps=args.ddpm_steps)
 scheduler = DDIMScheduler(num_train_timesteps=args.ddpm_steps, beta_schedule="linear", clip_sample=False)
@@ -55,7 +48,7 @@ model.load_state_dict(state_dict)
 model.to(device).eval()
 
 cprint("green:Loading dataset...")
-dataset = Dataset2PM(str(args.dataset),augument=False)
+dataset = Dataset2PM(str(args.dataset), augument=False)
 # indexes = np.random.choice(range(len(dataset)), size=args.samples)
 indexes = [0, 1_000]
 
