@@ -1,7 +1,5 @@
 """
-Usage:
-python tester.py \
-    --checkpoint="pth/202508041042/9.pt" \
+Usage: python test.py --checkpoint="pth/202508041859/8.pt"
 """
 
 import argparse
@@ -20,6 +18,8 @@ from torchvision.transforms import ToPILImage
 import torch
 import pytorch_msssim
 from torch.nn.functional import l1_loss, mse_loss
+from csbdeep.utils import normalize
+from torchvision import transforms
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from src import *
@@ -31,7 +31,7 @@ def parse_args():
     return parser.parse_args()
 
 
-BS = 16
+BS = 8
 args = parse_args()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 out_dir = Path("results") / args.checkpoint.parts[-2]
@@ -45,18 +45,23 @@ model.load_state_dict(state_dict)
 model.to(device).eval()
 
 cprint("green:Loading dataset...")
-recording = Recording(DATASETS["oabf_astro"] / "y.tiff")
+rec = Recording(DATASETS["oabf_astro"] / "y.tiff", max_frames=300)
+frames = rec.frames
+rec = rec.np
+# rec = (rec - np.min(rec)) / (np.max(rec) - np.min(rec))
+# rec = rec * 2 - 1
+rec = np.clip(normalize(rec, 0.1, 99.9), max=1)
 
 cprint("yellow:Starting training...")
 start_time = time_ns()
-preds = np.empty_like(recording.np)
-# TODO: batch x
-for i in tqdm(range(recording.frames), desc="Frames"):
-    x = recording[i]
-    x = (x - np.min(x)) / (np.max(x) - np.min(x))
-    x = x * 2 - 1
+preds = np.empty_like(rec)
+for i in tqdm(range(0, frames, BS), desc="Frames"):
+    x = rec[i : i + BS]
+    x = transforms.Normalize(0.5, 0.5)(torch.tensor(x)).unsqueeze(1).to(model.device)
     with torch.no_grad():
         pred = model(x, torch.zeros(x.shape[0]).to(model.device)).sample
-        preds[i] = pred[0].numpy()
+        preds[i : i + BS] = pred.cpu().squeeze(1).numpy()
 
-Recording(preds).render(out_dir / f"pred.mp4")
+pred = Recording(preds)
+# pred.save_sample(out_dir / f"pred.tiff")
+pred.render(out_dir / f"pred.mp4")

@@ -1,6 +1,6 @@
 """
 Usage:
-python tester.py \
+python test.py \
     --checkpoint="pth/202508041042/9.pt" \
     --dataset="dataset/astro_1" \
     --steps=120

@@ -16,7 +16,7 @@ class Recording:
             if isinstance(video, np.ndarray)
             else tiff.imread(str(video), key=range(max_frames) if max_frames else None)
         )
-        # self.np = (self.np / np.max(self.np)).astype(np.float32)
+        self.np = self.np.astype(np.float32)
 
     @property
     def frames(self) -> int:
@@ -24,10 +24,10 @@ class Recording:
 
     @property
     def normalized(self) -> np.ndarray:
-        return np.clip(normalize(self.np, 0.5, 99.5), max=1)
+        return np.clip(normalize(self.np, 1, 99.5), min=0, max=1)
 
-    def save_sample(self, path: Path | str, length=500):
-        tiff.imwrite(str(path), self.np[:length], dtype=np.float32)
+    def save_sample(self, path: Path | str, length=300):
+        tiff.imwrite(str(path), self.np[: min(self.frames, length)], dtype=np.float32)
 
     def render(self, path: Path | str, start=None, end=None, bitrate=4500, fps=30):
         iio.imwrite(
