@@ -13,25 +13,25 @@ def __make_gaussian_kernel(channels, kernel_size=5, sigma=1.0, device="cuda"):
     return kernel2d  # (channels, 1, kernel_size, kernel_size)
 
 
-def lf_hf_tv_loss(I, I_c, I_n, lambda_lf=1.0, lambda_hf=0.5, lambda_tv=1e-4, kernel_size=5, sigma=1.0):
-    B, C, H, W = I.shape
-    device = I.device
+def lf_hf_tv_loss(pred, clean, noisy, lambda_lf=1.0, lambda_hf=0.5, lambda_tv=1e-4, kernel_size=5, sigma=1.0):
+    B, C, H, W = pred.shape
+    device = pred.device
 
     # low-pass filter
     gauss_k = __make_gaussian_kernel(C, kernel_size, sigma, device=device)
-    lpf_I = F.conv2d(I, gauss_k, padding=kernel_size // 2, groups=C)
-    lpf_Ic = F.conv2d(I_c, gauss_k, padding=kernel_size // 2, groups=C)
+    lpf_I = F.conv2d(pred, gauss_k, padding=kernel_size // 2, groups=C)
+    lpf_Ic = F.conv2d(clean, gauss_k, padding=kernel_size // 2, groups=C)
     # high-pass = residual
-    hpf_I = I - lpf_I
-    hpf_In = I_n - F.conv2d(I_n, gauss_k, padding=kernel_size // 2, groups=C)
+    hpf_I = pred - lpf_I
+    hpf_In = noisy - F.conv2d(noisy, gauss_k, padding=kernel_size // 2, groups=C)
 
     # LF & HF MSE
     loss_lf = F.mse_loss(lpf_I, lpf_Ic)
     loss_hf = F.mse_loss(hpf_I, hpf_In)
 
     # anisotropic total variation
-    tv_h = torch.abs(I[:, :, :, :-1] - I[:, :, :, 1:]).mean()
-    tv_v = torch.abs(I[:, :, :-1, :] - I[:, :, 1:, :]).mean()
+    tv_h = torch.abs(pred[:, :, :, :-1] - pred[:, :, :, 1:]).mean()
+    tv_v = torch.abs(pred[:, :, :-1, :] - pred[:, :, 1:, :]).mean()
     loss_tv = tv_h + tv_v
 
     return lambda_lf * loss_lf + lambda_hf * loss_hf + lambda_tv * loss_tv

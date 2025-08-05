@@ -1,5 +1,5 @@
 """
-Usage: python test.py --checkpoint="pth/202508041859/8.pt"
+Usage: python test.py --checkpoint="pth/202508051638/4.pt"
 """
 
 import argparse
@@ -45,19 +45,17 @@ model.load_state_dict(state_dict)
 model.to(device).eval()
 
 cprint("green:Loading dataset...")
+ds = AstroDataset()
 rec = Recording(DATASETS["oabf_astro"] / "y.tiff", max_frames=300)
 frames = rec.frames
 rec = rec.np
-# rec = (rec - np.min(rec)) / (np.max(rec) - np.min(rec))
-# rec = rec * 2 - 1
-rec = np.clip(normalize(rec, 0.1, 99.9), max=1)
 
 cprint("yellow:Starting training...")
 start_time = time_ns()
-preds = np.empty_like(rec)
+preds = np.empty_like(rec, dtype=np.float32)
 for i in tqdm(range(0, frames, BS), desc="Frames"):
     x = rec[i : i + BS]
-    x = transforms.Normalize(0.5, 0.5)(torch.tensor(x)).unsqueeze(1).to(model.device)
+    x = ds.clean_transforms(x).unsqueeze(1).to(model.device)
     with torch.no_grad():
         pred = model(x, torch.zeros(x.shape[0]).to(model.device)).sample
         preds[i : i + BS] = pred.cpu().squeeze(1).numpy()
