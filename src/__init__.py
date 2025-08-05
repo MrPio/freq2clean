@@ -7,7 +7,7 @@ __license__ = "Apache-2.0"
 from .networks import DiffDenoiseUNet, DeepCADImprovementUNet, NextFrameUNet
 
 # Dataset
-from .dataset import DATASETS
+from .dataset.dataset import DATASETS
 from .dataset.noisy_clean_dataset import NoisyCleanDataset
 from .dataset.noisy_dataset import NoisyDataset
 

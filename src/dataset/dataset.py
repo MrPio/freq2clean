@@ -1,7 +1,9 @@
 import torch
 from torchvision import transforms
 import random
-from src import _ROOT_DIR
+from pathlib import Path
+
+_ROOT_DIR = Path(__file__).parents[2]
 
 
 class DatasetMetadata:

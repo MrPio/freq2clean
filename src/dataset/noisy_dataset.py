@@ -12,7 +12,7 @@ class NoisyDataset(Dataset):
         self.x = Recording(metadata.path_x, max_frames=max_frames)
 
     def __len__(self):
-        return len(self.x.frames - self.frames_per_patch * 2)
+        return self.x.frames - self.frames_per_patch * 2
 
     def __getitem__(self, idx):
         even = self.x.np[idx : idx + self.frames_per_patch * 2 : 2]
