@@ -49,6 +49,7 @@ pth_dir = Path(f"pth/{train_name}")
 (pth_dir / "snaps").mkdir(parents=True, exist_ok=True)
 
 cprint("yellow:Starting training...")
+# TODO:run
 for epoch in tqdm(range(EPOCHS), desc="Epochs"):
     with tqdm(dataloader, leave=False, disable=not accelerator.is_main_process) as pbar:
         for x, gt in pbar:

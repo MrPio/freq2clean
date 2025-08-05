@@ -12,6 +12,7 @@ from torchvision.transforms import ToPILImage
 import torch
 import pytorch_msssim
 from torch.nn.functional import l1_loss, mse_loss
+from loss import lf_hf_tv_loss
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from src import *
@@ -58,7 +59,8 @@ for epoch in tqdm(range(EPOCHS), desc="Epochs"):
             mse = mse_loss(pred, gt)
             ssim = pytorch_msssim.ssim(pred, gt, data_range=2.0, size_average=True)
             grad = gradient_loss(pred, gt)
-            loss = 1 * mse + 0.1 * l1 + 0.55 * (1 - ssim) + 0.1 * grad
+            # loss = 1 * mse + 0.1 * l1 + 0.55 * (1 - ssim) + 0.1 * grad
+            loss = lf_hf_tv_loss(pred, x, gt)
 
             accelerator.backward(loss)
             optimizer.step()
