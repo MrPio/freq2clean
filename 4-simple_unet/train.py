@@ -36,7 +36,7 @@ model = DeepCADImprovementUNet()
 optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
 
 cprint("green:Loading dataset...")
-dataset = AstroDataset(augument=False)
+dataset = NoisyCleanDataset(name="oabf_astro", augument=False)
 dataloader = DataLoader(dataset, batch_size=BS, shuffle=True, num_workers=1)
 
 cprint("blue:Loading accelerator...")

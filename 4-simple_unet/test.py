@@ -45,7 +45,7 @@ model.load_state_dict(state_dict)
 model.to(device).eval()
 
 cprint("green:Loading dataset...")
-ds = AstroDataset()
+ds = NoisyCleanDataset(name="oabf_astro")
 rec = Recording(DATASETS["oabf_astro"] / "y.tiff", max_frames=300)
 frames = rec.frames
 rec = rec.np
