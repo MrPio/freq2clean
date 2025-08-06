@@ -1,20 +1,62 @@
 from torch.utils.data import Dataset
 from src.dataset.dataset import DATASETS, npy2tensor
 from src.recording import Recording
+from random import randrange
+
+from src.utils import cprint
 
 
 class NoisyDataset(Dataset):
-    def __init__(self, name, frames_per_patch=2, augument=True, max_frames=None):
+    def __init__(
+        self, name, patch_xy=64, frames_per_patch=2, augument=True, max_frames=None, overlap=0.5, verbose=False
+    ):
         metadata = DATASETS[name]
+        self.patch_xy = patch_xy
         self.transforms = npy2tensor(metadata.max_val_x)
         self.frames_per_patch = frames_per_patch
         self.augument = augument
         self.x = Recording(metadata.path_x, max_frames=max_frames)
+        self.overlap = overlap
+
+        D, H, W = self.x.np.shape
+        h = w = self.patch_xy
+        d = self.frames_per_patch * 2
+        o = self.overlap
+        self.Xs = int((W - w) // (w * (1 - o))) + 1
+        self.Ys = int((H - h) // (h * (1 - o))) + 1
+        self.Zs = int((D - d) // (d * (1 - o))) + 1
+
+        self.verbose = verbose
+        if verbose:
+            cprint(
+                "The dataset has",
+                f"green:{self.Zs}z",
+                "x",
+                f"red:{self.Ys}y",
+                "x",
+                f"yellow:{self.Xs}x",
+                "=",
+                len(self),
+                "samples",
+            )
 
     def __len__(self):
-        return self.x.frames - self.frames_per_patch * 2
+        return self.Xs * self.Ys * self.Zs
 
     def __getitem__(self, idx):
-        even = self.x.np[idx : idx + self.frames_per_patch * 2 : 2]
-        odd = self.x.np[idx + 1 : idx + self.frames_per_patch * 2 : 2]
-        return self.transforms(even), self.transforms(odd)
+        x = idx % self.Xs
+        y = (idx % (self.Xs * self.Ys)) // self.Xs
+        z = idx // (self.Xs * self.Ys)
+
+        x1 = x * int(self.patch_xy * (1 - self.overlap))
+        y1 = y * int(self.patch_xy * (1 - self.overlap))
+        z1 = z * int(self.frames_per_patch * 2 * (1 - self.overlap))
+        x2 = x1 + self.patch_xy
+        y2 = y1 + self.patch_xy
+        z2 = z1 + self.frames_per_patch * 2
+
+        if self.verbose:
+            cprint((x, y, z), "-->", f"green:[{z1}:{z2}z,", f"red:{y1}:{y2}y,", f"yellow:{x1}:{x2}x]")
+        even = self.x.np[z1:z2:2, y1:y2, x1:x2]
+        odd = self.x.np[z1:z2:2, y1:y2, x1:x2]
+        return self.transforms(even).unsqueeze(0), self.transforms(odd).unsqueeze(0)

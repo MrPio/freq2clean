@@ -17,9 +17,8 @@ from src import *
 
 EPOCHS = 10
 BS = 14
-TRAINSET = "dataset/astro_192"
 DDPM_STEPS = 1_000
-
+TRAINSET = "oabf_astro"
 
 def remove_noise(noisy_t: torch.Tensor, eps: torch.Tensor, t: torch.LongTensor, scheduler) -> torch.Tensor:
     """
@@ -59,11 +58,11 @@ def remove_noise(noisy_t: torch.Tensor, eps: torch.Tensor, t: torch.LongTensor, 
 cprint("red:Loading model...")
 train_name = datetime.now().strftime("%Y%m%d%H%M")
 model = DiffDenoiseUNet()
-noise_scheduler = DDPMScheduler(num_train_timesteps=DDPM_STEPS)
+scheduler = DDPMScheduler(num_train_timesteps=DDPM_STEPS)
 optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
 
 cprint("green:Loading dataset...")
-dataset = Dataset2PM(TRAINSET)
+dataset = NoisyCleanDataset(name=TRAINSET)
 dataloader = DataLoader(dataset, batch_size=BS, shuffle=True, num_workers=1)
 
 cprint("blue:Loading accelerator...")
@@ -83,7 +82,7 @@ for epoch in tqdm(range(EPOCHS), desc="Epochs"):
             # clean, cond: [B,1,512,512]
             eps = torch.randn_like(noisy)
             t = torch.randint(0, DDPM_STEPS, (noisy.size(0),), device=noisy.device)
-            noisy_t = noise_scheduler.add_noise(noisy, eps, t)
+            noisy_t = scheduler.add_noise(noisy, eps, t)
 
             # input: [B,2,512,512]
             model_input = torch.cat([noisy_t, cond], dim=1)
@@ -92,7 +91,7 @@ for epoch in tqdm(range(EPOCHS), desc="Epochs"):
             loss = torch.nn.functional.l1_loss(noise_pred, eps)
             # loss = []
             # for i in range(noisy.size(0)):
-            #     sample = noise_scheduler.step(noise_pred, t[i], noisy_t).prev_sample
+            #     sample = scheduler.step(noise_pred, t[i], noisy_t).prev_sample
             #     loss.append(torch.nn.functional.l1_loss(noisy, sample))
             # loss = sum(loss)
 
@@ -116,7 +115,7 @@ for epoch in tqdm(range(EPOCHS), desc="Epochs"):
 
             # Preview images
             if (len(metrics) - 1) % 50 == 0 and accelerator.is_main_process:
-                recovered = remove_noise(noisy_t, noise_pred, t, noise_scheduler)
+                recovered = remove_noise(noisy_t, noise_pred, t, scheduler)
                 tensor2pil(recovered[0]).save(f"pth/{train_name}/snaps/pred_{len(metrics)}.png")
                 tensor2pil(noisy[0]).save(f"pth/{train_name}/snaps/noisy_{len(metrics)}.png")
                 tensor2pil(noisy_t[0]).save(f"pth/{train_name}/snaps/noisy_t_{len(metrics)}_{t.cpu()[0].item()}.png")

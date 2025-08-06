@@ -12,3 +12,7 @@
 4-simple_unet/dataset/
 4-simple_unet/pth
 # 4-simple_unet/results
+
+5-next_frame_unet/dataset/
+5-next_frame_unet/pth
+# 5-next_frame_unet/results

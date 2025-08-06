@@ -10,57 +10,87 @@ from pathlib import Path
 import pandas as pd
 from torchvision.transforms import ToPILImage
 import torch
-import pytorch_msssim
 from torch.nn.functional import l1_loss, mse_loss
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from src import *
 
 EPOCHS = 10
-BS = 16
+SAVE_EVERY = 100
+BS = 1
+FRAMES_PER_PATCH = 16
+PATCH_XY = 64
 TRAINSET = "oabf_astro"
-
-
-def gradient_loss(pred, gt):
-    pred_dx = pred[:, :, :, 1:] - pred[:, :, :, :-1]
-    pred_dy = pred[:, :, 1:, :] - pred[:, :, :-1, :]
-    gt_dx = gt[:, :, :, 1:] - gt[:, :, :, :-1]
-    gt_dy = gt[:, :, 1:, :] - gt[:, :, :-1, :]
-    return l1_loss(pred_dx, gt_dx) + l1_loss(pred_dy, gt_dy)
-
+EMBED_DIM = 512
+DDPM_STEPS = 1_000
 
 cprint("red:Loading model...")
 train_name = datetime.now().strftime("%Y%m%d%H%M")
-model = NextFrameUNet(frames=1)
+model = NextFramesUNet(patch_xy=PATCH_XY, cross_attention_dim=EMBED_DIM)
+encoder = VideoEncoder(embed_dim=EMBED_DIM)
+scheduler = DDPMScheduler(num_train_timesteps=DDPM_STEPS)
 optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
 
 cprint("green:Loading dataset...")
-dataset = DatasetNextFrame(DATASETS[TRAINSET], frames_per_patch=1)
+dataset = NoisyDataset(name=TRAINSET, patch_xy=PATCH_XY, frames_per_patch=FRAMES_PER_PATCH, augument=False)
 dataloader = DataLoader(dataset, batch_size=BS, shuffle=True, num_workers=1)
+cprint("The dataset has", len(dataset), "samples!")
+cprint("The augumentation is", f"green:{'ON' if dataset.augument else 'OFF'}")
 
 cprint("blue:Loading accelerator...")
 accelerator = Accelerator()
 print(f"🚀 Accelerator launching on {accelerator.num_processes} GPU(s)")
-model, optimizer, dataloader = accelerator.prepare(model, optimizer, dataloader)
+model, encoder, optimizer, dataloader = accelerator.prepare(model, encoder, optimizer, dataloader)
 
-metrics = pd.DataFrame(columns=["TotalLoss", "L1", "SSIM", "Gradient Loss", "MSE"])
+metrics = pd.DataFrame(columns=["Total Loss", "L1", "MSE"])
 start_time = time_ns()
 pth_dir = Path(f"pth/{train_name}")
 (pth_dir / "snaps").mkdir(parents=True, exist_ok=True)
 
+
+def remove_noise(noisy_t: torch.Tensor, eps: torch.Tensor, t: torch.LongTensor, scheduler) -> torch.Tensor:
+    # gather the scalars for each batch element
+    # alphas_cumprod is a 1D tensor of shape (num_train_timesteps,)
+    alpha_prod = scheduler.alphas_cumprod.to(noisy_t.device)
+
+    # alpha_prod_t and one_minus_alpha_t have shape (B,)
+    alpha_prod_t = alpha_prod[t]
+    one_minus_alpha_t = 1.0 - alpha_prod_t
+
+    # take square roots
+    sqrt_alpha_prod = torch.sqrt(alpha_prod_t)  # (B,)
+    sqrt_one_minus_alpha = torch.sqrt(one_minus_alpha_t)  # (B,)
+
+    # reshape to broadcast over (C, H, W)
+    for _ in range(noisy_t.ndim - 1):
+        sqrt_alpha_prod = sqrt_alpha_prod.unsqueeze(-1)
+        sqrt_one_minus_alpha = sqrt_one_minus_alpha.unsqueeze(-1)
+
+    # invert the noising
+    noisy = (noisy_t - sqrt_one_minus_alpha * eps) / sqrt_alpha_prod
+    return noisy
+
+
 cprint("yellow:Starting training...")
-# TODO:run
+checkpoint = 0
 for epoch in tqdm(range(EPOCHS), desc="Epochs"):
     with tqdm(dataloader, leave=False, disable=not accelerator.is_main_process) as pbar:
-        for x, gt in pbar:
-            print(x.shape, gt.shape)
-            pred = model(x, torch.zeros(x.shape[0]).to(model.device)).sample
+        for even, odd in pbar:
+            # even, odd: (BS, 1, FRAMES_PER_PATCH, 64, 64)
+            eps = torch.randn_like(odd)
+            t = torch.randint(0, DDPM_STEPS, (BS,), device=odd.device)
+            noisy_odd = scheduler.add_noise(odd, eps, t)
 
-            l1 = l1_loss(pred, gt)
-            mse = mse_loss(pred, gt)
-            ssim = pytorch_msssim.ssim(pred, gt, data_range=2.0, size_average=True)
-            grad = gradient_loss(pred, gt)
-            loss = 1 * l1 + 0.5 * (1 - ssim) + 0.25 * grad
+            even_enc = encoder(even)
+            eps_pred = model(
+                sample=noisy_odd,
+                timestep=t,
+                encoder_hidden_states=even_enc,
+            ).sample
+
+            mse = mse_loss(eps_pred, eps)
+            l1 = l1_loss(eps_pred, eps)
+            loss = mse + 0.1 * l1
 
             accelerator.backward(loss)
             optimizer.step()
@@ -72,19 +102,25 @@ for epoch in tqdm(range(EPOCHS), desc="Epochs"):
             h, m, s = delta // 3600, (delta % 3600) // 60, delta % 60
             pbar.set_postfix(
                 {
-                    f"Loss": f"{loss.item():.2f} (L1:{l1.item():.2f}, SSIM:{ssim.item():.2f}, Grad:{grad.item():.2f}, MSE:{mse.item():.2f})",
+                    f"Loss": f"{loss.item():.3f} (L1:{l1.item():.2f}, MSE:{mse.item():.2f})",
                     "Free VRAM": f"{vram_free:.1f}GiB",
                     "Time": f"{h:.0f}h {m:.0f}m {s:.0f}s",
                 }
             )
-            metrics.loc[len(metrics)] = [loss.item(), l1.item(), ssim.item(), grad.item(), mse.item()]
+            metrics.loc[len(metrics)] = [loss.item(), l1.item(), mse.item()]
 
-            # Preview images
             if (len(metrics) - 1) % 50 == 0 and accelerator.is_main_process:
-                pil_stack(map(tensor2pil, [x[0], gt[0], pred[0]])).save(f"pth/{train_name}/snaps/{len(metrics)}.png")
+                metrics.to_parquet(pth_dir / f"metrics.parquet")
+                recovered = remove_noise(noisy_odd, eps_pred, t, scheduler)
+                pil_stack(map(tensor2pil, [even[0, :, 0], noisy_odd[0, :, 0], recovered[0, :, 0]])).save(
+                    f"pth/{train_name}/snaps/{len(metrics)}_({t[0].item()}).png"
+                )
 
-        accelerator.wait_for_everyone()
-        if accelerator.is_main_process:
-            metrics.to_parquet(pth_dir / f"metrics.parquet")
-            cprint(f"cyan:Saving checkpoint [{epoch+1}/{EPOCHS}]")
-            torch.save(model.state_dict(), pth_dir / f"{epoch}.pt")
+            # Save checkpoint
+            if (len(metrics)) % SAVE_EVERY == 0:
+                accelerator.wait_for_everyone()
+                if accelerator.is_main_process:
+                    checkpoint += 1
+                    cprint(f"cyan:\nSaving checkpoint [{checkpoint+1}]")
+                    torch.save(model.state_dict(), pth_dir / f"{checkpoint}.pt")
+                    torch.save(encoder.state_dict(), pth_dir / f"enc_{checkpoint}.pt")

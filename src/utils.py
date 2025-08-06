@@ -43,6 +43,8 @@ def log(*vals, use_log=True):
     def fmt(v):
         if isinstance(v, (int, float)):
             v = f"blue:{v:,}"
+        if isinstance(v, tuple):
+            v = f"blue:{v}"
         else:
             v = str(v)
         for c in COLORS:

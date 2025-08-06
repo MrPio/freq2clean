@@ -4,7 +4,7 @@ __license__ = "Apache-2.0"
 
 
 # Networks
-from .networks import DiffDenoiseUNet, DeepCADImprovementUNet, NextFrameUNet
+from .networks import DiffDenoiseUNet, DeepCADImprovementUNet, NextFramesUNet, VideoEncoder
 
 # Dataset
 from .dataset.dataset import DATASETS
