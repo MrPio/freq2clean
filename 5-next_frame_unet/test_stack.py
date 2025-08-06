@@ -1,5 +1,5 @@
 """
-Usage: python test.py --checkpoint="pth/202508060042/185.pt" --steps=60
+Usage: python test_stack.py --checkpoint="pth/202508061211/11.pt" --steps=60
 """
 
 import argparse
@@ -34,15 +34,21 @@ def parse_args():
 
 
 def predict(even, odd, i):
-    even_enc = encoder(even)
+    # even_enc = encoder(even)
+    even_enc = torch.zeros(even.size(0), 1, model.config.cross_attention_dim, device=odd.device, dtype=odd.dtype)
     for j, t in enumerate(tqdm(scheduler.timesteps, leave=False)):
         with torch.no_grad():
-            eps_pred = model(sample=odd, timestep=t, encoder_hidden_states=even_enc).sample
+            model_input = torch.cat([odd, even], dim=1)
+            eps_pred = model(sample=model_input, timestep=t, encoder_hidden_states=even_enc).sample
             odd = scheduler.step(model_output=eps_pred, timestep=t, sample=odd).prev_sample
         if (j + 1) % 10 == 0:
-            pil_stack(map(tensor2pil, [odd[0, :, d] for d in range(odd.size(2))])).save(
-                out_dir / "pred" / f"{i}_{j+1}.png"
-            )
+            pil_stack(
+                [
+                    pil_stack(map(tensor2pil, [odd[0, :, d] for d in range(odd.size(2))])),
+                    pil_stack(map(tensor2pil, [even[0, :, d] for d in range(even.size(2))])),
+                ],
+                horizontally=False,
+            ).save(out_dir / "pred" / f"{i}_{j+1}.png")
 
     return odd
 
@@ -61,10 +67,10 @@ encoder_checkpoint = args.checkpoint.parent / f"enc_{args.checkpoint.stem}.pt"
 
 cprint("red:Loading model...")
 train_name = datetime.now().strftime("%Y%m%d%H%M")
-model = NextFramesUNet(patch_xy=PATCH_XY, cross_attention_dim=EMBED_DIM)
-encoder = VideoEncoder(embed_dim=EMBED_DIM)
+model = NextFramesUNetStacked(patch_xy=PATCH_XY)
+# encoder = VideoEncoder(embed_dim=EMBED_DIM)
 model.load_state_dict(torch.load(args.checkpoint, map_location="cpu"))
-encoder.load_state_dict(torch.load(encoder_checkpoint, map_location="cpu"))
+# encoder.load_state_dict(torch.load(encoder_checkpoint, map_location="cpu"))
 scheduler = DDIMScheduler(num_train_timesteps=DDPM_STEPS, beta_schedule="linear", clip_sample=False)
 scheduler.set_timesteps(args.steps)
 
@@ -82,9 +88,10 @@ dataloader = DataLoader(dataset, batch_size=BS, shuffle=False, num_workers=1)
 cprint("blue:Loading accelerator...")
 accelerator = Accelerator()
 print(f"🚀 Accelerator launching on {accelerator.num_processes} GPU(s)")
-model, encoder, dataloader = accelerator.prepare(model, encoder, dataloader)
+# model, encoder, dataloader = accelerator.prepare(model, encoder, dataloader)
+model, dataloader = accelerator.prepare(model, dataloader)
 model.eval()
-encoder.eval()
+# encoder.eval()
 
 cprint("yellow:Starting training...")
 start_time = time_ns()

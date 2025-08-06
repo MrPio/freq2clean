@@ -15,4 +15,4 @@
 
 5-next_frame_unet/dataset/
 5-next_frame_unet/pth
-# 5-next_frame_unet/results
+5-next_frame_unet/results/**/pred/

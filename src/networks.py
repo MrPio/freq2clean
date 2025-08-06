@@ -58,6 +58,33 @@ class NextFramesUNet(UNet3DConditionModel):
         )
 
 
+class NextFramesUNetStacked(UNet3DConditionModel):
+    def __init__(self, patch_xy):
+        super().__init__(
+            in_channels=2,
+            out_channels=1,
+            sample_size=patch_xy,
+            block_out_channels=(32, 64, 128, 256),
+            layers_per_block=3,
+            down_block_types=(
+                "DownBlock3D",
+                "DownBlock3D",
+                "DownBlock3D",
+                "DownBlock3D",
+            ),
+            up_block_types=(
+                "UpBlock3D",
+                "UpBlock3D",
+                "UpBlock3D",
+                "UpBlock3D",
+            ),
+            # attention_head_dim=0,
+            # num_attention_heads=0,
+            # cross_attention_dim=cross_attention_dim,
+            norm_num_groups=16,
+        )
+
+
 class VideoEncoder(nn.Module):
     def __init__(self, embed_dim: int):
         super().__init__()

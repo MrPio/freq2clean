@@ -18,21 +18,30 @@ from src import *
 EPOCHS = 10
 SAVE_EVERY = 100
 BS = 1
-FRAMES_PER_PATCH = 16
+FRAMES_PER_PATCH = 64
 PATCH_XY = 64
 TRAINSET = "oabf_astro"
 EMBED_DIM = 512
 DDPM_STEPS = 1_000
+OVERLAP = 0.4
 
 cprint("red:Loading model...")
 train_name = datetime.now().strftime("%Y%m%d%H%M")
-model = NextFramesUNet(patch_xy=PATCH_XY, cross_attention_dim=EMBED_DIM)
-encoder = VideoEncoder(embed_dim=EMBED_DIM)
+# model = NextFramesUNet(patch_xy=PATCH_XY, cross_attention_dim=EMBED_DIM)
+model = NextFramesUNetStacked(patch_xy=PATCH_XY)
+# encoder = VideoEncoder(embed_dim=EMBED_DIM)
 scheduler = DDPMScheduler(num_train_timesteps=DDPM_STEPS)
 optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
 
 cprint("green:Loading dataset...")
-dataset = NoisyDataset(name=TRAINSET, patch_xy=PATCH_XY, frames_per_patch=FRAMES_PER_PATCH, augument=False)
+dataset = NoisyDataset(
+    name=TRAINSET,
+    patch_xy=PATCH_XY,
+    frames_per_patch=FRAMES_PER_PATCH,
+    max_frames=None,
+    augument=False,
+    overlap=OVERLAP,
+)
 dataloader = DataLoader(dataset, batch_size=BS, shuffle=True, num_workers=1)
 cprint("The dataset has", len(dataset), "samples!")
 cprint("The augumentation is", f"green:{'ON' if dataset.augument else 'OFF'}")
@@ -40,7 +49,8 @@ cprint("The augumentation is", f"green:{'ON' if dataset.augument else 'OFF'}")
 cprint("blue:Loading accelerator...")
 accelerator = Accelerator()
 print(f"🚀 Accelerator launching on {accelerator.num_processes} GPU(s)")
-model, encoder, optimizer, dataloader = accelerator.prepare(model, encoder, optimizer, dataloader)
+# model, encoder, optimizer, dataloader = accelerator.prepare(model, encoder, optimizer, dataloader)
+model, optimizer, dataloader = accelerator.prepare(model, optimizer, dataloader)
 
 metrics = pd.DataFrame(columns=["Total Loss", "L1", "MSE"])
 start_time = time_ns()
@@ -78,19 +88,23 @@ for epoch in tqdm(range(EPOCHS), desc="Epochs"):
         for even, odd in pbar:
             # even, odd: (BS, 1, FRAMES_PER_PATCH, 64, 64)
             eps = torch.randn_like(odd)
-            t = torch.randint(0, DDPM_STEPS, (BS,), device=odd.device)
+            t = torch.randint(0, DDPM_STEPS, (even.size(0),), device=odd.device)
             noisy_odd = scheduler.add_noise(odd, eps, t)
 
-            even_enc = encoder(even)
+            # even_enc = encoder(even)
+            even_enc = torch.zeros(
+                even.size(0), 1, model.config.cross_attention_dim, device=odd.device, dtype=odd.dtype
+            )
+            model_input = torch.cat([noisy_odd, even], dim=1)
             eps_pred = model(
-                sample=noisy_odd,
+                sample=model_input,
                 timestep=t,
                 encoder_hidden_states=even_enc,
             ).sample
 
             mse = mse_loss(eps_pred, eps)
             l1 = l1_loss(eps_pred, eps)
-            loss = mse + 0.1 * l1
+            loss = mse
 
             accelerator.backward(loss)
             optimizer.step()
@@ -123,4 +137,4 @@ for epoch in tqdm(range(EPOCHS), desc="Epochs"):
                     checkpoint += 1
                     cprint(f"cyan:\nSaving checkpoint [{checkpoint+1}]")
                     torch.save(model.state_dict(), pth_dir / f"{checkpoint}.pt")
-                    torch.save(encoder.state_dict(), pth_dir / f"enc_{checkpoint}.pt")
+                    # torch.save(encoder.state_dict(), pth_dir / f"enc_{checkpoint}.pt")

@@ -43,7 +43,7 @@ class NoisyDataset(Dataset):
     def __len__(self):
         return self.Xs * self.Ys * self.Zs
 
-    def __getitem__(self, idx):
+    def idx2pos(self, idx):
         x = idx % self.Xs
         y = (idx % (self.Xs * self.Ys)) // self.Xs
         z = idx // (self.Xs * self.Ys)
@@ -55,8 +55,18 @@ class NoisyDataset(Dataset):
         y2 = y1 + self.patch_xy
         z2 = z1 + self.frames_per_patch * 2
 
+        return (z1, z2), (y1, y2), (x1, x2)
+
+    def __getitem__(self, idx):
+        z, y, x = self.idx2pos(idx)
         if self.verbose:
-            cprint((x, y, z), "-->", f"green:[{z1}:{z2}z,", f"red:{y1}:{y2}y,", f"yellow:{x1}:{x2}x]")
-        even = self.x.np[z1:z2:2, y1:y2, x1:x2]
-        odd = self.x.np[z1:z2:2, y1:y2, x1:x2]
+            cprint(
+                idx,
+                "-->",
+                f"green:[{z[0]}:{z[1]} z,",
+                f"red:{y[0]}:{y[1]} y,",
+                f"yellow:{x[0]}:{x[1]} x]",
+            )
+        even = self.x.np[z[0] : z[1] : 2, y[0] : y[1], x[0] : x[1]]
+        odd = self.x.np[z[0] + 1 : z[1] : 2, y[0] : y[1], x[0] : x[1]]
         return self.transforms(even).unsqueeze(0), self.transforms(odd).unsqueeze(0)

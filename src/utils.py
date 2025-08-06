@@ -126,7 +126,7 @@ def tensor2pil(tensor: torch.Tensor):
     return Image.fromarray(np.uint8(img[0] * 255), mode="L")
 
 
-def pil_stack(imgs):
+def pil_stack(imgs, horizontally=True):
     """
     Stacks a list of PIL Images horizontally.
 
@@ -139,12 +139,12 @@ def pil_stack(imgs):
     """
     imgs = list(imgs)
     widths, heights = zip(*(im.size for im in imgs))
-    total_width = sum(widths)
-    max_height = max(heights)
+    total_width = (sum if horizontally else max)(widths)
+    max_height = (max if horizontally else sum)(heights)
     new_img = Image.new(imgs[0].mode, (total_width, max_height))
-    x_offset = 0
+    offset = 0
     for im in imgs:
-        new_img.paste(im, (x_offset, 0))
-        x_offset += im.width
+        new_img.paste(im, (offset, 0) if horizontally else (0, offset))
+        offset += im.width if horizontally else im.height
 
     return new_img
