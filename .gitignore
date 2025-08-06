@@ -4,6 +4,9 @@
 /**/onnx
 *.tif
 *.tiff
+
+2-denoise/pth/
+
 3-deepcad_improvement_with_diffusion/dataset/
 3-deepcad_improvement_with_diffusion/dataset.zip
 3-deepcad_improvement_with_diffusion/pth

@@ -53,8 +53,8 @@ def predict(even, odd, i):
     return odd
 
 
-BS = 8
-FRAMES_PER_PATCH = 16
+BS = 1
+FRAMES_PER_PATCH = 64
 PATCH_XY = 64
 EMBED_DIM = 512
 DDPM_STEPS = 1_000
@@ -79,7 +79,7 @@ dataset = NoisyDataset(
     name=args.dataset,
     patch_xy=PATCH_XY,
     frames_per_patch=FRAMES_PER_PATCH,
-    max_frames=32,
+    max_frames=128,
     augument=False,
     overlap=0,
 )

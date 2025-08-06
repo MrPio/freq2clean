@@ -8,9 +8,6 @@ OOM: `select_img_num` and `train_datasets_size` only affect RAM requirement, not
 
 import torch
 from deepcad.train_collection import training_class
-from deepcad.movie_display import display
-from deepcad.utils import get_first_filename, download_demo
-from pathlib import Path
 
 training_class(
     {
@@ -21,7 +18,7 @@ training_class(
         "scale_factor": 1,  # the factor for image intensity scaling
         "select_img_num": 1500,  # select the number of frames used for training (use all frames by default)
         "train_datasets_size": 1000,  # datasets size for training (how many 3D patches)
-        "datasets_path": "../dataset/oabf/resonant_neuro",  # folder containing files for training
+        "datasets_path": "dataset/astro",  # folder containing files for training
         "pth_dir": "./pth",  # the path for pth file and result images
         # network related parameters
         "n_epochs": 10,  # the number of training epochs
@@ -33,9 +30,7 @@ training_class(
         "num_workers": 0,  # if you use Windows system, set this to 0.
         "visualize_images_per_epoch": False,  # whether to show result images after each epoch
         "save_test_images_per_epoch": True,  # whether to save result images after each epoch
-        # "UNet_type": "ResidualUNet3D",
         "max_frames": 1000,
         "UNet_type": "ResidualUNet3D",
-        "max_frames": 2000,
     }
 ).run()
