@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 from matplotlib import pyplot as plt
 import pandas as pd
 import tifffile as tiff
@@ -7,6 +8,8 @@ import numpy as np
 import imageio.v3 as iio
 from os import PathLike
 from IPython.display import Video
+
+from src.utils import gauss1D
 
 
 class Recording:
@@ -43,10 +46,15 @@ class Recording:
         ax = pd.Series(self.np.flatten()).hist(figsize=figsize, bins=bins, edgecolor="white")
         ax.set_yscale("log")
 
-    def avg(self, frame: int, window=1) -> np.ndarray:
+    def avg(self, frame: int, window=1, type: Literal["box", "gauss"] = "box") -> np.ndarray:
         start = max(0, frame - window // 2)
-        end = min(self.frames, frame + (window - (frame - start)))
-        return np.mean(self.np[start:end], axis=0)
+        end = min(self.frames, frame + window // 2)
+        voxel = self.np[start:end]
+
+        if type == "box":
+            return np.mean(voxel, axis=0)
+        elif type == "gauss":
+            return np.tensordot(gauss1D(end - start, mu=frame - start), voxel, axes=([0], [0]))
 
     def __getitem__(self, i):
         return Recording(self.np[i])

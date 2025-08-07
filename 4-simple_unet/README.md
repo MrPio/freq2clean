@@ -10,6 +10,8 @@ Can we train a UNet to enrich the DeepCAD predictions with more fine details whi
 I had an idea. Why not combining a loss on the ground truth `gt` with a loss on the input `x`?
 See `202508051043`, `202508051050`, `202508051059`, ...
 
+The [`lf_hf_tv_loss`](loss.py) got me the best results.
+
 ## Experiments Overview
 |             Trainings              |                           Loss                            | What's changed                                                                                                                                                                                                      |
 | :--------------------------- | :------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

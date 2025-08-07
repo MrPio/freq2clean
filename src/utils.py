@@ -68,7 +68,7 @@ def imshow(
     images: list[Image.Image | np.ndarray | str | Path] | dict[str, Image.Image | np.ndarray | str | Path],
     size=4,
     cols: int = None,
-    cmap=None,
+    cmap="grey",
 ):
     """Plot a list of PIL images in a grid
 
@@ -148,3 +148,11 @@ def pil_stack(imgs, horizontally=True):
         offset += im.width if horizontally else im.height
 
     return new_img
+
+def gauss1D(size, mu=None, sigma=None):
+    if not sigma:
+        sigma = size / 6 # ~99% of Gaussian
+    if not mu:
+        mu = size // 2
+    gaussian_weights = np.exp(-0.5 * ((np.arange(size) - mu) / sigma) ** 2)
+    return gaussian_weights / gaussian_weights.sum()

@@ -14,7 +14,7 @@ from .dataset.noisy_dataset import NoisyDataset
 # Utils
 from .recording import Recording
 from .losses import lf_hf_tv
-from .utils import imshow, cprint, log, get_gpu_memory, tensor2pil, pil_stack
+from .utils import imshow, cprint, log, get_gpu_memory, tensor2pil, pil_stack, gauss1D
 
 # Configuration
 import matplotlib.pyplot as plt
