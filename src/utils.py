@@ -69,6 +69,7 @@ def imshow(
     size=4,
     cols: int = None,
     cmap="grey",
+    vrange=(None, None),
 ):
     """Plot a list of PIL images in a grid
 
@@ -103,7 +104,7 @@ def imshow(
     else:
         axes = [axes]
     for i, img in enumerate(images):
-        axes[i].imshow(img, cmap=cmap)
+        axes[i].imshow(img, cmap=cmap, vmin=vrange[0], vmax=vrange[1])
         if titles:
             axes[i].set_title(titles[i])
         axes[i].axis("off")
@@ -149,9 +150,10 @@ def pil_stack(imgs, horizontally=True):
 
     return new_img
 
+
 def gauss1D(size, mu=None, sigma=None):
     if not sigma:
-        sigma = size / 6 # ~99% of Gaussian
+        sigma = size / 6  # ~99% of Gaussian
     if not mu:
         mu = size // 2
     gaussian_weights = np.exp(-0.5 * ((np.arange(size) - mu) / sigma) ** 2)

@@ -26,7 +26,7 @@ class Recording:
 
     @property
     def normalized(self) -> np.ndarray:
-        return np.clip(normalize(self.np, 1, 99.5), min=0, max=1)
+        return np.clip(normalize(self.np, 0.1, 99.9), min=0, max=1)
 
     def save_sample(self, path: Path | str, length=300):
         tiff.imwrite(str(path), self.np[: min(self.frames, length)], dtype=np.float32)

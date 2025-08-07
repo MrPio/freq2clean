@@ -8,14 +8,22 @@ from src.utils import cprint
 
 class NoisyDataset(Dataset):
     def __init__(
-        self, name, patch_xy=64, frames_per_patch=2, augument=True, max_frames=None, overlap=0.5, verbose=False
+        self,
+        name,
+        patch_xy=64,
+        frames_per_patch=2,
+        augument=True,
+        max_frames=None,
+        overlap=0.5,
+        verbose=False,
+        load_y=False,
     ):
         metadata = DATASETS[name]
         self.patch_xy = patch_xy
-        self.transforms = npy2tensor(metadata.max_val_x)
+        self.transforms = npy2tensor(metadata.max_val_y if load_y else metadata.max_val_x)
         self.frames_per_patch = frames_per_patch
         self.augument = augument
-        self.x = Recording(metadata.path_x, max_frames=max_frames)
+        self.x = Recording(metadata.path_y if load_y else metadata.path_x, max_frames=max_frames)
         self.overlap = overlap
 
         D, H, W = self.x.np.shape
