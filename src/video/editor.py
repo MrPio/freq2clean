@@ -6,6 +6,8 @@ from IPython.display import Video
 
 """ 
 The `Editor` class holds the basic video processing operations used to compare multiple videos.
+
+Note: Ensure you have Magik installed.
 """
 
 
@@ -21,6 +23,10 @@ class Editor:
         bitrate=4500,
         font="SourceCodeVF-Black",
     ):
+        """Create a composed video from a grid of videos.
+        Args:
+            font (str): You can list installed fonts with `convert -list font`
+        """
         clips = []
         for videos_row in array:
             row = []
