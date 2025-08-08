@@ -1,6 +1,6 @@
 from torch.utils.data import Dataset
 from src.dataset.dataset import DATASETS, npy2tensor
-from src.recording import Recording
+from src.video.recording import Recording
 from random import randrange
 
 from src.utils import cprint

@@ -3,17 +3,26 @@ __email__ = "valeriomorelli50@gmail.com"
 __license__ = "Apache-2.0"
 
 
-# Networks
-from .networks import DiffDenoiseUNet, DeepCADImprovementUNet, NextFramesUNet, VideoEncoder, NextFramesUNetStacked
-
 # Dataset
 from .dataset.dataset import DATASETS
 from .dataset.noisy_clean_dataset import NoisyCleanDataset
 from .dataset.noisy_dataset import NoisyDataset
 
+# Networks
+from .networks.networks import (
+    DiffDenoiseUNet,
+    DeepCADImprovementUNet,
+    NextFramesUNet,
+    VideoEncoder,
+    NextFramesUNetStacked,
+)
+from .networks.losses import lf_hf_tv
+
+# Video
+from .video.editor import Editor
+from .video.recording import Recording
+
 # Utils
-from .recording import Recording
-from .losses import lf_hf_tv
 from .utils import imshow, cprint, log, get_gpu_memory, tensor2pil, pil_stack, gauss1D
 
 # Configuration

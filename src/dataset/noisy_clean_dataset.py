@@ -1,6 +1,6 @@
 from torch.utils.data import Dataset
 from src.dataset.dataset import DATASETS, npy2tensor, random_transform
-from src.recording import Recording
+from src.video.recording import Recording
 
 
 class NoisyCleanDataset(Dataset):
