@@ -1,6 +1,6 @@
 from pathlib import Path
 from PIL import Image
-from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, clips_array
+from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, clips_array, concatenate_videoclips
 from tqdm import tqdm
 from IPython.display import Video
 
@@ -19,7 +19,7 @@ class Editor:
         self,
         array: list[dict[str, Path | str]],
         output: Path | str,
-        fontsize=28,
+        fontsize=26,
         bitrate=4500,
         font="SourceCodeVF-Black",
     ):
@@ -39,4 +39,34 @@ class Editor:
                 row.append(CompositeVideoClip([clip, text]))
             clips.append(row)
         clips_array(clips).write_videofile(output, bitrate=f"{bitrate}k")
+        return Video(output)
+
+    def alternate(
+        self,
+        videos: dict[str : Path | str] | list[Path | str],
+        output: Path | str,
+        fontsize=26,
+        bitrate=4500,
+        font="SourceCodeVF-Black",
+        delta=1.0,
+    ):
+        """
+        Create a video alternating every second between videos.
+        """
+        if isinstance(videos, list):
+            videos = {Path(_).stem: _ for _ in videos}
+        clips = [VideoFileClip(str(p)) for _, p in videos.items()]
+        titles = [t for t, _ in videos.items()]
+        duration = min(map(lambda _: _.duration, clips))
+        sequence = []
+        for i in range(int(duration / delta)):
+            idx = i % len(clips)
+            base_clip = clips[idx].subclip(i, i + delta)
+            title = (
+                TextClip(titles[idx], fontsize=fontsize, color="white", font=font)
+                .set_position(("center", "top"))
+                .set_duration(delta)
+            )
+            sequence.append(CompositeVideoClip([base_clip, title]))
+        concatenate_videoclips(sequence, method="compose").write_videofile(str(output), bitrate=f"{bitrate}k")
         return Video(output)
