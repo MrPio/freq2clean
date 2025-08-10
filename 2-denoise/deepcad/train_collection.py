@@ -21,6 +21,7 @@ from skimage import io
 from .movie_display import test_img_display, display_img
 from pathlib import Path
 import pytorch_msssim
+from scipy.fftpack import dctn, idctn
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 from src import *
@@ -328,23 +329,21 @@ class training_class:
                 L1_loss = L1_pixelwise(fake_B, real_B)
                 L2_loss = L2_pixelwise(fake_B, real_B)
                 # lf_hf_yv_loss = lf_hf_tv(fake_B, real_B, lambda_lf=15, lambda_hf=0.5, lambda_tv=1)
-                ssim = pytorch_msssim.ssim(fake_B, real_B, data_range=2.0, size_average=True)
+                # ssim = pytorch_msssim.ssim(fake_B, real_B, data_range=2.0, size_average=True)
 
                 optimizer_G.zero_grad()
 
                 # Calculate total loss
-
-                # Total_loss = (
-                #     0.5 * L1_loss
-                #     + 0.5 * L2_loss
-                #     - 0.0001
-                #     * (
-                #         torch.sum((fake_B[:, :, :, :, 1:] - fake_B[:, :, :, :, :-1]))
-                #         + torch.sum((fake_B[:, :, :, 1:, :] - fake_B[:, :, :, :-1, :]))
-                #         + torch.sum((fake_B[:, :, 1:, :, :] - fake_B[:, :, :-1, :, :]))
-                #     )
-                # )
-                Total_loss = 1 - ssim
+                Total_loss = (
+                    0.5 * L1_loss
+                    + 0.5 * L2_loss
+                    # - 0.005
+                    # * (
+                    #     torch.sum((fake_B[:, :, :, :, 1:] - fake_B[:, :, :, :, :-1]))
+                    #     + torch.sum((fake_B[:, :, :, 1:, :] - fake_B[:, :, :, :-1, :]))
+                    #     + torch.sum((fake_B[:, :, 1:, :, :] - fake_B[:, :, :-1, :, :]))
+                    # )
+                )
                 Total_loss.backward()
                 optimizer_G.step()
                 # Record and estimate the remaining time
@@ -463,6 +462,10 @@ class training_class:
             # Enhanced sub-stacks are sequentially output from the network
             output_image = np.squeeze(fake_B.cpu().detach().numpy())
             raw_image = np.squeeze(real_A.cpu().detach().numpy())
+
+            # output_image = np.stack([idctn(_, type=2, norm="ortho") for _ in output_image])
+            # raw_image = np.stack([idctn(_, type=2, norm="ortho") for _ in raw_image])
+
             if output_image.ndim == 3:
                 postprocess_turn = 1
             else:
