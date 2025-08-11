@@ -4,6 +4,7 @@
 /**/onnx
 *.tif
 *.tiff
+**/*.h5
 
 2-denoise/pth/
 
@@ -19,3 +20,8 @@
 5-next_frame_unet/dataset/
 5-next_frame_unet/pth
 5-next_frame_unet/results/**/pred/
+
+7-cnnt/**/wandb
+7-cnnt/**/*.pth
+7-cnnt/dataset/Denoising
+7-cnnt/train.log

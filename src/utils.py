@@ -1,5 +1,6 @@
 import math
 from pathlib import Path
+import random
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
@@ -47,6 +48,9 @@ def log(*vals, use_log=True):
             v = f"blue:{v}"
         else:
             v = str(v)
+
+        if v.startswith("rand:"):
+            v = v.replace("rand:", f"{random.choice(COLORS)}:")
         for c in COLORS:
             tag = f"{c}:"
             if v.startswith(tag):
