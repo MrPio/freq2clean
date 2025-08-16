@@ -6,6 +6,7 @@ No GPU is required. CWD-dependent. No support for parrallelism.
 import sys
 from pathlib import Path
 import h5py
+import numpy as np
 from tqdm import tqdm
 
 sys.path.append(str(Path("..").resolve()))
@@ -15,6 +16,8 @@ from src import *
 def dataset2hdf5(dataset: str, window, time, patches, out):
     metadata = DATASETS[dataset]
     x, y = (Recording(metadata.dir / f"{_}.tiff", max_frames=None) for _ in ["x", "y"])
+    x.normalize(metadata.max_val_x)
+    y.normalize(metadata.max_val_y)
     x = x.avg(window)
     with h5py.File(out / f"{dataset}.h5", "w") as h5f:
         for i in tqdm(list(range(0, x.frames - time * window, x.frames // patches))[:patches]):

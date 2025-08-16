@@ -44,6 +44,13 @@ class Recording:
     def normalized(self) -> np.ndarray:
         return np.clip(normalize(self.np, 0.1, 99.9), min=0, max=1)
 
+    def normalize(self, a: int, b: int = 2**16 - 1) -> None:
+        """Normalize the maximum value of the `uint16` recording.
+        The range (a, b) indicates the actual and the new max values.
+        Note: this is heavy because casts to `np.float64` and then back to `uint16`
+        """
+        self.np = (self.np / a * b).astype(np.uint16)
+
     def save_sample(self, path: Path | str, length=300):
         tiff.imwrite(str(path), self.np[: min(self.frames, length)], dtype=np.float32)
 
@@ -68,14 +75,14 @@ class Recording:
         voxel = self.np[start:end]
         return self.__AGGREGATIONS[type](voxel, frame, start, end)
 
-    def avg(self, window, type: Literal["box", "gauss"] = "box") -> 'Recording':
-        cleaned = np.empty_like(self.np)
+    def avg(self, window, type: Literal["box", "gauss"] = "box") -> "Recording":
+        averaged = np.empty_like(self.np)
         length = self.frames
         for i in tqdm(range(length)):
             start = max(0, i - window // 2)
             end = min(length, i + window // 2)
-            cleaned[i] = self.__AGGREGATIONS[type](self.np, i, start, end)
-        return Recording(cleaned)
+            averaged[i] = self.__AGGREGATIONS[type](self.np, i, start, end)
+        return Recording(averaged)
 
     def __getitem__(self, i):
         return Recording(self.np[i])
