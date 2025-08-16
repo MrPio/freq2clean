@@ -8,6 +8,7 @@ import numpy as np
 import imageio.v3 as iio
 from os import PathLike
 from IPython.display import Video
+from tqdm import tqdm
 from src.utils import gauss1D
 
 """ 
@@ -21,6 +22,13 @@ You can access the `ndarray` by accessing the `np` property. You also can:
 
 
 class Recording:
+    __AGGREGATIONS = {
+        "box": lambda voxel, frame, start, end: np.mean(voxel[start:end], axis=0),
+        "gauss": lambda voxel, frame, start, end: np.tensordot(
+            gauss1D(end - start, mu=frame - start), voxel, axes=([0], [0])
+        ),
+    }
+
     def __init__(self, video: PathLike | np.ndarray, max_frames: int = 300):
         self.np = (
             video
@@ -54,15 +62,20 @@ class Recording:
         ax = pd.Series(self.np.flatten()).hist(figsize=figsize, bins=bins, edgecolor="white")
         ax.set_yscale("log")
 
-    def avg(self, frame: int, window=1, type: Literal["box", "gauss"] = "box") -> np.ndarray:
+    def avg_frame(self, frame: int, window=1, type: Literal["box", "gauss"] = "box") -> np.ndarray:
         start = max(0, frame - window // 2)
         end = min(self.frames, frame + window // 2)
         voxel = self.np[start:end]
+        return self.__AGGREGATIONS[type](voxel, frame, start, end)
 
-        if type == "box":
-            return np.mean(voxel, axis=0)
-        elif type == "gauss":
-            return np.tensordot(gauss1D(end - start, mu=frame - start), voxel, axes=([0], [0]))
+    def avg(self, window, type: Literal["box", "gauss"] = "box") -> 'Recording':
+        cleaned = np.empty_like(self.np)
+        length = self.frames
+        for i in tqdm(range(length)):
+            start = max(0, i - window // 2)
+            end = min(length, i + window // 2)
+            cleaned[i] = self.__AGGREGATIONS[type](self.np, i, start, end)
+        return Recording(cleaned)
 
     def __getitem__(self, i):
         return Recording(self.np[i])

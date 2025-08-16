@@ -25,3 +25,4 @@
 7-cnnt/**/*.pth
 7-cnnt/dataset/Denoising
 7-cnnt/train.log
+7-cnnt/logs/model/

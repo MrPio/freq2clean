@@ -12,8 +12,7 @@ from torchvision.transforms import ToPILImage
 import torch
 from torch.nn.functional import l1_loss, mse_loss
 
-sys.path.append(str(Path(__file__).resolve().parents[1]))
-from src import *
+
 
 EPOCHS = 10
 SAVE_EVERY = 100

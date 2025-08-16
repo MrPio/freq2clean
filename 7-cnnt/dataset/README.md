@@ -1,6 +1,7 @@
 # Dataset download
 
-Download the [`Denoising.zip`](https://zenodo.org/records/4624364#.YF4lBa9Kgal) dataset, and `unzip` it in this `dataset/` folder. The expected hierarchy is:
+Following the original paper instruction:
+- Download the [`Denoising.zip`](https://zenodo.org/records/4624364#.YF4lBa9Kgal) dataset, and `unzip` it in this `dataset/` folder. The expected hierarchy is:
 
 ```sh
 dataset
@@ -21,4 +22,4 @@ dataset
 │   ├── ...
 ```
 
-Finally, run [`dataset2hdf5.py`](../dataset2hdf5.py) to convert the dataset to HDF5 desired format.
+- Finally, run [`dataset2hdf5.py`](../dataset2hdf5.py) to convert the dataset to HDF5 desired format.
