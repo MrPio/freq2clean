@@ -49,7 +49,7 @@ class Recording:
         The range (a, b) indicates the actual and the new max values.
         Note: this is heavy because casts to `np.float64` and then back to `uint16`
         """
-        self.np = (self.np / a * b).astype(np.uint16)
+        self.np = (self.np / a * b)
 
     def save_sample(self, path: Path | str, length=300):
         tiff.imwrite(str(path), self.np[: min(self.frames, length)], dtype=np.float32)

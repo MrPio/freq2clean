@@ -3,18 +3,17 @@
 #SBATCH --job-name=CNNT
 #SBATCH --output=finetune.log
 #SBATCH --error=finetune.log
-#SBATCH --time=01:00:00
+#SBATCH --time=10:00:00
 #SBATCH --partition=boost_usr_prod
 #SBATCH --gres=gpu:2
-#SBATCH --mem=32G
+#SBATCH --mem=64G
 
 cd /leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/7-cnnt
 
 srun python CNNT_Microscopy/main.py \
---h5files \
-    "dataset/Denoising/Demo.h5" \
---fine_samples 15 \
---test_case "dataset/Denoising/Demo.h5" \
+--h5files "dataset/oabf_astro.h5" \
+--fine_samples 10 \
+--test_case "dataset/oabf_astro.h5" \
 --global_lr 0.000025 --skip_LSUV \
 --num_epochs 30 --batch_size 2 \
 --time 16 --width 128 160 --height 128 160 \
