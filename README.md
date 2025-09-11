@@ -4,3 +4,5 @@
 > **Wait for it**
 > 
 >This repository is still in a experimental state. Plese come back later to (hopefully) witness some good results.
+
+-- FFT for dynamics comparison in DCT
