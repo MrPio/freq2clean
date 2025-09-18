@@ -7,7 +7,6 @@
 **/*.h5
 
 2-denoise/pth/
-
 3-deepcad_improvement_with_diffusion/dataset/
 3-deepcad_improvement_with_diffusion/dataset.zip
 3-deepcad_improvement_with_diffusion/pth
@@ -20,6 +19,8 @@
 5-next_frame_unet/dataset/
 5-next_frame_unet/pth
 5-next_frame_unet/results/**/pred/
+
+6-video_fusion/results/
 
 7-cnnt/**/wandb
 7-cnnt/**/*.pth

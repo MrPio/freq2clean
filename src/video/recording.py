@@ -78,7 +78,7 @@ class Recording:
     def avg(self, window, type: Literal["box", "gauss"] = "box") -> "Recording":
         averaged = np.empty_like(self.np)
         length = self.frames
-        for i in tqdm(range(length)):
+        for i in tqdm(range(length), desc="Averaging frames..."):
             start = max(0, i - window // 2)
             end = min(length, i + window // 2)
             averaged[i] = self.__AGGREGATIONS[type](self.np, i, start, end)

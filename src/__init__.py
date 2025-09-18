@@ -22,6 +22,10 @@ from .networks.losses import lf_hf_tv
 from .video.editor import Editor
 from .video.recording import Recording
 
+# Metrics
+from .metrics.ssim3d import ssim3D
+from .metrics.psnr3d import psnr3d
+
 # Utils
 from .utils import imshow, cprint, log, get_gpu_memory, tensor2pil, pil_stack, gauss1D
 

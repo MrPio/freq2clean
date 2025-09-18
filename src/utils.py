@@ -10,6 +10,7 @@ import subprocess as sp
 from torchvision.transforms import ToPILImage
 import torch
 from csbdeep.utils import normalize
+from scipy.ndimage import zoom as ndi_zoom
 
 logging.basicConfig(
     level="INFO",
@@ -74,6 +75,7 @@ def imshow(
     cols: int = None,
     cmap="grey",
     vrange=(None, None),
+    zoom=1.0,
 ):
     """Plot a list of PIL images in a grid
 
@@ -108,7 +110,7 @@ def imshow(
     else:
         axes = [axes]
     for i, img in enumerate(images):
-        axes[i].imshow(img, cmap=cmap, vmin=vrange[0], vmax=vrange[1])
+        axes[i].imshow(zoom_img(img, zoom), cmap=cmap, vmin=vrange[0], vmax=vrange[1])
         if titles:
             axes[i].set_title(titles[i])
         axes[i].axis("off")
@@ -162,3 +164,11 @@ def gauss1D(size, mu=None, sigma=None):
         mu = size // 2
     gaussian_weights = np.exp(-0.5 * ((np.arange(size) - mu) / sigma) ** 2)
     return gaussian_weights / gaussian_weights.sum()
+
+
+def zoom_img(x, factor: float = 1):
+    x = np.array(x)
+    h, w = x.shape[:2]
+    new_h, new_w = int(h / factor), int(w / factor)
+    top, left = (h - new_h) // 2, (w - new_w) // 2
+    return x[top : top + new_h, left : left + new_w]
