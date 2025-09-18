@@ -20,14 +20,14 @@ logging.basicConfig(
 logger = logging.getLogger("src")
 
 COLORS = [
-    "black",
+    # "black",
     "red",
     "green",
     "yellow",
     "blue",
     "magenta",
     "cyan",
-    "white",
+    # "white",
     "light_grey",
     "dark_grey",
     "light_red",
@@ -37,10 +37,13 @@ COLORS = [
     "light_magenta",
     "light_cyan",
 ]
+__counter = 0
 
 
-def log(*vals, use_log=True):
+def cprint(*vals, sep=""):
     """Log values, highlighting any prefixed by a color tag (e.g., 'red:error')."""
+    global __counter
+    __counter = 0
 
     def fmt(v):
         if isinstance(v, (int, float)):
@@ -51,22 +54,17 @@ def log(*vals, use_log=True):
             v = str(v)
 
         if v.startswith("rand:"):
-            v = v.replace("rand:", f"{random.choice(COLORS)}:")
+            global __counter
+            v = v.replace("rand:", f"{COLORS[__counter%len(COLORS)]}:")
+            __counter += 1
         for c in COLORS:
             tag = f"{c}:"
             if v.startswith(tag):
-                return f"[bold {c}]{v[len(tag):]}[/bold {c}]" if use_log else colored(v[len(tag) :], c, attrs=["bold"])
+                return colored(v[len(tag) :], c, attrs=["bold"])
         return v
 
     vals = map(fmt, vals)
-    if use_log:
-        logger.info(" ".join(vals))
-    else:
-        print(*vals)
-
-
-def cprint(*vals):
-    log(*vals, use_log=False)
+    print(*vals, sep=sep)
 
 
 def imshow(

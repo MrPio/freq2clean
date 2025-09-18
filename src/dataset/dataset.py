@@ -7,7 +7,7 @@ _ROOT_DIR = Path(__file__).parents[2]
 
 
 class DatasetMetadata:
-    def __init__(self, dir, max_value_x, max_value_y):
+    def __init__(self, dir, max_value_x=None, max_value_y=None):
         self.dir = _ROOT_DIR / dir
         self.path_x = self.dir / "x.tiff"
         self.path_y = self.dir / "y.tiff"
@@ -21,16 +21,9 @@ DATASETS = {
         max_value_x=14_207,
         max_value_y=6_521,
     ),
-    "oabf_vpm": DatasetMetadata(
-        dir="dataset/oabf/vpm",
-        max_value_x=None,
-        max_value_y=None,
-    ),
-    "oabf_resonant_neuro": DatasetMetadata(
-        dir="dataset/oabf/resonant_neuro",
-        max_value_x=None,
-        max_value_y=None,
-    ),
+    "oabf_vpm": DatasetMetadata(dir="dataset/oabf/vpm"),
+    "oabf_resonant_neuro": DatasetMetadata(dir="dataset/oabf/resonant_neuro"),
+    "synthetic": DatasetMetadata(dir="dataset/zenodo/synthetic"),
 }
 
 

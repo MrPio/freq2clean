@@ -27,7 +27,7 @@ from .metrics.ssim3d import ssim3D
 from .metrics.psnr3d import psnr3d
 
 # Utils
-from .utils import imshow, cprint, log, get_gpu_memory, tensor2pil, pil_stack, gauss1D
+from .utils import imshow, cprint, get_gpu_memory, tensor2pil, pil_stack, gauss1D
 
 # Configuration
 import matplotlib.pyplot as plt
