@@ -40,7 +40,7 @@ COLORS = [
 __counter = 0
 
 
-def cprint(*vals, sep=""):
+def cprint(*vals, sep=" "):
     """Log values, highlighting any prefixed by a color tag (e.g., 'red:error')."""
     global __counter
     __counter = 0
