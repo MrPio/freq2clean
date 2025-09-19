@@ -33,7 +33,7 @@ class Editor:
             if isinstance(videos_row, list):
                 videos_row = {Path(_).stem: _ for _ in videos_row}
             for title, video in videos_row.items():
-                clip = VideoFileClip(video)
+                clip = VideoFileClip(str(video))
                 text = TextClip(title, fontsize=fontsize, color="white", font=font)
                 text = text.set_position(("center", "top")).set_duration(clip.duration)
                 row.append(CompositeVideoClip([clip, text]))
