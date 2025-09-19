@@ -54,14 +54,14 @@ class Recording:
     def save_sample(self, path: Path | str, length=300):
         tiff.imwrite(str(path), self.np[: min(self.frames, length)], dtype=np.float32)
 
-    def render(self, path: Path | str, start=None, end=None, bitrate=4500, fps=30):
+    def render(self, path: Path | str, start=None, end=None, bitrate=4000, fps=30, codec="libx265", silent=True):
         iio.imwrite(
             uri=str(path),
             image=(self.normalized * 255).astype(np.uint8),
             fps=fps,
-            codec="libx265",
+            codec=codec,
             bitrate=f"{bitrate}k",
-            output_params=["-loglevel", "quiet"],
+            output_params=["-loglevel", "quiet"] if silent else [],
         )
         return Video(path)
 
