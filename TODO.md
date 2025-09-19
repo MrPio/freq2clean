@@ -25,3 +25,7 @@
 - FPS Augumentation with DeepCAD?
 - CARE (sup)
 - 3D-RCAN (sup)
+
+# Video Fusion
+- DCT vs FFT
+- plot average PSNR vs GT

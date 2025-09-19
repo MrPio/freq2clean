@@ -22,6 +22,7 @@ class Editor:
         fontsize=26,
         bitrate=4500,
         font="SourceCodeVF-Black",
+        codec="libx265"
     ):
         """Create a composed video from a grid of videos.
         Args:
@@ -38,7 +39,7 @@ class Editor:
                 text = text.set_position(("center", "top")).set_duration(clip.duration)
                 row.append(CompositeVideoClip([clip, text]))
             clips.append(row)
-        clips_array(clips).write_videofile(output, bitrate=f"{bitrate}k", codec="libx265")
+        clips_array(clips).write_videofile(str(output), bitrate=f"{bitrate}k", codec=codec)
         return Video(output)
 
     def alternate(
@@ -49,6 +50,7 @@ class Editor:
         bitrate=4500,
         font="SourceCodeVF-Black",
         delta=1.0,
+        codec="libx265"
     ):
         """
         Create a video alternating every second between videos.
@@ -69,6 +71,6 @@ class Editor:
             )
             sequence.append(CompositeVideoClip([base_clip, title]))
         concatenate_videoclips(sequence, method="compose").write_videofile(
-            str(output), bitrate=f"{bitrate}k", codec="libx265"
+            str(output), bitrate=f"{bitrate}k", codec=codec
         )
         return Video(output)
