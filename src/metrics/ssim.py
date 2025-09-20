@@ -55,21 +55,26 @@ def __gaussian(window_size, sigma):
     return gauss / gauss.sum()
 
 
-def ssim3d(img1, img2, window_size=11, size_average=True, device="cuda"):
+def ssim3d(vox1, vox2, window_size=11, size_average=True, device="cuda"):
     """Data must be normalized [0,1]"""
-    if isinstance(img1, np.ndarray) and isinstance(img2, np.ndarray):
-        img1 = torch.from_numpy(img1).unsqueeze(0).unsqueeze(0).float().to(device)  # -> (N=1,C=1,D,H,W)
-        img2 = torch.from_numpy(img2).unsqueeze(0).unsqueeze(0).float().to(device)  # -> (N=1,C=1,D,H,W)
+    if isinstance(vox1, Recording):
+        vox1 = vox1.np
+    if isinstance(vox2, Recording):
+        vox2 = vox2.np
+
+    if isinstance(vox1, np.ndarray) and isinstance(vox2, np.ndarray):
+        vox1 = torch.from_numpy(vox1).unsqueeze(0).unsqueeze(0).float().to(device)  # -> (N=1,C=1,D,H,W)
+        vox2 = torch.from_numpy(vox2).unsqueeze(0).unsqueeze(0).float().to(device)  # -> (N=1,C=1,D,H,W)
 
     with torch.no_grad():
-        (_, channel, _, _, _) = img1.size()
+        (_, channel, _, _, _) = vox1.size()
         window = __create_window_3D(window_size, channel)
 
-        if img1.is_cuda:
-            window = window.cuda(img1.get_device())
-        window = window.type_as(img1)
+        if vox1.is_cuda:
+            window = window.cuda(vox1.get_device())
+        window = window.type_as(vox1)
 
-        return __ssim_3d(img1, img2, window, window_size, channel, size_average).item()
+        return __ssim_3d(vox1, vox2, window, window_size, channel, size_average).item()
 
 
 def ssim(img1: np.ndarray | Recording, img2: np.ndarray | Recording, data_range=1):

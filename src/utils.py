@@ -1,10 +1,13 @@
 import math
+import os
 from pathlib import Path
 import random
+from time import time_ns
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 import logging
+import psutil
 from termcolor import colored
 import subprocess as sp
 from torchvision.transforms import ToPILImage
@@ -38,7 +41,7 @@ COLORS = [
     "light_cyan",
 ]
 __counter = 0
-
+__eta=time_ns()
 
 def cprint(*vals, sep=" "):
     """Log values, highlighting any prefixed by a color tag (e.g., 'red:error')."""
@@ -123,6 +126,18 @@ def get_gpu_memory():
     return memory_free_values
 
 
+def get_cpu_memory():
+    process = psutil.Process(os.getpid())
+    used = process.memory_info().rss / (1024**3)
+    free = psutil.virtual_memory().available / (1024**3)
+    return used, free
+
+
+def print_mem():
+    cpu_used, cpu_free = get_cpu_memory()
+    return f"{cpu_used:.1f}/{cpu_free:.1f} GiB"
+
+
 def tensor2pil(tensor: torch.Tensor):
     img = tensor.cpu().detach().numpy()
     img -= np.min(img)
@@ -170,3 +185,6 @@ def zoom_img(x, factor: float = 1):
     new_h, new_w = int(h / factor), int(w / factor)
     top, left = (h - new_h) // 2, (w - new_w) // 2
     return x[top : top + new_h, left : left + new_w]
+
+def eta():
+    return (time_ns() - __eta) // 10**9
