@@ -23,7 +23,7 @@ You can access the `ndarray` by accessing the `np` property. You also can:
 
 class Recording:
     __AGGREGATIONS = {
-        "box": lambda voxel, frame, start, end: np.mean(voxel[start:end], axis=0),
+        "box": lambda voxel, frame, start, end: np.mean(voxel, axis=0),
         "gauss": lambda voxel, frame, start, end: np.tensordot(
             gauss1D(end - start, mu=frame - start), voxel, axes=([0], [0])
         ),
@@ -49,7 +49,7 @@ class Recording:
         The range (a, b) indicates the actual and the new max values.
         Note: this is heavy because casts to `np.float64` and then back to `uint16`
         """
-        self.np = (self.np / a * b)
+        self.np = self.np / a * b
 
     def save_sample(self, path: Path | str, length=300):
         tiff.imwrite(str(path), self.np[: min(self.frames, length)], dtype=np.float32)
@@ -70,6 +70,8 @@ class Recording:
         ax.set_yscale("log")
 
     def avg_frame(self, frame: int, window=1, type: Literal["box", "gauss"] = "box") -> np.ndarray:
+        if window == 1:
+            return self.np[frame]
         start = max(0, frame - window // 2)
         end = min(self.frames, frame + window // 2)
         voxel = self.np[start:end]

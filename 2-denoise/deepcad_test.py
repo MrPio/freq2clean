@@ -8,7 +8,7 @@ testing_class(
         "patch_t": 150,  # the time dimension (frames) of 3D patches
         "overlap_factor": 0.6,  # overlap factor,
         "scale_factor": 1,  # the factor for image intensity scaling
-        "test_datasize": 6000,  # the number of frames to be tested
+        "test_datasize": 1200,  # the number of frames to be tested
         "datasets_path": "dataset/synthetic",  # folder containing all files to be tested
         "pth_dir": "./pth",  # pth file root path
         "denoise_model": "synthetic_202509191151",  # A folder containing all models to be tested

@@ -8,8 +8,11 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from math import exp
 
+from src.video.recording import Recording
+from skimage.metrics import structural_similarity
 
-def _ssim_3D(img1, img2, window, window_size, channel, size_average=True):
+
+def __ssim_3d(img1, img2, window, window_size, channel, size_average=True):
     mu1 = F.conv3d(img1, window, padding=window_size // 2, groups=channel)
     mu2 = F.conv3d(img2, window, padding=window_size // 2, groups=channel)
 
@@ -33,8 +36,8 @@ def _ssim_3D(img1, img2, window, window_size, channel, size_average=True):
         return ssim_map.mean(1).mean(1).mean(1).mean(1)
 
 
-def _create_window_3D(window_size, channel):
-    _1D_window = _gaussian(window_size, 1.5).unsqueeze(1)
+def __create_window_3D(window_size, channel):
+    _1D_window = __gaussian(window_size, 1.5).unsqueeze(1)
     _2D_window = _1D_window.mm(_1D_window.t())
     _3D_window = (
         _1D_window.mm(_2D_window.reshape(1, -1))
@@ -47,12 +50,12 @@ def _create_window_3D(window_size, channel):
     return window
 
 
-def _gaussian(window_size, sigma):
+def __gaussian(window_size, sigma):
     gauss = torch.Tensor([exp(-((x - window_size // 2) ** 2) / float(2 * sigma**2)) for x in range(window_size)])
     return gauss / gauss.sum()
 
 
-def ssim3D(img1, img2, window_size=11, size_average=True, device="cuda"):
+def ssim3d(img1, img2, window_size=11, size_average=True, device="cuda"):
     """Data must be normalized [0,1]"""
     if isinstance(img1, np.ndarray) and isinstance(img2, np.ndarray):
         img1 = torch.from_numpy(img1).unsqueeze(0).unsqueeze(0).float().to(device)  # -> (N=1,C=1,D,H,W)
@@ -60,10 +63,21 @@ def ssim3D(img1, img2, window_size=11, size_average=True, device="cuda"):
 
     with torch.no_grad():
         (_, channel, _, _, _) = img1.size()
-        window = _create_window_3D(window_size, channel)
+        window = __create_window_3D(window_size, channel)
 
         if img1.is_cuda:
             window = window.cuda(img1.get_device())
         window = window.type_as(img1)
 
-        return _ssim_3D(img1, img2, window, window_size, channel, size_average).item()
+        return __ssim_3d(img1, img2, window, window_size, channel, size_average).item()
+
+
+def ssim(img1: np.ndarray | Recording, img2: np.ndarray | Recording, data_range=1):
+    """Peak Signal to Noise Ratio.
+    data_range: distance between minimum and maximum possible values.
+    """
+    if isinstance(img1, Recording):
+        img1 = img1.np
+    if isinstance(img2, Recording):
+        img2 = img2.np
+    return structural_similarity(img1, img2, data_range=data_range)

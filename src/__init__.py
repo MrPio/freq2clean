@@ -23,8 +23,8 @@ from .video.editor import Editor
 from .video.recording import Recording
 
 # Metrics
-from .metrics.ssim3d import ssim3D
-from .metrics.psnr3d import psnr3d
+from .metrics.ssim import ssim, ssim3d
+from .metrics.psnr import psnr, psnr3d
 from .metrics.ale import ale
 
 # Utils
@@ -35,13 +35,17 @@ import matplotlib.pyplot as plt
 
 plt.rcParams.update(
     {
-        "font.size": 13,
-        "axes.titlesize": 13,
-        "axes.labelsize": 13,
+        "font.size": 14,
+        "axes.titlesize": 14,
+        "axes.labelsize": 14,
         "axes.grid": True,
         "grid.linestyle": "--",
     }
 )
+# Used libraries
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
 
 # Constants
 from pathlib import Path
