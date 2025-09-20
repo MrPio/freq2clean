@@ -26,6 +26,7 @@ from .video.recording import Recording
 from .metrics.ssim import ssim, ssim3d
 from .metrics.psnr import psnr, psnr3d
 from .metrics.ale import ale
+from .metrics.pearson import pearson3d
 
 # Utils
 from .utils import imshow, cprint, get_gpu_memory, tensor2pil, pil_stack, gauss1D
