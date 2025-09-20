@@ -1,6 +1,7 @@
 from pathlib import Path
 from PIL import Image
 from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, clips_array, concatenate_videoclips
+import moviepy.video.fx.all as vfx
 from tqdm import tqdm
 from IPython.display import Video
 
@@ -22,7 +23,10 @@ class Editor:
         fontsize=26,
         bitrate=4500,
         font="SourceCodeVF-Black",
-        codec="libx265"
+        codec="libx265",
+        duration=None,
+        zoom=None,
+        speed=None,
     ):
         """Create a composed video from a grid of videos.
         Args:
@@ -35,8 +39,17 @@ class Editor:
                 videos_row = {Path(_).stem: _ for _ in videos_row}
             for title, video in videos_row.items():
                 clip = VideoFileClip(str(video))
-                text = TextClip(title, fontsize=fontsize, color="white", font=font)
-                text = text.set_position(("center", "top")).set_duration(clip.duration)
+                if speed:
+                    clip = vfx.speedx(clip, factor=speed)
+                if duration:
+                    clip = clip.set_duration(duration)
+                if zoom:
+                    w, h = clip.size
+                    new_w = int(w / zoom)
+                    new_h = int(h / zoom)
+                    clip = vfx.crop(clip, width=new_w, height=new_h, x_center=w / 2, y_center=h / 2)
+                text = TextClip(title, fontsize=fontsize / (zoom**0.5), color="white", font=font)
+                text = text.set_position(("center", "top")).set_duration(duration if duration else clip.duration)
                 row.append(CompositeVideoClip([clip, text]))
             clips.append(row)
         clips_array(clips).write_videofile(str(output), bitrate=f"{bitrate}k", codec=codec)
@@ -50,7 +63,7 @@ class Editor:
         bitrate=4500,
         font="SourceCodeVF-Black",
         delta=1.0,
-        codec="libx265"
+        codec="libx265",
     ):
         """
         Create a video alternating every second between videos.
