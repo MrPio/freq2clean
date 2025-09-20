@@ -72,7 +72,7 @@ def test(frames, alphas, ssim3d_step=4, save=False):
     # Metrics
     if save:
         cprint("yellow:Saving results...", f"[{print_mem()}]", f"[{elapsed()}s]")
-        np.save(RES_DIR / f"fused_{suffx}.npy", fused)
+        np.save(RES_DIR / f"ftt_fused_{suffx}.npy", fused)
 
     cprint("yellow:Computing PSNR3D...", f"[{print_mem()}]", f"[{elapsed()}s]")
     psnr_ = psnr3d(gt.np[:end], fused[:end], data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
@@ -82,8 +82,6 @@ def test(frames, alphas, ssim3d_step=4, save=False):
     df.loc[suffx] = [psnr_, ssim_]
     df.to_csv(METRICS_PATH)
     cprint("\tPSNR3D=", f"cyan:{psnr_:.2f}", "SSIM3D=", f"cyan:{ssim_:.2f}", f"[{print_mem()}]", f"[{elapsed()}s]")
-
-    return fused
 
 
 FRAMES = 1_000
@@ -97,4 +95,4 @@ FRAMES = 1_000
 #     for frames in tqdm([20, 50, 100, 300, 600, 1200, 3000, 6000]):
 #     test(frames=frames, alphas=ALPHAS)
 
-test(frames=1_000, alphas=[0.8], ssim3d_step=1, save=True)
+test(frames=1_000, alphas=[0.8], ssim3d_step=4, save=True)

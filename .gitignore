@@ -21,6 +21,7 @@
 5-next_frame_unet/results/**/pred/
 
 6-video_fusion/results/
+6-video_fusion/best/
 
 7-cnnt/**/wandb
 7-cnnt/**/*.pth

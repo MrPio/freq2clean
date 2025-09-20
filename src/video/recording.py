@@ -11,6 +11,7 @@ from IPython.display import Video
 from tqdm import tqdm
 from src.utils import gauss1D
 from multiprocessing import Pool
+from scipy.ndimage import uniform_filter1d
 
 """ 
 The `Recording` is the high-level abstraction of a TIFF/TIF file.
@@ -86,20 +87,10 @@ class Recording:
             averaged[i] = self.__AGGREGATIONS[type](self.np[start:end], i, start, end)
         return Recording(averaged)
 
-    def __avg_process(self, i, window):
-        start = max(0, i - window // 2)
-        end = min(self.frames, i + window // 2)
-        return np.mean(self.np[start:end], axis=0)
-
-    def avg_parallel(self, window, cpus=1) -> np.ndarray:
-        args = [(i, window) for i in range(self.frames)]
-        with Pool(cpus) as pool:
-            result = tqdm(
-                pool.imap(self.__avg_process, args),
-                total=self.frames,
-                desc="Averaging frames...",
-            )
-        return np.array(list(result))
+    def avg_fast(self, window) -> np.ndarray:
+        if window <= 1:
+            return self.np
+        return uniform_filter1d(self.np, size=window, axis=0, mode="reflect")
 
     def __getitem__(self, i):
         return Recording(self.np[i])
