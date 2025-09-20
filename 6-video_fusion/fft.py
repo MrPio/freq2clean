@@ -8,7 +8,7 @@ FILE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(FILE_DIR.parent))
 from src import *
 
-METRICS_PATH = Path("fft_syntethic_metrics_alpha.csv")
+METRICS_PATH = Path("fft_syntethic_metrics.csv")
 
 # Init
 cprint("red:Loading Dataset...", f"[{print_mem()}]", f"[{elapsed()}s]")
@@ -84,7 +84,7 @@ def test(frames, alphas, ssim3d_step=4, save=False):
     cprint("\tPSNR3D=", f"cyan:{psnr_:.2f}", "SSIM3D=", f"cyan:{ssim_:.2f}", f"[{print_mem()}]", f"[{elapsed()}s]")
 
 
-FRAMES = 1_000
+# FRAMES = 1_000
 # for alpha in tqdm([0.1 * i for i in range(1, 11)]):
 #     test(frames=FRAMES, alphas=[alpha])
 
@@ -95,4 +95,5 @@ FRAMES = 1_000
 #     for frames in tqdm([20, 50, 100, 300, 600, 1200, 3000, 6000]):
 #     test(frames=frames, alphas=ALPHAS)
 
+# BEST
 test(frames=1_000, alphas=[0.8], ssim3d_step=4, save=True)
