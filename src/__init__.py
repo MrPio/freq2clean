@@ -29,7 +29,7 @@ from .metrics.ale import ale
 from .metrics.pearson import pearson3d
 
 # Utils
-from .utils import imshow, cprint, get_gpu_memory, get_cpu_memory, print_mem, tensor2pil, pil_stack, gauss1D, eta
+from .utils import imshow, cprint, get_gpu_memory, get_cpu_memory, print_mem, tensor2pil, pil_stack, gauss1D, elapsed
 
 # Configuration
 import matplotlib.pyplot as plt

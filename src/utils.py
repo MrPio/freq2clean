@@ -186,5 +186,5 @@ def zoom_img(x, factor: float = 1):
     top, left = (h - new_h) // 2, (w - new_w) // 2
     return x[top : top + new_h, left : left + new_w]
 
-def eta():
+def elapsed():
     return (time_ns() - __eta) // 10**9
