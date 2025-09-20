@@ -10,6 +10,7 @@ from os import PathLike
 from IPython.display import Video
 from tqdm import tqdm
 from src.utils import gauss1D
+from multiprocessing import Pool
 
 """ 
 The `Recording` is the high-level abstraction of a TIFF/TIF file.
@@ -74,8 +75,7 @@ class Recording:
             return self.np[frame]
         start = max(0, frame - window // 2)
         end = min(self.frames, frame + window // 2)
-        voxel = self.np[start:end]
-        return self.__AGGREGATIONS[type](voxel, frame, start, end)
+        return self.__AGGREGATIONS[type](self.np[start:end], frame, start, end)
 
     def avg(self, window, type: Literal["box", "gauss"] = "box") -> "Recording":
         averaged = np.empty_like(self.np)
@@ -83,8 +83,23 @@ class Recording:
         for i in tqdm(range(length), desc="Averaging frames..."):
             start = max(0, i - window // 2)
             end = min(length, i + window // 2)
-            averaged[i] = self.__AGGREGATIONS[type](self.np, i, start, end)
+            averaged[i] = self.__AGGREGATIONS[type](self.np[start:end], i, start, end)
         return Recording(averaged)
+
+    def __avg_process(self, i, window):
+        start = max(0, i - window // 2)
+        end = min(self.frames, i + window // 2)
+        return np.mean(self.np[start:end], axis=0)
+
+    def avg_parallel(self, window, cpus=1) -> np.ndarray:
+        args = [(i, window) for i in range(self.frames)]
+        with Pool(cpus) as pool:
+            result = tqdm(
+                pool.imap(self.__avg_process, args),
+                total=self.frames,
+                desc="Averaging frames...",
+            )
+        return np.array(list(result))
 
     def __getitem__(self, i):
         return Recording(self.np[i])
