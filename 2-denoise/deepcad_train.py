@@ -13,7 +13,7 @@ training_class(
     {
         "patch_x": 150,  # the width of 3D patches
         "patch_y": 150,  # the height of 3D patches
-        "patch_t": 15,  # the time dimension (frames) of 3D patches
+        "patch_t": 300,  # the time dimension (frames) of 3D patches
         "overlap_factor": 0.4,  # overlap factor
         "scale_factor": 1,  # the factor for image intensity scaling
         "select_img_num": 1000,  # select the number of frames used for training

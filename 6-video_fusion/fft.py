@@ -8,7 +8,8 @@ FILE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(FILE_DIR.parent))
 from src import *
 
-METRICS_PATH = Path("fft_syntethic_metrics_patcht15_150.csv")
+deepcad_suffx="300-300"
+METRICS_PATH = Path(f"fft_syntethic_metrics_patcht{deepcad_suffx}.csv")
 
 # Init
 cprint("red:Loading Dataset...", f"[{print_mem()}]", f"[{elapsed()}s]")
@@ -16,7 +17,7 @@ ds_dir = DATASETS["synthetic"].dir
 x_path = ds_dir / "noise_1Q_-5.52dBSNR_490x490x6000.tif"
 
 # y_path = ds_dir / "deepcad_E_10_test_patcht_30_test_150.tif"
-y_path = "../2-denoise/results/DataFolderIs_synthetic_202509211422_ModelFolderIs_synthetic_202509211352/E_10_Iter_1200/xf_E_10_Iter_1200_output.tif"
+y_path = "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/2-denoise/results/DataFolderIs_synthetic_202509211545_ModelFolderIs_synthetic_202509211437/E_10_Iter_1296/xf_E_10_Iter_1296_output.tif"
 
 gt_path = ds_dir / "clean_30Hz_490x490x6000.tif"
 x, y, gt = (Recording(_, max_frames=None) for _ in [x_path, y_path, gt_path])
@@ -75,7 +76,7 @@ def test(frames, alphas, ssim3d_step=4, save=False):
     # Metrics
     if save:
         cprint("yellow:Saving results...", f"[{print_mem()}]", f"[{elapsed()}s]")
-        np.save(RES_DIR / f"ftt_fused_{suffx}.npy", fused)
+        np.save(RES_DIR / f"ftt_fused_{suffx}_{deepcad_suffx}.npy", fused)
 
     cprint("yellow:Computing PSNR3D...", f"[{print_mem()}]", f"[{elapsed()}s]")
     psnr_ = psnr3d(gt.np[:end], fused[:end], data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
