@@ -7,12 +7,13 @@ _ROOT_DIR = Path(__file__).parents[2]
 
 
 class DatasetMetadata:
-    def __init__(self, dir, max_value_x=None, max_value_y=None):
+    def __init__(self, dir, data_range=2**16, max_value_x=None, max_value_y=None):
         self.dir = _ROOT_DIR / dir
         self.path_x = self.dir / "x.tiff"
         self.path_y = self.dir / "y.tiff"
         self.max_val_x = max_value_x
         self.max_val_y = max_value_y
+        self.data_range = data_range
 
 
 DATASETS = {
@@ -23,7 +24,10 @@ DATASETS = {
     ),
     "oabf_vpm": DatasetMetadata(dir="dataset/oabf/vpm"),
     "oabf_resonant_neuro": DatasetMetadata(dir="dataset/oabf/resonant_neuro"),
-    "synthetic": DatasetMetadata(dir="dataset/zenodo/synthetic"),
+    "synthetic": DatasetMetadata(
+        dir="dataset/zenodo/synthetic", data_range=1_520
+    ),  # 1_520 is the 99.9% Quantile of GT
+    "zebrafish": DatasetMetadata(dir="dataset/zenodo/zebrafish", data_range=32_767),
 }
 
 

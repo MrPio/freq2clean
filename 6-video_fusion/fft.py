@@ -3,26 +3,26 @@ from pathlib import Path
 from time import time_ns
 from skimage.exposure import match_histograms
 from tqdm import trange
-import cupy as cp
 
 FILE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(FILE_DIR.parent))
 from src import *
 
-deepcad_suffx = "15-150-2"
-METRICS_PATH = Path(f"fft_syntethic_metrics_patcht{deepcad_suffx}.csv")
+deepcad_suffx = "60-150"
+dataset = "zebrafish"
+y_path = "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/2-denoise/results/DataFolderIs_zebrafish_202509211737_ModelFolderIs_zebrafish_202509211717/E_10_Iter_1812/xf_E_10_Iter_1812_output.tif"
 
 # Init
+METRICS_PATH = Path(f"fft_{dataset}_metrics_patcht{deepcad_suffx}.csv")
 cprint("red:Loading Dataset...", f"[{print_mem()}]", f"[{elapsed()}s]")
-ds_dir = DATASETS["synthetic"].dir
-x_path = ds_dir / "noise_1Q_-5.52dBSNR_490x490x6000.tif"
-
+metadata = DATASETS[dataset]
+x_path = metadata.dir / "x.tif"
 # y_path = ds_dir / "deepcad_E_10_test_patcht_30_test_150.tif"
-y_path = "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/2-denoise/results/DataFolderIs_synthetic_202509211422_ModelFolderIs_synthetic_202509211352/E_10_Iter_1200/xf_E_10_Iter_1200_output.tif"
-
-gt_path = ds_dir / "clean_30Hz_490x490x6000.tif"
+gt_path = metadata.dir / "gt.tif"
 x, y, gt = (Recording(_, max_frames=None) for _ in [x_path, y_path, gt_path])
-RES_DIR = FILE_DIR / "results/synthetic/"
+x.np = x.np[: y.frames]
+gt.np = gt.np[: y.frames]
+RES_DIR = FILE_DIR / f"results/{dataset}/"
 RES_DIR.mkdir(exist_ok=True)
 
 # Freq0 as Averaged Frame
@@ -40,20 +40,23 @@ def test(frames, alphas, ssim3d_step=4, save=False):
         else pd.DataFrame(columns=["suffx", "PSNR", "SSIM"]).set_index("suffx")
     )
     if "deepcad" not in df.index:
-        # cprint("red:Initializing metrics...", f"[{print_mem()}]", f"[{elapsed()}s]")
-        # psnr_ = psnr3d(gt, y, data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
-        # ssim_ = ssim3d(gt.np[::ssim3d_step], y.np[::ssim3d_step])
-        # df.loc["deepcad"] = [psnr_, ssim_]
-        # df.to_csv(METRICS_PATH)
-        # cprint(
-        #     "\tDeepCAD --> PSNR3D=",
-        #     f"cyan:{psnr_:.2f}",
-        #     "SSIM3D=",
-        #     f"cyan:{ssim_:.2f}",
-        #     f"[{print_mem()}]",
-        #     f"[{elapsed()}s]",
-        # )
-        df.loc["deepcad"] = [0, 0]
+        cprint("red:Initializing metrics...", f"[{print_mem()}]", f"[{elapsed()}s]")
+        psnr_ = psnr3d(gt, y, data_range=metadata.data_range)
+        ssim_ = ssim3d(
+            Recording(gt.np[::ssim3d_step]).normalized,
+            Recording(y.np[::ssim3d_step]).normalized,
+        )
+        df.loc["deepcad"] = [psnr_, ssim_]
+        df.to_csv(METRICS_PATH)
+        cprint(
+            "\tDeepCAD --> PSNR3D=",
+            f"cyan:{psnr_:.2f}",
+            "SSIM3D=",
+            f"cyan:{ssim_:.2f}",
+            f"[{print_mem()}]",
+            f"[{elapsed()}s]",
+        )
+        # df.loc["deepcad"] = [0, 0]
 
     def fft_fusion(vox):
         # FFT
@@ -92,13 +95,10 @@ def test(frames, alphas, ssim3d_step=4, save=False):
         fused = np.fft.irfft(X, n=vox.shape[0], axis=0)
         return fused
 
-    def fft_fusion_gpu(
-        vox: np.ndarray,
-        eps: float = 1e-12
-    ) -> cp.ndarray:
-        vox_gpu=cp.asarray(vox)
-        x_mean_gpu=cp.asarray(x_mean)
-        
+    def fft_fusion_gpu(vox: np.ndarray, eps=1e-12) -> np.ndarray:
+        vox_gpu = cp.asarray(vox)
+        x_mean_gpu = cp.asarray(x_mean)
+
         X = cp.fft.rfft(vox_gpu, axis=0)
         mag = cp.abs(X)
         mag0 = mag[0]
@@ -114,22 +114,25 @@ def test(frames, alphas, ssim3d_step=4, save=False):
         if cp.any(zero_mask):
             X[0, zero_mask] = mag0_new[zero_mask].astype(X.dtype)
         return cp.fft.irfft(X, n=vox_gpu.shape[0], axis=0).get()
-    
-    
+
     fused = np.empty_like(y.np)
     for i in trange(x.frames // frames, desc="FFT fusion...", colour="cyan"):
         start = i * frames
         end = start + frames
-        fused[start:end] = fft_fusion_gpu(y.np[start:end])
+        fused[start:end] = (fft_fusion_gpu if CUPY_AVAILABLE else fft_fusion_optimized)(y.np[start:end])
+
     # Metrics
     if save:
         cprint("yellow:Saving results...", f"[{print_mem()}]", f"[{elapsed()}s]")
-        np.save(RES_DIR / f"ftt_fused_{suffx}_{deepcad_suffx}.npy", fused)
+        np.save(RES_DIR / f"ftt_{dataset}_{suffx}_{deepcad_suffx}.npy", fused)
 
     cprint("yellow:Computing PSNR3D...", f"[{print_mem()}]", f"[{elapsed()}s]")
-    psnr_ = psnr3d(gt.np[:end], fused[:end], data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
+    psnr_ = psnr3d(gt.np[:end], fused[:end], data_range=metadata.data_range)
     cprint("yellow:Computing SSIM3D...", f"[{print_mem()}]", f"[{elapsed()}s]")
-    ssim_ = ssim3d(gt.np[:end:ssim3d_step], fused[:end:ssim3d_step])
+    ssim_ = ssim3d(
+        Recording(gt.np[:end:ssim3d_step]).normalized,
+        Recording(fused[:end:ssim3d_step]).normalized,
+    )
 
     df.loc[suffx] = [psnr_, ssim_]
     df.to_csv(METRICS_PATH)

@@ -44,9 +44,17 @@ plt.rcParams.update(
     }
 )
 # Used libraries
-import numpy as np
 import pandas as pd
 from tqdm import tqdm
+import numpy as np
+
+try:
+    import cupy as cp
+
+    CUPY_AVAILABLE = True
+except Exception:
+    CUPY_AVAILABLE = False
+cprint("Cupy Available=", CUPY_AVAILABLE)
 
 # Constants
 from pathlib import Path
