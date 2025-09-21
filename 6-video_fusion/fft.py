@@ -3,6 +3,7 @@ from pathlib import Path
 from time import time_ns
 from skimage.exposure import match_histograms
 from tqdm import trange
+import cupy as cp
 
 FILE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(FILE_DIR.parent))
@@ -39,20 +40,20 @@ def test(frames, alphas, ssim3d_step=4, save=False):
         else pd.DataFrame(columns=["suffx", "PSNR", "SSIM"]).set_index("suffx")
     )
     if "deepcad" not in df.index:
-        cprint("red:Initializing metrics...", f"[{print_mem()}]", f"[{elapsed()}s]")
-        psnr_ = psnr3d(gt, y, data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
-        ssim_ = ssim3d(gt.np[::ssim3d_step], y.np[::ssim3d_step])
-        df.loc["deepcad"] = [psnr_, ssim_]
-        df.to_csv(METRICS_PATH)
-        cprint(
-            "\tDeepCAD --> PSNR3D=",
-            f"cyan:{psnr_:.2f}",
-            "SSIM3D=",
-            f"cyan:{ssim_:.2f}",
-            f"[{print_mem()}]",
-            f"[{elapsed()}s]",
-        )
-        # df.loc["deepcad"] = [0, 0]
+        # cprint("red:Initializing metrics...", f"[{print_mem()}]", f"[{elapsed()}s]")
+        # psnr_ = psnr3d(gt, y, data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
+        # ssim_ = ssim3d(gt.np[::ssim3d_step], y.np[::ssim3d_step])
+        # df.loc["deepcad"] = [psnr_, ssim_]
+        # df.to_csv(METRICS_PATH)
+        # cprint(
+        #     "\tDeepCAD --> PSNR3D=",
+        #     f"cyan:{psnr_:.2f}",
+        #     "SSIM3D=",
+        #     f"cyan:{ssim_:.2f}",
+        #     f"[{print_mem()}]",
+        #     f"[{elapsed()}s]",
+        # )
+        df.loc["deepcad"] = [0, 0]
 
     def fft_fusion(vox):
         # FFT
@@ -91,11 +92,35 @@ def test(frames, alphas, ssim3d_step=4, save=False):
         fused = np.fft.irfft(X, n=vox.shape[0], axis=0)
         return fused
 
+    def fft_fusion_gpu(
+        vox: np.ndarray,
+        eps: float = 1e-12
+    ) -> cp.ndarray:
+        vox_gpu=cp.asarray(vox)
+        x_mean_gpu=cp.asarray(x_mean)
+        
+        X = cp.fft.rfft(vox_gpu, axis=0)
+        mag = cp.abs(X)
+        mag0 = mag[0]
+
+        freq0_matched = match_histograms(x_mean_gpu, mag0)
+        mag0_new = alphas[0] * freq0_matched + (1.0 - alphas[0]) * mag0
+
+        zero_mask = mag0 < eps
+        nonzero_mask = ~zero_mask
+        if cp.any(nonzero_mask):
+            scale = mag0_new[nonzero_mask] / mag0[nonzero_mask]
+            X[0, nonzero_mask] *= scale
+        if cp.any(zero_mask):
+            X[0, zero_mask] = mag0_new[zero_mask].astype(X.dtype)
+        return cp.fft.irfft(X, n=vox_gpu.shape[0], axis=0).get()
+    
+    
     fused = np.empty_like(y.np)
     for i in trange(x.frames // frames, desc="FFT fusion...", colour="cyan"):
         start = i * frames
         end = start + frames
-        fused[start:end] = fft_fusion_optimized(y.np[start:end])
+        fused[start:end] = fft_fusion_gpu(y.np[start:end])
     # Metrics
     if save:
         cprint("yellow:Saving results...", f"[{print_mem()}]", f"[{elapsed()}s]")
