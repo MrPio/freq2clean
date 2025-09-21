@@ -29,3 +29,7 @@
 # Video Fusion
 - DCT vs FFT
 - plot average PSNR vs GT
+
+# SCOPERTE
+neutrophils NON È UN VIDEO FERMO! => NO AUMENTO DI NITIDEZZA
+EPPURE IL SSIM3D AUMENTA TANTO CON FFT!!!
