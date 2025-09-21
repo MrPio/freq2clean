@@ -8,7 +8,7 @@ FILE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(FILE_DIR.parent))
 from src import *
 
-deepcad_suffx="15-150"
+deepcad_suffx = "15-150-2"
 METRICS_PATH = Path(f"fft_syntethic_metrics_patcht{deepcad_suffx}.csv")
 
 # Init
@@ -52,6 +52,7 @@ def test(frames, alphas, ssim3d_step=4, save=False):
             f"[{print_mem()}]",
             f"[{elapsed()}s]",
         )
+        # df.loc["deepcad"] = [0, 0]
 
     def fft_fusion(vox):
         # FFT
@@ -68,11 +69,33 @@ def test(frames, alphas, ssim3d_step=4, save=False):
         fused = np.fft.ifft(X, axis=0).real
         return fused
 
+    def fft_fusion_optimized(vox, eps=1e-12):
+        X = np.fft.rfft(vox, axis=0)
+        mag = np.abs(X)
+
+        global x_mean
+        freq0 = match_histograms(x_mean, mag[0])
+        mag0_new = alphas[0] * freq0 + (1.0 - alphas[0]) * mag[0]
+        mag0 = mag[0]
+
+        zero_mask = mag0 < eps
+        nonzero_mask = ~zero_mask
+        if nonzero_mask.any():
+            scale = mag0_new[nonzero_mask] / mag0[nonzero_mask]
+            X[0][nonzero_mask] *= scale
+        if zero_mask.any():
+            # set new complex values with zero phase
+            X0 = X[0]
+            X0[zero_mask] = mag0_new[zero_mask].astype(X.dtype)
+            X[0] = X0
+        fused = np.fft.irfft(X, n=vox.shape[0], axis=0)
+        return fused
+
     fused = np.empty_like(y.np)
     for i in trange(x.frames // frames, desc="FFT fusion...", colour="cyan"):
         start = i * frames
         end = start + frames
-        fused[start:end] = fft_fusion(y.np[start:end])
+        fused[start:end] = fft_fusion_optimized(y.np[start:end])
     # Metrics
     if save:
         cprint("yellow:Saving results...", f"[{print_mem()}]", f"[{elapsed()}s]")
