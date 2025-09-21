@@ -8,10 +8,10 @@ testing_class(
         "patch_t": 150,  # the time dimension (frames) of 3D patches
         "overlap_factor": 0.6,  # overlap factor,
         "scale_factor": 1,  # the factor for image intensity scaling
-        "test_datasize": 9000,  # the number of frames to be tested
-        "datasets_path": "dataset/zebrafish",  # folder containing all files to be tested
+        "test_datasize": 6000,  # the number of frames to be tested
+        "datasets_path": "dataset/neutrophils",  # folder containing all files to be tested
         "pth_dir": "./pth",  # pth file root path
-        "denoise_model": "zebrafish_202509211717",  # A folder containing all models to be tested
+        "denoise_model": "neutrophils_202509211933",  # A folder containing all models to be tested
         "output_dir": "./results",  # result file root path
         # network related parameters
         "fmap": 16,  # number of feature maps

@@ -28,6 +28,7 @@ DATASETS = {
         dir="dataset/zenodo/synthetic", data_range=1_520
     ),  # 1_520 is the 99.9% Quantile of GT
     "zebrafish": DatasetMetadata(dir="dataset/zenodo/zebrafish", data_range=32_767),
+    "neutrophils": DatasetMetadata(dir="dataset/zenodo/neutrophils", data_range=49_978),
 }
 
 

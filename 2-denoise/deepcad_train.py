@@ -16,10 +16,10 @@ training_class(
         "patch_t": 60,  # the time dimension (frames) of 3D patches
         "overlap_factor": 0.4,  # overlap factor
         "scale_factor": 1,  # the factor for image intensity scaling
-        "select_img_num": 9000,  # select the number of frames used for training
+        "select_img_num": 6000,  # select the number of frames used for training
         "train_datasets_size": 1200,  # datasets size for training (how many 3D patches)
         # "max_frames": 6_000,
-        "datasets_path": "dataset/zebrafish",  # folder containing files for training
+        "datasets_path": "dataset/neutrophils",  # folder containing files for training
         "pth_dir": "./pth",  # the path for pth file and result images
         # network related parameters
         "n_epochs": 10,  # the number of training epochs

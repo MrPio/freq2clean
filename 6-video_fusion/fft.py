@@ -9,8 +9,8 @@ sys.path.append(str(FILE_DIR.parent))
 from src import *
 
 deepcad_suffx = "60-150"
-dataset = "zebrafish"
-y_path = "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/2-denoise/results/DataFolderIs_zebrafish_202509211737_ModelFolderIs_zebrafish_202509211717/E_10_Iter_1812/xf_E_10_Iter_1812_output.tif"
+dataset = "neutrophils"
+y_path = "../2-denoise/results/DataFolderIs_neutrophils_202509211945_ModelFolderIs_neutrophils_202509211933/E_10_Iter_1200/xf_E_10_Iter_1200_output.tif"
 
 # Init
 METRICS_PATH = Path(f"fft_{dataset}_metrics_patcht{deepcad_suffx}.csv")
@@ -154,4 +154,4 @@ def test(frames, alphas, ssim3d_step=4, save=False):
 #     test(frames=frames, alphas=ALPHAS)
 
 # BEST
-test(frames=3_000, alphas=[0.85], ssim3d_step=4, save=True)
+test(frames=3_000, alphas=[1], ssim3d_step=4, save=True)
