@@ -1,7 +1,7 @@
 GPU: '0'
 batch_size: 1
 datasets_path: dataset/synthetic
-denoise_model: synthetic_202509211352190s
+denoise_model: synthetic_202509211352
 fmap: 16
 gap_t: 60
 gap_x: 60

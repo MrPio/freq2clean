@@ -8,7 +8,7 @@ FILE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(FILE_DIR.parent))
 from src import *
 
-deepcad_suffx="300-300"
+deepcad_suffx="15-150"
 METRICS_PATH = Path(f"fft_syntethic_metrics_patcht{deepcad_suffx}.csv")
 
 # Init
@@ -17,7 +17,7 @@ ds_dir = DATASETS["synthetic"].dir
 x_path = ds_dir / "noise_1Q_-5.52dBSNR_490x490x6000.tif"
 
 # y_path = ds_dir / "deepcad_E_10_test_patcht_30_test_150.tif"
-y_path = "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/2-denoise/results/DataFolderIs_synthetic_202509211545_ModelFolderIs_synthetic_202509211437/E_10_Iter_1296/xf_E_10_Iter_1296_output.tif"
+y_path = "/leonardo_scratch/fast/IscrC_MACRO/CalciumImagingDenoising/2-denoise/results/DataFolderIs_synthetic_202509211422_ModelFolderIs_synthetic_202509211352/E_10_Iter_1200/xf_E_10_Iter_1200_output.tif"
 
 gt_path = ds_dir / "clean_30Hz_490x490x6000.tif"
 x, y, gt = (Recording(_, max_frames=None) for _ in [x_path, y_path, gt_path])
