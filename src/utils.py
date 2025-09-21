@@ -41,7 +41,8 @@ COLORS = [
     "light_cyan",
 ]
 __counter = 0
-__eta=time_ns()
+__eta = time_ns()
+
 
 def cprint(*vals, sep=" "):
     """Log values, highlighting any prefixed by a color tag (e.g., 'red:error')."""
@@ -77,6 +78,7 @@ def imshow(
     cmap="grey",
     vrange=(None, None),
     zoom=1.0,
+    path: Path | str = None,
 ):
     """Plot a list of PIL images in a grid
 
@@ -116,6 +118,8 @@ def imshow(
             axes[i].set_title(titles[i])
         axes[i].axis("off")
     plt.tight_layout()
+    if path:
+        plt.savefig(path)
     plt.show()
 
 
@@ -185,6 +189,7 @@ def zoom_img(x, factor: float = 1):
     new_h, new_w = int(h / factor), int(w / factor)
     top, left = (h - new_h) // 2, (w - new_w) // 2
     return x[top : top + new_h, left : left + new_w]
+
 
 def elapsed():
     return (time_ns() - __eta) // 10**9

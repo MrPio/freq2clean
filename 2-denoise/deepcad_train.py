@@ -13,11 +13,12 @@ training_class(
     {
         "patch_x": 150,  # the width of 3D patches
         "patch_y": 150,  # the height of 3D patches
-        "patch_t": 150,  # the time dimension (frames) of 3D patches
+        "patch_t": 1000,  # the time dimension (frames) of 3D patches
         "overlap_factor": 0.4,  # overlap factor
         "scale_factor": 1,  # the factor for image intensity scaling
-        # "select_img_num": 500,  # select the number of frames used for training (use all frames by default)
-        "train_datasets_size": 1500,  # datasets size for training (how many 3D patches)
+        "select_img_num": 3000,  # select the number of frames used for training
+        "train_datasets_size": 600,  # datasets size for training (how many 3D patches)
+        "max_frames": 6_000,
         "datasets_path": "dataset/synthetic",  # folder containing files for training
         "pth_dir": "./pth",  # the path for pth file and result images
         # network related parameters
@@ -30,7 +31,6 @@ training_class(
         "num_workers": 0,  # if you use Windows system, set this to 0.
         "visualize_images_per_epoch": False,  # whether to show result images after each epoch
         "save_test_images_per_epoch": True,  # whether to save result images after each epoch
-        "max_frames": 6_000,
         # "UNet_type": "ResidualUNet3D",
     }
 ).run()
