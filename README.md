@@ -1,5 +1,10 @@
 # Enhancing Denoiser Models with FFT/DCT Video Fusion
 
+<p align="center">
+  <img width="80%" src="https://github.com/user-attachments/assets/26106a35-bc52-4164-aa56-5437831fab7f" />
+</p>
+
+## Test Datasets
 ### [Synthetic Calcium Imaging](https://zenodo.org/records/6254739)
 #### 1x
 https://github.com/user-attachments/assets/42ef0de1-a580-40f9-bbf5-4f12d8fb388b
