@@ -8,13 +8,16 @@ FILE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(FILE_DIR.parent))
 from src import *
 
-METRICS_PATH = Path("fft_syntethic_metrics.csv")
+METRICS_PATH = Path("fft_syntethic_metrics_patcht15_150.csv")
 
 # Init
 cprint("red:Loading Dataset...", f"[{print_mem()}]", f"[{elapsed()}s]")
 ds_dir = DATASETS["synthetic"].dir
 x_path = ds_dir / "noise_1Q_-5.52dBSNR_490x490x6000.tif"
-y_path = ds_dir / "deepcad_E_10_test.tif"
+
+# y_path = ds_dir / "deepcad_E_10_test_patcht_30_test_150.tif"
+y_path = "../2-denoise/results/DataFolderIs_synthetic_202509211422_ModelFolderIs_synthetic_202509211352/E_10_Iter_1200/xf_E_10_Iter_1200_output.tif"
+
 gt_path = ds_dir / "clean_30Hz_490x490x6000.tif"
 x, y, gt = (Recording(_, max_frames=None) for _ in [x_path, y_path, gt_path])
 RES_DIR = FILE_DIR / "results/synthetic/"
@@ -84,16 +87,19 @@ def test(frames, alphas, ssim3d_step=4, save=False):
     cprint("\tPSNR3D=", f"cyan:{psnr_:.2f}", "SSIM3D=", f"cyan:{ssim_:.2f}", f"[{print_mem()}]", f"[{elapsed()}s]")
 
 
+# Alpha test
 # FRAMES = 1_000
 # for alpha in tqdm([0.1 * i for i in range(1, 11)]):
 #     test(frames=FRAMES, alphas=[alpha])
 
+# Alphas test
 # for n, s in tqdm([(n, s) for n in [1, 2, 3, 4, 5] for s in [1, 0.75, 0.5, 0.25]]):
 #     test(alphas=[ALPHA] + (np.linspace(1, 0, n) * s).tolist())
 
+# Frames test
 # ALPHAS = [ALPHA]
 #     for frames in tqdm([20, 50, 100, 300, 600, 1200, 3000, 6000]):
 #     test(frames=frames, alphas=ALPHAS)
 
 # BEST
-test(frames=1_000, alphas=[0.8], ssim3d_step=4, save=True)
+test(frames=3_000, alphas=[0.85], ssim3d_step=4, save=True)

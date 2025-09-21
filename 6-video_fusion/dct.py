@@ -33,20 +33,20 @@ def test(frames, win, s0, δs, t0, δt, ssim3d_step=4, save=False):
         else pd.DataFrame(columns=["suffx", "PSNR", "SSIM"]).set_index("suffx")
     )
     if "deepcad" not in df.index:
-        # cprint("red:Initializing metrics...", f"[{print_mem()}]", f"[{elapsed()}s]")
-        # psnr_ = psnr3d(gt, y, data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
-        # ssim_ = ssim3d(gt.np[::ssim3d_step], y.np[::ssim3d_step])
-        # df.loc["deepcad"] = [psnr_, ssim_]
-        # df.to_csv(METRICS_PATH)
-        # cprint(
-        #     "\tDeepCAD --> PSNR3D=",
-        #     f"cyan:{psnr_:.2f}",
-        #     "SSIM3D=",
-        #     f"cyan:{ssim_:.2f}",
-        #     f"[{print_mem()}]",
-        #     f"[{elapsed()}s]",
-        # )
-        df.loc["deepcad"] = [32.30381747535838, 0.5577632784843445]
+        cprint("red:Initializing metrics...", f"[{print_mem()}]", f"[{elapsed()}s]")
+        psnr_ = psnr3d(gt, y, data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
+        ssim_ = ssim3d(gt.np[::ssim3d_step], y.np[::ssim3d_step])
+        df.loc["deepcad"] = [psnr_, ssim_]
+        df.to_csv(METRICS_PATH)
+        cprint(
+            "\tDeepCAD --> PSNR3D=",
+            f"cyan:{psnr_:.2f}",
+            "SSIM3D=",
+            f"cyan:{ssim_:.2f}",
+            f"[{print_mem()}]",
+            f"[{elapsed()}s]",
+        )
+        # df.loc["deepcad"] = [32.30381747535838, 0.5577632784843445]
 
     # Mask
     T, H, W = frames, *x.np.shape[1:]
@@ -89,7 +89,7 @@ def test(frames, win, s0, δs, t0, δt, ssim3d_step=4, save=False):
     cprint("\tPSNR3D=", f"cyan:{psnr_:.2f}", "SSIM3D=", f"cyan:{ssim_:.2f}", f"[{print_mem()}]", f"[{elapsed()}s]")
 
 
-# Weights
+# Weights test
 # for s0, δs, t0, δt in tqdm(
 #     [
 #         (8, 24, 0, 64),
@@ -111,18 +111,19 @@ def test(frames, win, s0, δs, t0, δt, ssim3d_step=4, save=False):
 # ):
 #     test(frames=300, win=512, s0=s0, δs=δs, t0=t0, δt=δt)
 
-# Frames
+# Frames test
 # s0, δs, t0, δt = (48, 128, -6, 16)
 # for frames in tqdm([6000,1000]):
 #     test(frames=frames, win=512, s0=s0, δs=δs, t0=t0, δt=δt)
 
-# Avgs
+# Avgs test
 # s0, δs, t0, δt = (48, 128, -6, 16)
 # frames = 600
 # for win in tqdm([1, 4, 16, 64, 256, 1024, 2048, 4096, 6000]):
 #     test(frames=frames, win=win, s0=s0, δs=δs, t0=t0, δt=δt)
 
 
+# BEST
 s0, δs, t0, δt = (36, 72, -6, 16)
 frames = 3000
 win = 6000

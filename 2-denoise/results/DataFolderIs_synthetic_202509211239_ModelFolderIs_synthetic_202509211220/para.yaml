@@ -1,0 +1,16 @@
+GPU: '0'
+batch_size: 1
+datasets_path: dataset/synthetic
+denoise_model: synthetic_202509211220
+fmap: 16
+gap_t: 12
+gap_x: 60
+gap_y: 60
+output_dir: ./results
+overlap_factor: 0.6
+patch_t: 30
+patch_x: 150
+patch_y: 150
+pth_dir: ./pth
+scale_factor: 1
+test_datasize: 6000
