@@ -2,9 +2,11 @@
 /.venv
 /dataset
 TODO.md
+/bkp
 
 # main route ===========================
 2-sota/pth/
+2-sota/n2n/
 2-sota/n2v/
 
 3-video_fusion/results/
