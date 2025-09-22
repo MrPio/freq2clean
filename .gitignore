@@ -5,6 +5,7 @@
 *.tif
 *.tiff
 **/*.h5
+/.vscode
 
 2-denoise/pth/
 2-denoise/n2v/
