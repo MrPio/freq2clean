@@ -1,25 +1,28 @@
 # Enhancing Denoiser Models with FFT/DCT Video Fusion
-
+My method provide a substantial improvement over the denoiser ([*DeepCAD-RT*](https://github.com/cabooster/DeepCAD-RT) in this example) prediction. As you can see, PSNR increases by $2dB$, but the most interesting result is the improvement of SSIM2D by $0.2$ points.
 <p align="center">
-  <img width="80%" src="https://github.com/user-attachments/assets/26106a35-bc52-4164-aa56-5437831fab7f" />
+  <img width="90%" src="assets/fft_vs_baseline.png"/>
 </p>
+
 
 ## Test Datasets
 ### [Synthetic Calcium Imaging](https://zenodo.org/records/6254739)
-#### 1x
-https://github.com/user-attachments/assets/42ef0de1-a580-40f9-bbf5-4f12d8fb388b
-#### 2.75x
-https://github.com/user-attachments/assets/9a3f821c-28e3-46b4-8beb-36cea6c4115a
+This is the most relevant dataset in this study:
+- **It is synthetic**, yet very much alike the real dataset provided by the affiliated research group.
+- As such, **it has ground truths**. Therefore we can fairly assess the validity of the proposed solution.
+
+<p align="center">
+  <img width="45%" src="assets/fft_vs_deepcadrt.gif"/>
+  <img width="70%" src="assets/synthetic.png"/>
+</p>
 
 ### [Zebrafish Multiple Brain Regions](https://zenodo.org/records/6293696)
-#### 1x
-https://github.com/user-attachments/assets/a02c171c-992f-40aa-9b52-cf301591cde7
-#### 4x
-https://github.com/user-attachments/assets/6ad6bbe1-1acb-4ffd-8419-f982ab4bfd74
+<p align="center">
+  <img width="70%" src="assets/zebrafish.png"/>
+</p>
 
 ### [Mouse Brain Neutrophils](https://zenodo.org/records/6296569)
-#### 1x
-https://github.com/user-attachments/assets/3e98a7e7-8fd8-435b-9006-a5a418ca1f8e
-#### 2.5x
-https://github.com/user-attachments/assets/cc33b85f-4c91-419d-84bc-7787206c0e18
+<p align="center">
+  <img width="70%" src="assets/neutrophils.png"/>
+</p>
 
