@@ -12,17 +12,19 @@ This is the most relevant dataset in this study:
 - As such, **it has ground truths**. Therefore we can fairly assess the validity of the proposed solution.
 
 <p align="center">
-  <img width="45%" src="assets/fft_vs_deepcadrt.gif"/>
+  <img width="70%" src="assets/synthetic.gif"/>
   <img width="70%" src="assets/synthetic.png"/>
 </p>
 
 ### [Zebrafish Multiple Brain Regions](https://zenodo.org/records/6293696)
 <p align="center">
+  <img width="70%" src="assets/zebrafish.gif"/>
   <img width="70%" src="assets/zebrafish.png"/>
 </p>
 
 ### [Mouse Brain Neutrophils](https://zenodo.org/records/6296569)
 <p align="center">
+  <img width="70%" src="assets/neutrophils.gif"/>
   <img width="70%" src="assets/neutrophils.png"/>
 </p>
 
