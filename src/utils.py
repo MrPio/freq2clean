@@ -44,6 +44,10 @@ __counter = 0
 __eta = time_ns()
 
 
+def clog(*vals, sep=" "):
+    cprint(*vals, f"light_red:[{print_mem()}]", f"light_yellow:[{elapsed()}s]", sep=sep)
+
+
 def cprint(*vals, sep=" "):
     """Log values, highlighting any prefixed by a color tag (e.g., 'red:error')."""
     global __counter

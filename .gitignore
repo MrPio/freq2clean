@@ -7,6 +7,8 @@
 **/*.h5
 
 2-denoise/pth/
+2-denoise/n2v/
+
 3-deepcad_improvement_with_diffusion/dataset/
 3-deepcad_improvement_with_diffusion/dataset.zip
 3-deepcad_improvement_with_diffusion/pth

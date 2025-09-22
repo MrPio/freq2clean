@@ -44,7 +44,7 @@ class Recording:
 
     @property
     def normalized(self) -> np.ndarray:
-        return np.clip(normalize(self.np, 0.25, 99.9), min=0, max=1)
+        return np.clip(normalize(self.np, 0.25, 99.9), 0, 1)
 
     def normalize(self, a: int, b: int = 2**16 - 1) -> None:
         """Normalize the maximum value of the `uint16` recording.
