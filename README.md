@@ -39,3 +39,10 @@ This recording has slowly moving cells, which violates the hypothesis of this me
 
 ## The FFT-Fusion algorithm
 My method is designed to enhance the performance of an upstream denoiser. As such, it is a post-processing activity that uses *look-ahead* to recover long-range temporal information. However, due to its simplicity, it is only effective in still recordings. For this enhancement to work, both the camera and the objects need to be still. The faster the spatial dynamics, the shorter the temporal window should be.
+
+### Algorithm optimization
+In my initial implementation, I used the functions `np.fft.fft` and `np.fft.ifft` to translate between the temporal and frequency domains. For a $6{,}000\times 512 \times 512$ video, this took about $200sec$
+
+Then, since the angles are left untouched, I moved to `np.fft.rfft` and `np.fft.irfft`, improving time cost to $48sec$.
+
+Finally, leveraging GPU, moving from `numpy` to `cupy`, I arrived to a time cost of $16sec$.
