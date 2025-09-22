@@ -15,7 +15,7 @@ FPS = 30
 MAX_FRAMES = FPS * 30
 
 dataset = "neutrophils"
-y_path = "2-denoise/results/DataFolderIs_neutrophils_202509211945_ModelFolderIs_neutrophils_202509211933/E_10_Iter_1200/xf_E_10_Iter_1200_output.tif"
+y_path = "2-sota/results/DataFolderIs_neutrophils_202509211945_ModelFolderIs_neutrophils_202509211933/E_10_Iter_1200/xf_E_10_Iter_1200_output.tif"
 fft_path = "6-video_fusion/results/neutrophils/ftt_neutrophils_frame3000_alphas1_60-150.npy"
 # =============================================
 
