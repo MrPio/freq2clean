@@ -4,8 +4,9 @@ My method provide a substantial improvement over the denoiser ([*DeepCAD-RT*](ht
   <img width="90%" src="assets/fft_vs_baseline.png"/>
 </p>
 
->[!NOTE]
-> The x-axis refers to the value used for the `patch_t` hyperparameter during training. `patch_t` indicates the size of frames considered in each training sample. **This value is directly proportional to the training time**.
+## 📦 TL;DR
+The x-axis refers to the value used for the `patch_t` hyperparameter during training. `patch_t` indicates the size of frames considered in each training sample. This value is directly proportional to the training time. **Therefore, as shown in the figure above, using `patch_t = 30` enables us to significantly surpass the PSNR and SSIM3D values obtained using FFT video fusion compared to using `patch_t = 300`, for which $5\times$ more training time is required.**
+
 
 ## Hyphotesis
 Two hyphotesis are made:
