@@ -18,3 +18,5 @@ torchvision
 pytorch_msssim
 moviepy==1.0.3
 h5py
+cupy-cuda12x
+careamics
