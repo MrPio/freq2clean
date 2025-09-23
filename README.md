@@ -4,6 +4,9 @@ My method provide a substantial improvement over the denoiser ([*DeepCAD-RT*](ht
   <img width="90%" src="assets/fft_vs_baseline.png"/>
 </p>
 
+>[!NOTE]
+> The x-axis refers to the value used for the `patch_t` hyperparameter during training. `patch_t` indicates the size of frames considered in each training sample. **This value is directly proportional to the training time**.
+
 ## Hyphotesis
 Two hyphotesis are made:
 1. The input video should be severely noisy, yielding a very low input SNR. Otherwise, there is little margin for improvement with SOTA denoisers.

@@ -7,6 +7,7 @@ FILE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(FILE_DIR.parent))
 from src import Recording, clog, cprint, DATASETS, np, imshow
 
+
 dataset = "synthetic"
 max_frames = 64
 patch_t = 8
@@ -25,11 +26,10 @@ meta = DATASETS[dataset]
 x, gt = (Recording(_, max_frames=max_frames) for _ in [meta.x, meta.gt])
 
 # Block Matching
-x_gpu = cp.asarray(x.np)
 y = []
 for i in trange(x.frames // patch_t):
-    y.append(bm4d.bm4d(x_gpu[i * patch_t : (i + 1) * patch_t], sigma_psd=σ, stage_arg=stage))
-y = cp.concatenate(y, axis=0).get()
+    y.append(bm4d.bm4d(x.np[i * patch_t : (i + 1) * patch_t], sigma_psd=σ, stage_arg=stage))
+y = np.concatenate(y, axis=0)
 np.save(OUT_DIR / f"{experiment}.npy", y)
 
 clog("yellow:Rendering...")
