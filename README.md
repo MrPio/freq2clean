@@ -1,5 +1,5 @@
 # Enhancing Denoiser Models with FFT/DCT Video Fusion
-My method provide a substantial improvement over the denoiser ([*DeepCAD-RT*](https://github.com/cabooster/DeepCAD-RT) in this example) prediction. As you can see, PSNR increases by $2dB$, but the most interesting result is the improvement of SSIM2D by $0.2$ points.
+My method provides a substantial improvement over the denoiser ([*DeepCAD-RT*](https://github.com/cabooster/DeepCAD-RT) in this example) prediction. As you can see, PSNR increases by $2dB$, but the most interesting result is the improvement of SSIM2D by $0.2$ points.
 <p align="center">
   <img width="90%" src="assets/fft_vs_baseline.png"/>
 </p>
@@ -19,7 +19,7 @@ Two hypotheses are made:
 ### [Synthetic Calcium Imaging](https://zenodo.org/records/6254739)
 This is the most relevant dataset in this study:
 - **It is synthetic**, yet very much alike the real dataset provided by the affiliated research group.
-- As such, **it has ground truths**. Therefore we can fairly assess the validity of the proposed solution computing PSNR and SSIM3D, as shown above.
+- As such, **it has ground truths**. Therefore, we can assess the validity of the proposed solution by computing PSNR and SSIM3D, as shown above.
 
 <p align="center">
   <img width="70%" src="assets/synthetic.gif"/>
