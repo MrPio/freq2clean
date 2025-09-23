@@ -5,11 +5,13 @@ My method provide a substantial improvement over the denoiser ([*DeepCAD-RT*](ht
 </p>
 
 ## 📦 TL;DR
-The x-axis refers to the value used for the `patch_t` hyperparameter during training. `patch_t` indicates the size of frames considered in each training sample. This value is directly proportional to the training time. **Therefore, as shown in the figure above, using `patch_t = 30` enables us to significantly surpass the PSNR and SSIM3D values obtained using FFT video fusion compared to using `patch_t = 300`, for which $5\times$ more training time is required.**
+The x-axis refers to the value used for the `patch_t` hyperparameter during training. `patch_t` indicates the size of frames considered in each training sample. This value is directly proportional to the training time.
+
+As shown in the figure above, **FFT video fusion post-processing enables a value of `patch_t = 30` to outscore predictions made with `patch_t = 300` ($5\times$ more training time) in terms of both PSNR and SSIM3D.**
 
 
 ## Hyphotesis
-Two hyphotesis are made:
+Two hypotheses are made:
 1. The input video should be severely noisy, yielding a very low input SNR. Otherwise, there is little margin for improvement with SOTA denoisers.
 2. The recording should be still. The camera and the objects being recorded should both have slow spatial dynamics. The most precious information in the recording is the temporal dynamics.
 
