@@ -7,7 +7,7 @@ My method provide a substantial improvement over the denoiser ([*DeepCAD-RT*](ht
 ## 📦 TL;DR
 The x-axis refers to the value used for the `patch_t` hyperparameter during training. `patch_t` indicates the size of frames considered in each training sample. This value is directly proportional to the training time.
 
-As shown in the figure above, **FFT video fusion post-processing enables a value of `patch_t = 30` to outscore predictions made with `patch_t = 300` ($5\times$ more training time) in terms of both PSNR and SSIM3D.**
+As shown in the figure above, **FFT video fusion post-processing enables a value of `patch_t = 30` to outscore predictions made with `patch_t = 300` (which requires $5\times$ more training time) in terms of both PSNR and SSIM3D.**
 
 
 ## Hyphotesis
