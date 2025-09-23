@@ -12,22 +12,20 @@ from src import Recording, DATASETS, tqdm, np
 CODEC = "libx265"
 BITRATE = 12_000
 FPS = 30
-MAX_FRAMES = FPS * 30
+MAX_FRAMES = FPS * 20
 
-dataset = "neutrophils"
-y_path = "2-sota/results/DataFolderIs_neutrophils_202509211945_ModelFolderIs_neutrophils_202509211933/E_10_Iter_1200/xf_E_10_Iter_1200_output.tif"
-fft_path = "6-video_fusion/results/neutrophils/ftt_neutrophils_frame3000_alphas1_60-150.npy"
+dataset = "synthetic"
+y_path = "2-sota/n2v/output/n2v_synthetic_frames6000_t32_ep10-v2.npy"
+fft_path = "3-video_fusion/results/synthetic/ftt_synthetic_frame3000_alphas0.85_32.npy"
 # =============================================
 
 metadata = DATASETS[dataset]
-x_path = metadata.dir / "x.tif"
-gt_path = metadata.dir / "gt.tif"
 recs = {
     k: Recording(path, max_frames=MAX_FRAMES)
     for k, path in {
-        "x": x_path,
+        # "x": metadata.x,
         "y": y_path,
-        "gt": gt_path,
+        # "gt": metadata.gt,
     }.items()
 }
 recs["fft"] = Recording(np.load(fft_path)[:MAX_FRAMES])

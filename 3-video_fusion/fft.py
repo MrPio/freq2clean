@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 from time import time_ns
+from typing import Literal
 from skimage.exposure import match_histograms
 from tqdm import trange
 
@@ -8,55 +9,46 @@ FILE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(FILE_DIR.parent))
 from src import *
 
-deepcad_suffx = "60-150"
-dataset = "neutrophils"
-y_path = "../2-sota/results/DataFolderIs_neutrophils_202509211945_ModelFolderIs_neutrophils_202509211933/E_10_Iter_1200/xf_E_10_Iter_1200_output.tif"
+denoiser_name: Literal["deepcad", "noise2noise", "noise2void"] = "deepcad"
+denoiser_suffx = "300-150 norm"
+dataset = "synthetic"
+y_path = "../bkp/2-denoise/results/DataFolderIs_synthetic_202509211545_ModelFolderIs_synthetic_202509211437/E_10_Iter_1296/xf_E_10_Iter_1296_output.tif"
 
 # Init
-METRICS_PATH = Path(f"fft_{dataset}_metrics_patcht{deepcad_suffx}.csv")
-cprint("red:Loading Dataset...", f"[{print_mem()}]", f"[{elapsed()}s]")
+METRICS_PATH = Path(f"fft_{dataset}_metrics_{denoiser_name}_{denoiser_suffx}.csv")
+clog("red:Loading Dataset...")
 metadata = DATASETS[dataset]
-x_path = metadata.dir / "x.tif"
-# y_path = ds_dir / "deepcad_E_10_test_patcht_30_test_150.tif"
-gt_path = metadata.dir / "gt.tif"
-x, y, gt = (Recording(_, max_frames=None) for _ in [x_path, y_path, gt_path])
-x.np = x.np[: y.frames]
-gt.np = gt.np[: y.frames]
+x, y, gt = (Recording(_, max_frames=None) for _ in [metadata.x, y_path, metadata.gt])
+x.np = x.np[: y.frames, : y.np.shape[1], : y.np.shape[2]]
+gt.np = gt.np[: y.frames, : y.np.shape[1], : y.np.shape[2]]
 RES_DIR = FILE_DIR / f"results/{dataset}/"
-RES_DIR.mkdir(exist_ok=True)
+RES_DIR.mkdir(exist_ok=True, parents=True)
 
 # Freq0 as Averaged Frame
-cprint("blue:Computing Freq0...", f"[{print_mem()}]", f"[{elapsed()}s]")
+clog("blue:Computing Freq0...")
 x_mean = np.mean(x.np, axis=0)
 
 
 def test(frames, alphas, ssim3d_step=4, save=False):
     suffx = f"frame{frames}_alphas{'-'.join(map(str,alphas))}"
-    cprint(f"magenta:RUN --> {suffx}", f"[{print_mem()}]", f"[{elapsed()}s]")
+    clog(f"magenta:RUN --> {suffx}")
 
     df = (
         pd.read_csv(METRICS_PATH, index_col="suffx")
         if METRICS_PATH.exists()
         else pd.DataFrame(columns=["suffx", "PSNR", "SSIM"]).set_index("suffx")
     )
-    if "deepcad" not in df.index:
-        cprint("red:Initializing metrics...", f"[{print_mem()}]", f"[{elapsed()}s]")
+    if denoiser_name not in df.index:
+        clog("red:Initializing metrics...")
         psnr_ = psnr3d(gt, y, data_range=metadata.data_range)
         ssim_ = ssim3d(
             Recording(gt.np[::ssim3d_step]).normalized,
             Recording(y.np[::ssim3d_step]).normalized,
         )
-        df.loc["deepcad"] = [psnr_, ssim_]
+        df.loc[denoiser_name] = [psnr_, ssim_]
         df.to_csv(METRICS_PATH)
-        cprint(
-            "\tDeepCAD --> PSNR3D=",
-            f"cyan:{psnr_:.2f}",
-            "SSIM3D=",
-            f"cyan:{ssim_:.2f}",
-            f"[{print_mem()}]",
-            f"[{elapsed()}s]",
-        )
-        # df.loc["deepcad"] = [0, 0]
+        clog(f"\t{denoiser_name} --> PSNR3D=", f"cyan:{psnr_:.2f}", "SSIM3D=", f"cyan:{ssim_:.2f}")
+        # df.loc[denoiser_name] = [0, 0]
 
     def fft_fusion(vox):
         # FFT
@@ -123,12 +115,12 @@ def test(frames, alphas, ssim3d_step=4, save=False):
 
     # Metrics
     if save:
-        cprint("yellow:Saving results...", f"[{print_mem()}]", f"[{elapsed()}s]")
-        np.save(RES_DIR / f"ftt_{dataset}_{suffx}_{deepcad_suffx}.npy", fused)
+        clog("yellow:Saving results...")
+        np.save(RES_DIR / f"ftt_{dataset}_{suffx}{denoiser_name}_{denoiser_suffx}.npy", fused)
 
-    cprint("yellow:Computing PSNR3D...", f"[{print_mem()}]", f"[{elapsed()}s]")
+    clog("yellow:Computing PSNR3D...")
     psnr_ = psnr3d(gt.np[:end], fused[:end], data_range=metadata.data_range)
-    cprint("yellow:Computing SSIM3D...", f"[{print_mem()}]", f"[{elapsed()}s]")
+    clog("yellow:Computing SSIM3D...")
     ssim_ = ssim3d(
         Recording(gt.np[:end:ssim3d_step]).normalized,
         Recording(fused[:end:ssim3d_step]).normalized,
@@ -136,7 +128,7 @@ def test(frames, alphas, ssim3d_step=4, save=False):
 
     df.loc[suffx] = [psnr_, ssim_]
     df.to_csv(METRICS_PATH)
-    cprint("\tPSNR3D=", f"cyan:{psnr_:.2f}", "SSIM3D=", f"cyan:{ssim_:.2f}", f"[{print_mem()}]", f"[{elapsed()}s]")
+    clog("\tPSNR3D=", f"cyan:{psnr_:.2f}", "SSIM3D=", f"cyan:{ssim_:.2f}")
 
 
 # Alpha test
@@ -154,4 +146,4 @@ def test(frames, alphas, ssim3d_step=4, save=False):
 #     test(frames=frames, alphas=ALPHAS)
 
 # BEST
-test(frames=3_000, alphas=[1], ssim3d_step=4, save=True)
+test(frames=3_000, alphas=[0.85], ssim3d_step=4, save=True)

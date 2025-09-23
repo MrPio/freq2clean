@@ -35,7 +35,11 @@ class Recording:
         self.np = (
             video
             if isinstance(video, np.ndarray)
-            else tiff.imread(str(video), key=range(max_frames) if max_frames else None)
+            else (
+                np.load(str(video))[:max_frames]
+                if str(video).endswith(".npy")
+                else tiff.imread(str(video), key=range(max_frames) if max_frames else None)
+            )
         )
 
     @property

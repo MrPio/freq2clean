@@ -9,8 +9,6 @@ _ROOT_DIR = Path(__file__).parents[2]
 class DatasetMetadata:
     def __init__(self, dir, data_range=2**16, max_value_x=None, max_value_y=None, x="x.tif", gt="gt.tif"):
         self.dir = _ROOT_DIR / dir
-        self.path_x = self.dir / "x.tiff"
-        self.path_y = self.dir / "y.tiff"
         self.max_val_x = max_value_x
         self.max_val_y = max_value_y
         self.data_range = data_range
