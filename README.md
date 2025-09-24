@@ -1,5 +1,5 @@
 # Enhancing Denoiser Models with FFT/DCT Video Fusion
-My method provides a substantial improvement over the denoiser ([*DeepCAD-RT*](https://github.com/cabooster/DeepCAD-RT) in this example) prediction. As you can see, PSNR increases by $2dB$, but the most interesting result is the improvement of SSIM3D by $0.2$ points.
+My method provides a substantial improvement over the denoiser ([*DeepCAD-RT*](https://github.com/cabooster/DeepCAD-RT) in this example) prediction. As you can see, PSNR increases by $2dB$, but the most interesting result is the improvement of SSIM3D by $0.1$ points.
 <p align="center">
   <img width="90%" src="assets/fft_vs_baseline.png"/>
 </p>
