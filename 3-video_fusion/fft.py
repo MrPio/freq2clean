@@ -9,19 +9,22 @@ FILE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(FILE_DIR.parent))
 from src import *
 
+# Args
 denoiser_name: Literal["deepcad", "noise2noise", "noise2void"] = "deepcad"
 denoiser_suffx = "theirs"
-dataset = "oabf_astro"
-y_path = "../dataset/oabf/astro/y.tiff"
+dataset = "oabf_vpm"
+y_path = "../dataset/oabf/vpm/y.tiff"
+max_frames = 2_000
+CUPY_AVAILABLE = False
 
 # Init
 METRICS_PATH = Path(f"fft_{dataset}_metrics_{denoiser_name}_{denoiser_suffx}.csv")
 clog("red:Loading Dataset...")
 meta = DATASETS[dataset]
-x, y = (Recording(_, max_frames=None) for _ in [meta.x, y_path])
+x, y = (Recording(_, max_frames=max_frames) for _ in [meta.x, y_path])
 x.np = x.np[: y.frames, : y.np.shape[1], : y.np.shape[2]]
 if meta.labelled:
-    gt = Recording(meta.gt, max_frames=None)
+    gt = Recording(meta.gt, max_frames=max_frames)
     gt.np = gt.np[: y.frames, : y.np.shape[1], : y.np.shape[2]]
 RES_DIR = FILE_DIR / f"results/{dataset}/"
 RES_DIR.mkdir(exist_ok=True, parents=True)
@@ -149,4 +152,4 @@ def test(frames, alphas, ssim3d_step=4, save=False):
 #     test(frames=frames, alphas=ALPHAS)
 
 # BEST
-test(frames=3_000, alphas=[0.85], ssim3d_step=4, save=True)
+test(frames=1_000, alphas=[0.85], ssim3d_step=4, save=True)

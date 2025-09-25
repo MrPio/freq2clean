@@ -43,11 +43,17 @@ This recording has slowly moving cells, which violates the hypothesis of this me
   <img width="70%" src="assets/neutrophils.png"/>
 </p>
 
-### Mouse Astrocyte
+### Unlabeled datasets
 This dataset lacks any kind of ground truth.
 
+#### Mouse Astrocyte
 <p align="center">
   <img width="70%" src="assets/astro.gif"/>
+</p>
+
+#### Mouse Neuron with GRIN lenses
+<p align="center">
+  <img width="70%" src="assets/vpm.gif"/>
 </p>
 
 ## The FFT-Fusion algorithm
