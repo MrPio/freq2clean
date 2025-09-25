@@ -43,6 +43,13 @@ This recording has slowly moving cells, which violates the hypothesis of this me
   <img width="70%" src="assets/neutrophils.png"/>
 </p>
 
+### Mouse Astrocyte
+This dataset lacks any kind of ground truth.
+
+<p align="center">
+  <img width="70%" src="assets/astro.gif"/>
+</p>
+
 ## The FFT-Fusion algorithm
 My method is designed to enhance the performance of an upstream denoiser. As such, it is a post-processing activity that uses *look-ahead* to recover long-range temporal information. However, due to its simplicity, it is only effective in still recordings. For this enhancement to work, both the camera and the objects need to be still. The faster the spatial dynamics, the shorter the temporal window should be.
 
