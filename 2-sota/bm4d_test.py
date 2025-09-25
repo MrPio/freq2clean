@@ -9,8 +9,8 @@ from src import Recording, clog, cprint, DATASETS, np, imshow
 
 
 dataset = "synthetic"
-max_frames = 64
-patch_t = 8
+max_frames = 6000
+patch_t = 30
 σ = 10
 max_render_frames = 60
 stage = bm3d.BM3DStages.ALL_STAGES

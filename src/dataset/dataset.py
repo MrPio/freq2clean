@@ -13,17 +13,15 @@ class DatasetMetadata:
         self.max_val_y = max_value_y
         self.data_range = data_range
         self.x = self.dir / x
-        self.gt = self.dir / gt
+        self.labelled = gt != None
+        if gt:
+            self.gt = self.dir / gt
 
 
 DATASETS = {
-    "oabf_astro": DatasetMetadata(
-        dir="dataset/oabf/astro",
-        max_value_x=14_207,
-        max_value_y=6_521,
-    ),
-    "oabf_vpm": DatasetMetadata(dir="dataset/oabf/vpm"),
-    "oabf_resonant_neuro": DatasetMetadata(dir="dataset/oabf/resonant_neuro"),
+    "oabf_astro": DatasetMetadata(dir="dataset/oabf/astro", max_value_x=14_207, max_value_y=6_521, x="x.tiff", gt=None),
+    "oabf_vpm": DatasetMetadata(dir="dataset/oabf/vpm", x="x.tiff", gt=None),
+    "oabf_resonant_neuro": DatasetMetadata(dir="dataset/oabf/resonant_neuro", x="x.tiff", gt=None),
     "synthetic": DatasetMetadata(
         dir="dataset/zenodo/synthetic",
         data_range=1_520,

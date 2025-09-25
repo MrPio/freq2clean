@@ -10,13 +10,13 @@ from src import Recording, DATASETS, tqdm, np
 
 # ARGS ========================================
 CODEC = "libx265"
-BITRATE = 12_000
+BITRATE = 10_000
 FPS = 30
 MAX_FRAMES = FPS * 20
 
-dataset = "synthetic"
-y_path = "2-sota/n2v/output/n2v_synthetic_frames6000_t32_ep10-v2.npy"
-fft_path = "3-video_fusion/results/synthetic/ftt_synthetic_frame3000_alphas0.85_32.npy"
+dataset = "oabf_astro"
+y_path = "dataset/oabf/astro/y.tiff"
+fft_path = "3-video_fusion/results/oabf_astro/ftt_oabf_astro_frame3000_alphas0.85deepcad_theirs.npy"
 # =============================================
 
 metadata = DATASETS[dataset]

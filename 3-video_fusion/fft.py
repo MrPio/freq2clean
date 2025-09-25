@@ -10,17 +10,19 @@ sys.path.append(str(FILE_DIR.parent))
 from src import *
 
 denoiser_name: Literal["deepcad", "noise2noise", "noise2void"] = "deepcad"
-denoiser_suffx = "300-150 norm"
-dataset = "synthetic"
-y_path = "../bkp/2-denoise/results/DataFolderIs_synthetic_202509211545_ModelFolderIs_synthetic_202509211437/E_10_Iter_1296/xf_E_10_Iter_1296_output.tif"
+denoiser_suffx = "theirs"
+dataset = "oabf_astro"
+y_path = "../dataset/oabf/astro/y.tiff"
 
 # Init
 METRICS_PATH = Path(f"fft_{dataset}_metrics_{denoiser_name}_{denoiser_suffx}.csv")
 clog("red:Loading Dataset...")
-metadata = DATASETS[dataset]
-x, y, gt = (Recording(_, max_frames=None) for _ in [metadata.x, y_path, metadata.gt])
+meta = DATASETS[dataset]
+x, y = (Recording(_, max_frames=None) for _ in [meta.x, y_path])
 x.np = x.np[: y.frames, : y.np.shape[1], : y.np.shape[2]]
-gt.np = gt.np[: y.frames, : y.np.shape[1], : y.np.shape[2]]
+if meta.labelled:
+    gt = Recording(meta.gt, max_frames=None)
+    gt.np = gt.np[: y.frames, : y.np.shape[1], : y.np.shape[2]]
 RES_DIR = FILE_DIR / f"results/{dataset}/"
 RES_DIR.mkdir(exist_ok=True, parents=True)
 
@@ -38,9 +40,9 @@ def test(frames, alphas, ssim3d_step=4, save=False):
         if METRICS_PATH.exists()
         else pd.DataFrame(columns=["suffx", "PSNR", "SSIM"]).set_index("suffx")
     )
-    if denoiser_name not in df.index:
+    if denoiser_name not in df.index and meta.labelled:
         clog("red:Initializing metrics...")
-        psnr_ = psnr3d(gt, y, data_range=metadata.data_range)
+        psnr_ = psnr3d(gt, y, data_range=meta.data_range)
         ssim_ = ssim3d(
             Recording(gt.np[::ssim3d_step]).normalized,
             Recording(y.np[::ssim3d_step]).normalized,
@@ -118,17 +120,18 @@ def test(frames, alphas, ssim3d_step=4, save=False):
         clog("yellow:Saving results...")
         np.save(RES_DIR / f"ftt_{dataset}_{suffx}{denoiser_name}_{denoiser_suffx}.npy", fused)
 
-    clog("yellow:Computing PSNR3D...")
-    psnr_ = psnr3d(gt.np[:end], fused[:end], data_range=metadata.data_range)
-    clog("yellow:Computing SSIM3D...")
-    ssim_ = ssim3d(
-        Recording(gt.np[:end:ssim3d_step]).normalized,
-        Recording(fused[:end:ssim3d_step]).normalized,
-    )
+    if meta.labelled:
+        clog("yellow:Computing PSNR3D...")
+        psnr_ = psnr3d(gt.np[:end], fused[:end], data_range=meta.data_range)
+        clog("yellow:Computing SSIM3D...")
+        ssim_ = ssim3d(
+            Recording(gt.np[:end:ssim3d_step]).normalized,
+            Recording(fused[:end:ssim3d_step]).normalized,
+        )
 
-    df.loc[suffx] = [psnr_, ssim_]
-    df.to_csv(METRICS_PATH)
-    clog("\tPSNR3D=", f"cyan:{psnr_:.2f}", "SSIM3D=", f"cyan:{ssim_:.2f}")
+        df.loc[suffx] = [psnr_, ssim_]
+        df.to_csv(METRICS_PATH)
+        clog("\tPSNR3D=", f"cyan:{psnr_:.2f}", "SSIM3D=", f"cyan:{ssim_:.2f}")
 
 
 # Alpha test
