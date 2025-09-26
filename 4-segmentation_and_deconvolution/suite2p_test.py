@@ -7,6 +7,7 @@ from src import Path, np, trange, pd, clog, cprint
 # Args
 dataset = "synthetic"
 denoiser = "fft_15"
+FAST_IOU=False
 
 # Init
 METRICS_PATH = Path(f"suite2p_matrics.csv")
@@ -20,7 +21,7 @@ def create_mask(stat_item, ly, lx):
     return mask
 
 
-def calculate_iou(mask1, mask2):
+def iou(mask1, mask2):
     """Calculates the Intersection over Union (IoU) for two boolean masks."""
     intersection = np.sum(mask1 & mask2)
     union = np.sum(mask1 | mask2)
@@ -63,51 +64,57 @@ def compare(test: str, gt: str = "gt", iou_threshold=0.5):
     n_test = len(stat_test)
     cprint(f"Found", n_gt, "ROIs in Ground Truth and", n_test, "ROIs in Test.")
 
-    clog("Building IoU matrix...")
-    iou_matrix = np.zeros((n_gt, n_test))
-    for i in trange(n_gt):
-        mask_gt = create_mask(stat_gt[i], ly, lx)
-        for j in range(n_test):
-            mask_test = create_mask(stat_test[j], ly, lx)
-            iou_matrix[i, j] = calculate_iou(mask_gt, mask_test)
+    if FAST_IOU:
+        gt_mask = np.logical_or.reduce([create_mask(_, ly, lx) for _ in stat_gt])
+        test_mask = np.logical_or.reduce([create_mask(_, ly, lx) for _ in stat_test])
+        tot_iou = iou(test_mask, gt_mask)
+        clog(f"IoU={tot_iou:.3f}")
+    else:
+        clog("Building IoU matrix...")
+        iou_matrix = np.zeros((n_gt, n_test))
+        for i in trange(n_gt):
+            mask_gt = create_mask(stat_gt[i], ly, lx)
+            for j in range(n_test):
+                mask_test = create_mask(stat_test[j], ly, lx)
+                iou_matrix[i, j] = iou(mask_gt, mask_test)
 
-    clog("Match ROIs using the Hungarian algorithm...")
-    row_ind, col_ind = linear_sum_assignment(-iou_matrix)
+        clog("Match ROIs using the Hungarian algorithm...")
+        row_ind, col_ind = linear_sum_assignment(-iou_matrix)
 
-    clog("Computing metrics...")
-    matched_ious = iou_matrix[row_ind, col_ind]
-    true_positives = np.sum(matched_ious >= iou_threshold)
-    false_negatives = n_gt - true_positives
-    false_positives = n_test - true_positives
-    precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0.0
-    recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0.0
-    f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
-    avg_iou_matched = np.mean(matched_ious[matched_ious >= iou_threshold]) if true_positives > 0 else 0.0
+        clog("Computing metrics...")
+        matched_ious = iou_matrix[row_ind, col_ind]
+        true_positives = np.sum(matched_ious >= iou_threshold)
+        false_negatives = n_gt - true_positives
+        false_positives = n_test - true_positives
+        precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0.0
+        recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0.0
+        f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
+        avg_iou_matched = np.mean(matched_ious[matched_ious >= iou_threshold]) if true_positives > 0 else 0.0
 
-    # --- Print Results ---
-    print("\n--- Segmentation Performance ---")
-    print(f"IoU Threshold: {iou_threshold}")
-    print("---------------------------------")
-    print(f"True Positives (TP):  {true_positives}")
-    print(f"False Positives (FP): {false_positives}")
-    print(f"False Negatives (FN): {false_negatives}")
-    print("---------------------------------")
-    print(f"Precision: {precision:.3f}")
-    print(f"Recall:    {recall:.3f}")
-    print(f"F1-Score:  {f1_score:.3f}")
-    print(f"Average IoU of matched ROIs: {avg_iou_matched:.3f}")
-    print("---------------------------------\n")
-    df.loc[SUFFX] = [
-        iou_threshold,
-        true_positives,
-        false_positives,
-        false_negatives,
-        precision,
-        recall,
-        f1_score,
-        avg_iou_matched,
-    ]
-    df.to_csv(METRICS_PATH)
+        # --- Print Results ---
+        print("\n--- Segmentation Performance ---")
+        print(f"IoU Threshold: {iou_threshold}")
+        print("---------------------------------")
+        print(f"True Positives (TP):  {true_positives}")
+        print(f"False Positives (FP): {false_positives}")
+        print(f"False Negatives (FN): {false_negatives}")
+        print("---------------------------------")
+        print(f"Precision: {precision:.3f}")
+        print(f"Recall:    {recall:.3f}")
+        print(f"F1-Score:  {f1_score:.3f}")
+        print(f"Average IoU of matched ROIs: {avg_iou_matched:.3f}")
+        print("---------------------------------\n")
+        df.loc[SUFFX] = [
+            iou_threshold,
+            true_positives,
+            false_positives,
+            false_negatives,
+            precision,
+            recall,
+            f1_score,
+            avg_iou_matched,
+        ]
+        df.to_csv(METRICS_PATH)
 
 
 compare(denoiser)
