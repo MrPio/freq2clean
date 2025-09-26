@@ -7,29 +7,50 @@ _ROOT_DIR = Path(__file__).parents[2]
 
 
 class DatasetMetadata:
-    def __init__(self, dir, data_range=2**16, max_value_x=None, max_value_y=None, x="x.tif", gt="gt.tif"):
+    def __init__(
+        self, dir, shape=None, data_range=2**16, max_value_x=None, max_value_y=None, x="x.tif", gt="gt.tif", hz=30
+    ):
         self.dir = _ROOT_DIR / dir
+        self.shape = shape
         self.max_val_x = max_value_x
         self.max_val_y = max_value_y
         self.data_range = data_range
         self.x = self.dir / x
         self.labelled = gt != None
+        self.hz = hz
         if gt:
             self.gt = self.dir / gt
 
 
 DATASETS = {
-    "oabf_astro": DatasetMetadata(dir="dataset/oabf/astro", max_value_x=14_207, max_value_y=6_521, x="x.tiff", gt=None),
+    "oabf_astro": DatasetMetadata(
+        dir="dataset/oabf/astro",
+        max_value_x=14_207,
+        max_value_y=6_521,
+        x="x.tiff",
+        gt=None,
+        hz=7,
+    ),
     "oabf_vpm": DatasetMetadata(dir="dataset/oabf/vpm", x="x.tiff", gt=None),
     "oabf_resonant_neuro": DatasetMetadata(dir="dataset/oabf/resonant_neuro", x="x.tiff", gt=None),
     "synthetic": DatasetMetadata(
         dir="dataset/zenodo/synthetic",
+        shape=(6000, 490, 490),
         data_range=1_520,
         x="noise_1Q_-5.52dBSNR_490x490x6000.tif",
         gt="clean_30Hz_490x490x6000.tif",
+        hz=30,
     ),  # 1_520 is the 99.9% Quantile of GT
-    "zebrafish": DatasetMetadata(dir="dataset/zenodo/zebrafish", data_range=32_767),
-    "neutrophils": DatasetMetadata(dir="dataset/zenodo/neutrophils", data_range=49_978),
+    "zebrafish": DatasetMetadata(
+        dir="dataset/zenodo/zebrafish",
+        shape=(9000, 485, 400),
+        data_range=32_767,
+        hz=15,
+    ),
+    "neutrophils": DatasetMetadata(
+        dir="dataset/zenodo/neutrophils",
+        data_range=49_978,
+    ),
 }
 
 

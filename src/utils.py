@@ -45,6 +45,8 @@ __eta = time_ns()
 
 
 def clog(*vals, sep=" "):
+    if len(vals) == 1 and ":" not in vals[0]:
+        vals = (random.choice(COLORS) + ":" + vals[0],)
     cprint(*vals, f"light_red:[{print_mem()}]", f"light_yellow:[{elapsed()}s]", sep=sep)
 
 

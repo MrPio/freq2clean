@@ -13,6 +13,8 @@ TODO.md
 3-video_fusion/results/
 3-video_fusion/best/
 
+4-segmentation_and_deconvolution/dataset/
+
 # other_experiments ====================
 other_experiments/diffdenoise/dataset/
 other_experiments/diffdenoise/dataset.zip

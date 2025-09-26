@@ -45,7 +45,7 @@ plt.rcParams.update(
 )
 # Used libraries
 import pandas as pd
-from tqdm import tqdm
+from tqdm import tqdm, trange
 import numpy as np
 
 try:

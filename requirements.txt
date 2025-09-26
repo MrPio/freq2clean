@@ -20,3 +20,4 @@ moviepy==1.0.3
 h5py
 cupy-cuda12x
 careamics
+suite2p
