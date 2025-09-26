@@ -5,8 +5,8 @@ sys.path.append("..")
 from src import DATASETS, clog
 
 # Args
-dataset = "zebrafish"
-folder = "x"
+dataset = "synthetic"
+folder = "fft_15"
 
 # Init
 meta = DATASETS[dataset]

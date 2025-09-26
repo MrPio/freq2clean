@@ -5,8 +5,8 @@ sys.path.append("..")
 from src import Path, np, trange, pd, clog, cprint
 
 # Args
-dataset = "zebrafish"
-denoiser = "fft"
+dataset = "synthetic"
+denoiser = "fft_15"
 
 # Init
 METRICS_PATH = Path(f"suite2p_matrics.csv")
