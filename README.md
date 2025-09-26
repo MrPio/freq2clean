@@ -61,6 +61,7 @@ An improvement is registered when segmenting with *Suite2p*.
 <p align="center">
   <img width="90%" src="assets/fft_vs_baseline_roi.png"/>
   <img width="70%" src="assets/synthetic_roi.gif"/>
+  <img width="70%" src="assets/synthetic_roi.png"/>
 </p>
 
 ## The FFT-Fusion algorithm
