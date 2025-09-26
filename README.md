@@ -56,6 +56,13 @@ This dataset lacks any kind of ground truth.
   <img width="70%" src="assets/vpm.gif"/>
 </p>
 
+## ROI detection with [*Suite2p*](https://github.com/MouseLand/suite2p)
+An improvement is registered when segmenting with *Suite2p*.
+<p align="center">
+  <img width="90%" src="assets/fft_vs_baseline_roi.png"/>
+  <img width="70%" src="assets/synthetic_roi.gif"/>
+</p>
+
 ## The FFT-Fusion algorithm
 My method is designed to enhance the performance of an upstream denoiser. As such, it is a post-processing activity that uses *look-ahead* to recover long-range temporal information. However, due to its simplicity, it is only effective in still recordings. For this enhancement to work, both the camera and the objects need to be still. The faster the spatial dynamics, the shorter the temporal window should be.
 
