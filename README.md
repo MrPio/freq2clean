@@ -59,14 +59,14 @@ This dataset lacks any kind of ground truth.
 ## ROIs segmentation 
 
 ### [*Cellpose*](https://github.com/MouseLand/cellpose)
-An huge improvement is registered when segmenting with *Cellpose*. Results have been computed by averaging segmentation predictions over 50 sparse frames.
+A huge improvement is registered when segmenting with *Cellpose*. Results have been computed by averaging segmentation predictions over 50 sparse frames.
 <p align="center">
   <img width="90%" src="assets/deepcad_vs_fft_cellpose.png"/>
   <img width="90%" src="assets/deepcad_vs_fft_cellpose_masks.png"/>
 </p>
 
 ### [*Suite2p*](https://github.com/MouseLand/suite2p)
-An improvement is registered when segmenting with *Suite2p*.
+A slight improvement is registered when segmenting with *Suite2p*.
 <p align="center">
   <img width="90%" src="assets/fft_vs_baseline_roi.png"/>
   <img width="70%" src="assets/synthetic_roi.gif"/>
