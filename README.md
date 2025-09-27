@@ -8,7 +8,7 @@ The x-axis refers to the value used for the `patch_t` hyperparameter during trai
 As shown in the figure above, **FFT video fusion post-processing enables a value of `patch_t = 30` to outscore predictions made with `patch_t = 300` (which requires $5\times$ more training time) in terms of both PSNR and SSIM3D.**
 
 ## 📦 TL;DR
-_Freq2Clean_ is a simple, yet effective post-processing technique that recovers high-frequency spatial details by leveraging the low-frequency temporal dynamics of still recordings. To do so, it performs a video fusion in the frequency domain. The results show that it significantly improves the PSNR and SSIM3D metrics on labeled synthetic datasets.
+_Freq2Clean_ is a simple, yet effective post-processing technique that recovers high-frequency spatial details by leveraging the low-frequency temporal dynamics of still recordings. To do so, it performs a video fusion in the frequency domain. The results show that **_Freq2Clean_ significantly improves the PSNR, SSIM3D, and IoU metrics on labeled synthetic datasets and increases the number of recognized regions of interest (ROIs)**.
 
 ## Hyphotesis
 Two hypotheses are made:
