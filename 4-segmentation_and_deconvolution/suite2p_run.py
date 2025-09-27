@@ -2,20 +2,25 @@ import sys
 import suite2p
 
 sys.path.append("..")
-from src import DATASETS, clog
+from src import DATASETS, clog, Recording
 
 # Args
 dataset = "synthetic"
-folder = "fft_15"
+folder = "fft"
+max_frames = 500
 
 # Init
 meta = DATASETS[dataset]
 n_time, Ly, Lx = meta.shape
 ops = suite2p.default_ops()
-# ops['threshold_scaling'] = 2.0 # we are increasing the threshold for finding ROIs to limit the number of non-cell ROIs found (sometimes useful in gcamp injections)
-ops["fs"] = meta.hz  # sampling rate of recording, determines binning for cell detection
-ops["tau"] = 1.25  # timescale of gcamp to use for deconvolution
-db = {"data_path": [f"dataset/{dataset}/{folder}"]}
+ops["fs"] = meta.hz
+ops["tau"] = 1.25
+ops["soma_crop"] = False
+db = {"data_path": [c]}
+
+if max_frames:
+    clog(f"Cutting TIFF to {max_frames} frames...")
+    Recording(db["data_path"][0] + "/data.tiff", max_frames=max_frames).save(db["data_path"][0] + "/data.tiff")
 
 clog("light_red:Running pipeline...")
 output_ops = suite2p.run_s2p(ops=ops, db=db)

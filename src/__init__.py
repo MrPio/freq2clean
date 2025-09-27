@@ -29,7 +29,19 @@ from .metrics.ale import ale
 from .metrics.pearson import pearson3d
 
 # Utils
-from .utils import imshow, cprint, clog, get_gpu_memory, get_cpu_memory, print_mem, tensor2pil, pil_stack, gauss1D, elapsed
+from .utils import (
+    imshow,
+    cprint,
+    clog,
+    get_gpu_memory,
+    get_cpu_memory,
+    print_mem,
+    tensor2pil,
+    pil_stack,
+    gauss1D,
+    elapsed,
+    mkdir
+)
 
 # Configuration
 import matplotlib.pyplot as plt
@@ -60,4 +72,3 @@ cprint("Cupy Available=", CUPY_AVAILABLE)
 from pathlib import Path
 
 _ROOT_DIR = Path(__file__).parents[1]
-

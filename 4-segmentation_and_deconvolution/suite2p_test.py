@@ -6,7 +6,7 @@ from src import Path, np, trange, pd, clog, cprint
 
 # Args
 dataset = "synthetic"
-denoiser = "fft_15"
+denoiser = "deepcad"
 FAST_IOU=False
 
 # Init

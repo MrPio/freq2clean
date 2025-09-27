@@ -45,8 +45,8 @@ __eta = time_ns()
 
 
 def clog(*vals, sep=" "):
-    if len(vals) == 1 and ":" not in vals[0]:
-        vals = (random.choice(COLORS) + ":" + vals[0],)
+    # if len(vals) == 1 and ":" not in vals[0]:
+        # vals = (random.choice(COLORS) + ":" + vals[0],)
     cprint(*vals, f"light_red:[{print_mem()}]", f"light_yellow:[{elapsed()}s]", sep=sep)
 
 
@@ -199,3 +199,9 @@ def zoom_img(x, factor: float = 1):
 
 def elapsed():
     return (time_ns() - __eta) // 10**9
+
+
+def mkdir(path: str | Path) -> Path:
+    path = Path(path)
+    path.mkdir(exist_ok=True, parents=True)
+    return path

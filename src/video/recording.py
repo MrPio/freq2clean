@@ -57,8 +57,8 @@ class Recording:
         """
         self.np = self.np / a * b
 
-    def save_sample(self, path: Path | str, length=300):
-        tiff.imwrite(str(path), self.np[: min(self.frames, length)], dtype=np.float32)
+    def save(self, path: Path | str, max_frames=None):
+        tiff.imwrite(str(path), self.np[: max_frames], dtype=self.np.dtype)
 
     def render(self, path: Path | str, start=None, end=None, bitrate=4000, fps=30, codec="libx265", silent=True):
         iio.imwrite(
