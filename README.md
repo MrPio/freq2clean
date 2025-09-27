@@ -62,6 +62,7 @@ This dataset lacks any kind of ground truth.
 An huge improvement is registered when segmenting with *Cellpose*. Results have been computed by averaging segmentation predictions over 50 sparse frames.
 <p align="center">
   <img width="90%" src="assets/deepcad_vs_fft_cellpose.png"/>
+  <img width="90%" src="assets/deepcad_vs_fft_cellpose_masks.png"/>
 </p>
 
 ### [*Suite2p*](https://github.com/MouseLand/suite2p)
