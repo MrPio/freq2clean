@@ -6,7 +6,6 @@ from src import Path, np, pd, clog, cprint
 # Args
 dataset = sys.argv[1]
 denoisers = ["deepcad", "fft"]
-# frames = 100
 model = "cpsam"  # ["cpsam", "cyto3", "nuclei"]
 
 # Init
@@ -39,28 +38,22 @@ def compare(test: str, gt: str = "gt"):
         iou_threshold (float): The IoU threshold to consider a match a true positive.
     """
     SUFFX = f"{dataset}_{test}"
-    test_path = Path(f"cellpose_results/{dataset}/{test}/{frame}_{model}_mask.npy")
-    gt_path = Path(f"cellpose_results/{dataset}/{gt}/{frame}_{model}_mask.npy")
+    test_path = Path(f"cellpose_results/{dataset}/{test}/{model}_mask.npy")
+    gt_path = Path(f"cellpose_results/{dataset}/{gt}/{model}_mask.npy")
 
     df = (
         pd.read_csv(METRICS_PATH, index_col="suffx")
         if METRICS_PATH.exists()
         else pd.DataFrame(columns=["suffx", "ROI GT", "ROIs", "IoU"]).set_index("suffx")
     )
-
-    clog("Load suite2p outputs...")
     mask_test = np.load(test_path)
     mask_gt = np.load(gt_path)
-
-    clog("Ensure dimensions match...")
-    ly, lx = mask_gt.shape
-    assert ly == mask_test.shape[0] and lx == mask_test.shape[1]
-
+    print(mask_gt.shape)
     n_gt = mask_gt.max()
     n_test = mask_test.max()
     cprint(f"Found", n_gt, "ROIs in Ground Truth and", n_test, "ROIs in Test.")
 
-    tot_iou = iou(mask_test, mask_gt)
+    tot_iou = np.mean([iou(mask_test[i], mask_gt[i]) for i in range(mask_gt.shape[0])])
     clog(f"IoU=", f"blue:{tot_iou:.3f}")
     df.loc[SUFFX] = [n_gt, n_test, tot_iou]
     df.to_csv(METRICS_PATH)
