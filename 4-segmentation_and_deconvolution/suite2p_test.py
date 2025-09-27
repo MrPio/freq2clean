@@ -10,7 +10,7 @@ denoiser = "deepcad"
 FAST_IOU=False
 
 # Init
-METRICS_PATH = Path(f"suite2p_matrics.csv")
+METRICS_PATH = Path(f"suite2p_metrics.csv")
 SUFFX = f"{dataset}_metrics_{denoiser}"
 
 

@@ -5,11 +5,23 @@ from src import Path, np, pd, clog, cprint
 
 # Args
 dataset = sys.argv[1]
-denoisers = ["deepcad", "fft"]
+denoisers = [
+    "gt",
+    "deepcad_15",
+    "fft_15",
+    "deepcad_30",
+    "fft_30",
+    "deepcad_75",
+    "fft_75",
+    "deepcad_150",
+    "fft_150",
+    "deepcad_300",
+    "fft_300",
+]
 model = "cpsam"  # ["cpsam", "cyto3", "nuclei"]
 
 # Init
-METRICS_PATH = Path(f"cellpose_matrics.csv")
+METRICS_PATH = Path(f"cellpose_metrics.csv")
 
 
 def create_mask(stat_item, ly, lx):
@@ -48,9 +60,10 @@ def compare(test: str, gt: str = "gt"):
     )
     mask_test = np.load(test_path)
     mask_gt = np.load(gt_path)
-    print(mask_gt.shape)
     n_gt = mask_gt.max()
     n_test = mask_test.max()
+    mask_test = mask_test.astype(bool)
+    mask_gt = mask_gt.astype(bool)
     cprint(f"Found", n_gt, "ROIs in Ground Truth and", n_test, "ROIs in Test.")
 
     tot_iou = np.mean([iou(mask_test[i], mask_gt[i]) for i in range(mask_gt.shape[0])])
