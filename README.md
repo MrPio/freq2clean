@@ -56,7 +56,7 @@ This dataset lacks any kind of ground truth.
   <img width="70%" src="assets/vpm.gif"/>
 </p>
 
-## ROI detection 
+## ROIs segmentation 
 
 ### [*Cellpose*](https://github.com/MouseLand/cellpose)
 An huge improvement is registered when segmenting with *Cellpose*. Results have been computed by averaging segmentation predictions over 50 sparse frames.
