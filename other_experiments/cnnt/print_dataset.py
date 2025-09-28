@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path("..").resolve()))
+sys.path.append("..")
 from src import imshow, cprint, tqdm, Recording
 
 dataset_dir = Path("dataset/Denoising/")

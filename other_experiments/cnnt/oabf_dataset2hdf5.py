@@ -9,7 +9,7 @@ import h5py
 import numpy as np
 from tqdm import tqdm
 
-sys.path.append(str(Path("..").resolve()))
+sys.path.append("..")
 from src import *
 
 

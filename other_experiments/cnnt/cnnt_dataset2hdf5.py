@@ -11,7 +11,7 @@ import h5py
 import tifffile as tiff
 from typing import Literal
 
-sys.path.append(str(Path("..").resolve()))
+sys.path.append("..")
 from src import *
 
 
