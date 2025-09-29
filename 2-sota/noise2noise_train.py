@@ -23,8 +23,8 @@ OUT_DIR = mkdir(WORK_DIR / "output")
 METRICS_PATH = OUT_DIR / "metrics.csv"
 
 clog("red:Loading Dataset...")
-metadata = DATASETS[dataset]
-x, gt = (Recording(_, max_frames=max_frames).normalized for _ in [metadata.x, metadata.gt])
+meta = DATASETS[dataset]
+x, gt = (Recording(_, max_frames=max_frames).normalized for _ in [meta.x, meta.gt])
 x_mean, gt_mean = (np.mean(_) for _ in [x, gt])
 x_std, gt_std = (np.std(_) for _ in [x, gt])
 df = (
