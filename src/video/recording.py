@@ -31,14 +31,16 @@ class Recording:
         ),
     }
 
-    def __init__(self, video: PathLike | np.ndarray, max_frames: int = 300):
+    def __init__(self, video: PathLike | np.ndarray, max_frames: int | None = 300):
         self.np = (
             video
             if isinstance(video, np.ndarray)
             else (
                 np.load(str(video))[:max_frames]
                 if str(video).endswith(".npy")
-                else tiff.imread(str(video), key=range(max_frames) if max_frames else None)
+                else tiff.imread(
+                    str(video), key=range(max_frames) if max_frames else None
+                )
             )
         )
 
@@ -58,9 +60,18 @@ class Recording:
         self.np = self.np / a * b
 
     def save(self, path: Path | str, max_frames=None):
-        tiff.imwrite(str(path), self.np[: max_frames], dtype=self.np.dtype)
+        tiff.imwrite(str(path), self.np[:max_frames], dtype=self.np.dtype)
 
-    def render(self, path: Path | str, start=None, end=None, bitrate=4000, fps=30, codec="libx265", silent=True):
+    def render(
+        self,
+        path: Path | str,
+        start=None,
+        end=None,
+        bitrate=4000,
+        fps=30,
+        codec="libx265",
+        silent=True,
+    ):
         iio.imwrite(
             uri=str(path),
             image=(self.normalized[start:end] * 255).astype(np.uint8),
@@ -72,10 +83,14 @@ class Recording:
         return Video(path)
 
     def hist(self, figsize=(12, 5), bins=100):
-        ax = pd.Series(self.np.flatten()).hist(figsize=figsize, bins=bins, edgecolor="white")
+        ax = pd.Series(self.np.flatten()).hist(
+            figsize=figsize, bins=bins, edgecolor="white"
+        )
         ax.set_yscale("log")
 
-    def avg_frame(self, frame: int, window=1, type: Literal["box", "gauss"] = "box") -> np.ndarray:
+    def avg_frame(
+        self, frame: int, window=1, type: Literal["box", "gauss"] = "box"
+    ) -> np.ndarray:
         if window == 1:
             return self.np[frame]
         start = max(0, frame - window // 2)

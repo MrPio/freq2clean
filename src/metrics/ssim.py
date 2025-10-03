@@ -55,13 +55,15 @@ def __gaussian(window_size, sigma):
     return gauss / gauss.sum()
 
 
-def ssim3d(vox1, vox2, window_size=11, size_average=True, device="cuda"):
+def ssim3d(vox1, vox2, window_size=11, size_average=True, device="cuda", step=None):
     """Data must be normalized [0,1]"""
     if isinstance(vox1, Recording):
         vox1 = vox1.np
     if isinstance(vox2, Recording):
         vox2 = vox2.np
-
+    if step:
+        vox1 = vox1[::step]
+        vox2 = vox2[::step]
     if isinstance(vox1, np.ndarray) and isinstance(vox2, np.ndarray):
         vox1 = torch.from_numpy(vox1).unsqueeze(0).unsqueeze(0).float().to(device)  # -> (N=1,C=1,D,H,W)
         vox2 = torch.from_numpy(vox2).unsqueeze(0).unsqueeze(0).float().to(device)  # -> (N=1,C=1,D,H,W)
@@ -85,4 +87,6 @@ def ssim(img1: np.ndarray | Recording, img2: np.ndarray | Recording, data_range=
         img1 = img1.np
     if isinstance(img2, Recording):
         img2 = img2.np
+    if len(img1.shape) == 3:
+        return ssim3d(img1, img2)
     return structural_similarity(img1, img2, data_range=data_range)
