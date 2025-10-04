@@ -8,125 +8,127 @@ FILE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(FILE_DIR.parent))
 from src import *
 
-METRICS_PATH = Path("dct_synthetic_metrics.csv")
 MAX_FRAMES = None
 
-# Init
-clog("red:Loading Dataset...")
-meta = DATASETS["synthetic"]
-ds_dir = meta.dir
-x_path = ds_dir / "noise_1Q_-5.52dBSNR_490x490x6000.tif"
-y_path = "../2-sota/results/DataFolderIs_synthetic_202509211503_ModelFolderIs_synthetic_202509211433/E_10_Iter_1248/xf_E_10_Iter_1248_output.tif"  # 150-150
-gt_path = ds_dir / "clean_30Hz_490x490x6000.tif"
-x, y, gt = (Recording(_, max_frames=MAX_FRAMES) for _ in [x_path, y_path, gt_path])
-RES_DIR = mkdir(FILE_DIR / "results/synthetic/")
 means = {}
+for ds_variant in [15, 75]:
+    # Init
+    clog("red:Loading Dataset...")
+    meta = DATASETS["synthetic"]
+    ds_dir = meta.dir
+    y_paths = {
+        300: "../2-sota/results/DataFolderIs_synthetic_202509211545_ModelFolderIs_synthetic_202509211437/E_10_Iter_1296/xf_E_10_Iter_1296_output.tif",
+        150: "../2-sota/results/DataFolderIs_synthetic_202509211503_ModelFolderIs_synthetic_202509211433/E_10_Iter_1248/xf_E_10_Iter_1248_output.tif",
+        75: "../2-sota/results/DataFolderIs_synthetic_202509211502_ModelFolderIs_synthetic_202509211436/E_10_Iter_1248/xf_E_10_Iter_1248_output.tif",
+        30: "../2-sota/results/DataFolderIs_synthetic_202509211306_ModelFolderIs_synthetic_202509211220/E_10_Iter_1264/xf_E_10_Iter_1264_output.tif",
+        15: "../2-sota/results/DataFolderIs_synthetic_202509211422_ModelFolderIs_synthetic_202509211352/E_10_Iter_1200/xf_E_10_Iter_1200_output.tif",
+    }
+    x, y, gt = (Recording(_, max_frames=MAX_FRAMES) for _ in [meta.x, y_paths[ds_variant], meta.gt])
+    RES_DIR = mkdir(FILE_DIR / "results/synthetic/")
+    METRICS_PATH = Path(f"dct_synthetic_metrics_{ds_variant}.csv")
 
+    def test(frames, win, s0, δs, t0, δt, ssim3d_step=4, save=False):
+        suffx = f"frame{frames}_win{win}_s0{s0}_δs{δs}_t0{t0}_δt{δt}_{ds_variant}"
+        clog(f"magenta:RUN --> {suffx}")
 
-def test(frames, win, s0, δs, t0, δt, ssim3d_step=4, save=False):
-    suffx = f"frame{frames}_win{win}_s0{s0}_δs{δs}_t0{t0}_δt{δt}"
-    clog(f"magenta:RUN --> {suffx}")
+        df = (
+            pd.read_csv(METRICS_PATH, index_col="suffx")
+            if METRICS_PATH.exists()
+            else pd.DataFrame(columns=["suffx", "PSNR", "SSIM"]).set_index("suffx")
+        )
+        if "deepcad" not in df.index:
+            # clog("red:Initializing metrics...")
+            # psnr_ = psnr3d(gt, y, data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
+            # ssim_ = ssim3d(gt.np[::ssim3d_step], y.np[::ssim3d_step])
+            # df.loc["deepcad"] = [psnr_, ssim_]
+            # df.to_csv(METRICS_PATH)
+            # clog(
+            #     "\tDeepCAD --> PSNR3D=",
+            #     f"cyan:{psnr_:.2f}",
+            #     "SSIM3D=",
+            #     f"cyan:{ssim_:.2f}",
+            #     f"[{print_mem()}]",
+            #     f"[{elapsed()}s]",
+            # )
+            df.loc["deepcad"] = [0, 0]
 
-    df = (
-        pd.read_csv(METRICS_PATH, index_col="suffx")
-        if METRICS_PATH.exists()
-        else pd.DataFrame(columns=["suffx", "PSNR", "SSIM"]).set_index("suffx")
-    )
-    if "deepcad" not in df.index:
-        # clog("red:Initializing metrics...")
-        # psnr_ = psnr3d(gt, y, data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
-        # ssim_ = ssim3d(gt.np[::ssim3d_step], y.np[::ssim3d_step])
-        # df.loc["deepcad"] = [psnr_, ssim_]
-        # df.to_csv(METRICS_PATH)
-        # clog(
-        #     "\tDeepCAD --> PSNR3D=",
-        #     f"cyan:{psnr_:.2f}",
-        #     "SSIM3D=",
-        #     f"cyan:{ssim_:.2f}",
-        #     f"[{print_mem()}]",
-        #     f"[{elapsed()}s]",
-        # )
-        df.loc["deepcad"] = [32.849572493962576, 0.822667121887207]
+        # Mask
+        T, H, W = frames, *x.np.shape[1:]
+        w_t = np.arange(T)[:, None, None]
+        w_y = np.arange(H)[None, :, None]
+        w_x = np.arange(W)[None, None, :]
+        w_r = np.sqrt(w_y**2 + w_x**2)
+        w_s = np.clip((w_r - (s0 - δs)) / (2 * δs), 0, 1)  # grows from 0→1 around s0
+        w_t = np.clip((w_t - (t0 - δt)) / (2 * δt), 0, 1)  # grows from 0→1 around t0
+        W = w_s * (1 - w_t)
 
-    # Mask
-    T, H, W = frames, *x.np.shape[1:]
-    w_t = np.arange(T)[:, None, None]
-    w_y = np.arange(H)[None, :, None]
-    w_x = np.arange(W)[None, None, :]
-    w_r = np.sqrt(w_y**2 + w_x**2)
-    w_s = np.clip((w_r - (s0 - δs)) / (2 * δs), 0, 1)  # grows from 0→1 around s0
-    w_t = np.clip((w_t - (t0 - δt)) / (2 * δt), 0, 1)  # grows from 0→1 around t0
-    W = w_s * (1 - w_t)
+        if win not in means:
+            clog("blue:Computing Avg...")
+            means[win] = x.avg_fast(win)
 
-    if win not in means:
-        clog("blue:Computing Avg...")
-        means[win] = x.avg_fast(win)
+        def dct_fusion(vox_x, vox_y):
+            dct_x = dctn(vox_x, type=2, norm="ortho")
+            dct_y = dctn(vox_y, type=2, norm="ortho")
+            merged = W * dct_x + (1 - W) * dct_y
+            return idctn(merged, norm="ortho")
 
-    def dct_fusion(vox_x, vox_y):
-        dct_x = dctn(vox_x, type=2, norm="ortho")
-        dct_y = dctn(vox_y, type=2, norm="ortho")
-        merged = W * dct_x + (1 - W) * dct_y
-        return idctn(merged, norm="ortho")
+        fused = np.empty_like(y.np)
+        for i in trange(x.frames // frames, desc="DCT fusion...", colour="cyan"):
+            start = i * frames
+            end = start + frames
+            fused[start:end] = dct_fusion(means[win][start:end], y.np[start:end])
 
-    fused = np.empty_like(y.np)
-    for i in trange(x.frames // frames, desc="DCT fusion...", colour="cyan"):
-        start = i * frames
-        end = start + frames
-        fused[start:end] = dct_fusion(means[win][start:end], y.np[start:end])
+        # Metrics
+        if save:
+            clog("yellow:Saving results...")
+            np.save(RES_DIR / f"dct_fused_{suffx}.npy", fused)
 
-    # Metrics
-    if save:
-        clog("yellow:Saving results...")
-        np.save(RES_DIR / f"dct_fused_{suffx}.npy", fused)
+        clog("yellow:Computing PSNR3D...")
+        # psnr_ = psnr3d(gt.np[:end], fused[:end], data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
+        # clog("yellow:Computing SSIM3D...")
+        # ssim_ = ssim3d(gt.np[:end:ssim3d_step], fused[:end:ssim3d_step])
+        psnr_ = psnr3d(gt, fused, data_range=meta.data_range)
+        ssim_ = ssim3d(gt.normalized, Recording(fused).normalized, step=ssim3d_step)
 
-    clog("yellow:Computing PSNR3D...")
-    # psnr_ = psnr3d(gt.np[:end], fused[:end], data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
-    # clog("yellow:Computing SSIM3D...")
-    # ssim_ = ssim3d(gt.np[:end:ssim3d_step], fused[:end:ssim3d_step])
-    psnr_ = psnr3d(gt, fused, data_range=meta.data_range)
-    ssim_ = ssim3d(gt.normalized, Recording(fused).normalized, step=ssim3d_step)
+        df.loc[suffx] = [psnr_, ssim_]
+        df.to_csv(METRICS_PATH)
+        clog("\tPSNR3D=", f"cyan:{psnr_:.2f}", "SSIM3D=", f"cyan:{ssim_:.2f}")
 
-    df.loc[suffx] = [psnr_, ssim_]
-    df.to_csv(METRICS_PATH)
-    clog("\tPSNR3D=", f"cyan:{psnr_:.2f}", "SSIM3D=", f"cyan:{ssim_:.2f}")
+    # Weights test
+    # for s0, δs, t0, δt in tqdm(
+    #     [
+    #         (8, 24, 0, 64),
+    #         (16, 64, 0, 32),
+    #         (48, 128, -6, 16),
+    #         (64, 196, -6, 8),
 
+    #         (64, 128, -6, 16),
+    #         (128, 64, -6, 16),
+    #         (64, 128, -6, 32),
+    #         (128, 64, -6, 32),
 
-# Weights test
-# for s0, δs, t0, δt in tqdm(
-#     [
-#         (8, 24, 0, 64),
-#         (16, 64, 0, 32),
-#         (48, 128, -6, 16),
-#         (64, 196, -6, 8),
+    #         (48, 96, -6, 16),
+    #         (36, 72, -6, 16),
+    #         (36, 72, -6, 12),
+    #         (36, 72, -6, 8),
+    #         (48, 96, 0, 4),
+    #     ]
+    # ):
+    #     test(frames=300, win=512, s0=s0, δs=δs, t0=t0, δt=δt)
 
-#         (64, 128, -6, 16),
-#         (128, 64, -6, 16),
-#         (64, 128, -6, 32),
-#         (128, 64, -6, 32),
+    # Frames test
+    # s0, δs, t0, δt = (48, 128, -6, 16)
+    # for frames in tqdm([6000,1000]):
+    #     test(frames=frames, win=512, s0=s0, δs=δs, t0=t0, δt=δt)
 
-#         (48, 96, -6, 16),
-#         (36, 72, -6, 16),
-#         (36, 72, -6, 12),
-#         (36, 72, -6, 8),
-#         (48, 96, 0, 4),
-#     ]
-# ):
-#     test(frames=300, win=512, s0=s0, δs=δs, t0=t0, δt=δt)
+    # Avgs test
+    # s0, δs, t0, δt = (48, 128, -6, 16)
+    # frames = 600
+    # for win in tqdm([1, 4, 16, 64, 256, 1024, 2048, 4096, 6000]):
+    #     test(frames=frames, win=win, s0=s0, δs=δs, t0=t0, δt=δt)
 
-# Frames test
-# s0, δs, t0, δt = (48, 128, -6, 16)
-# for frames in tqdm([6000,1000]):
-#     test(frames=frames, win=512, s0=s0, δs=δs, t0=t0, δt=δt)
-
-# Avgs test
-# s0, δs, t0, δt = (48, 128, -6, 16)
-# frames = 600
-# for win in tqdm([1, 4, 16, 64, 256, 1024, 2048, 4096, 6000]):
-#     test(frames=frames, win=win, s0=s0, δs=δs, t0=t0, δt=δt)
-
-
-# BEST
-s0, δs, t0, δt = (36, 72, -6, 16)
-frames = 3000
-win = 6000
-test(frames=frames, win=win, s0=s0, δs=δs, t0=t0, δt=δt, save=True)
+    # BEST
+    s0, δs, t0, δt = (36, 72, -6, 16)
+    frames = 3000
+    win = 6000
+    test(frames=frames, win=win, s0=s0, δs=δs, t0=t0, δt=δt, save=True)
