@@ -8,7 +8,7 @@ FILE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(FILE_DIR.parent))
 from src import *
 
-METRICS_PATH = Path("dct_syntethic_metrics.csv")
+METRICS_PATH = Path("dct_synthetic_metrics.csv")
 MAX_FRAMES = None
 
 # Init
