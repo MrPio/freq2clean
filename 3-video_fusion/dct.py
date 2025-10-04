@@ -12,20 +12,20 @@ METRICS_PATH = Path("dct_synthetic_metrics.csv")
 MAX_FRAMES = None
 
 # Init
-cprint("red:Loading Dataset...", f"[{print_mem()}]", f"[{elapsed()}s]")
-ds_dir = DATASETS["synthetic"].dir
+clog("red:Loading Dataset...")
+meta = DATASETS["synthetic"]
+ds_dir = meta.dir
 x_path = ds_dir / "noise_1Q_-5.52dBSNR_490x490x6000.tif"
-y_path = ds_dir / "deepcad_E_10_test.tif"
+y_path = "../2-sota/results/DataFolderIs_synthetic_202509211503_ModelFolderIs_synthetic_202509211433/E_10_Iter_1248/xf_E_10_Iter_1248_output.tif"  # 150-150
 gt_path = ds_dir / "clean_30Hz_490x490x6000.tif"
 x, y, gt = (Recording(_, max_frames=MAX_FRAMES) for _ in [x_path, y_path, gt_path])
-RES_DIR = FILE_DIR / "results/synthetic/"
-RES_DIR.mkdir(exist_ok=True)
+RES_DIR = mkdir(FILE_DIR / "results/synthetic/")
 means = {}
 
 
 def test(frames, win, s0, δs, t0, δt, ssim3d_step=4, save=False):
     suffx = f"frame{frames}_win{win}_s0{s0}_δs{δs}_t0{t0}_δt{δt}"
-    cprint(f"magenta:RUN --> {suffx}", f"[{print_mem()}]", f"[{elapsed()}s]")
+    clog(f"magenta:RUN --> {suffx}")
 
     df = (
         pd.read_csv(METRICS_PATH, index_col="suffx")
@@ -33,20 +33,20 @@ def test(frames, win, s0, δs, t0, δt, ssim3d_step=4, save=False):
         else pd.DataFrame(columns=["suffx", "PSNR", "SSIM"]).set_index("suffx")
     )
     if "deepcad" not in df.index:
-        cprint("red:Initializing metrics...", f"[{print_mem()}]", f"[{elapsed()}s]")
-        psnr_ = psnr3d(gt, y, data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
-        ssim_ = ssim3d(gt.np[::ssim3d_step], y.np[::ssim3d_step])
-        df.loc["deepcad"] = [psnr_, ssim_]
-        df.to_csv(METRICS_PATH)
-        cprint(
-            "\tDeepCAD --> PSNR3D=",
-            f"cyan:{psnr_:.2f}",
-            "SSIM3D=",
-            f"cyan:{ssim_:.2f}",
-            f"[{print_mem()}]",
-            f"[{elapsed()}s]",
-        )
-        # df.loc["deepcad"] = [32.30381747535838, 0.5577632784843445]
+        # clog("red:Initializing metrics...")
+        # psnr_ = psnr3d(gt, y, data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
+        # ssim_ = ssim3d(gt.np[::ssim3d_step], y.np[::ssim3d_step])
+        # df.loc["deepcad"] = [psnr_, ssim_]
+        # df.to_csv(METRICS_PATH)
+        # clog(
+        #     "\tDeepCAD --> PSNR3D=",
+        #     f"cyan:{psnr_:.2f}",
+        #     "SSIM3D=",
+        #     f"cyan:{ssim_:.2f}",
+        #     f"[{print_mem()}]",
+        #     f"[{elapsed()}s]",
+        # )
+        df.loc["deepcad"] = [32.849572493962576, 0.822667121887207]
 
     # Mask
     T, H, W = frames, *x.np.shape[1:]
@@ -59,7 +59,7 @@ def test(frames, win, s0, δs, t0, δt, ssim3d_step=4, save=False):
     W = w_s * (1 - w_t)
 
     if win not in means:
-        cprint("blue:Computing Avg...", f"[{print_mem()}]", f"[{elapsed()}s]")
+        clog("blue:Computing Avg...")
         means[win] = x.avg_fast(win)
 
     def dct_fusion(vox_x, vox_y):
@@ -76,17 +76,19 @@ def test(frames, win, s0, δs, t0, δt, ssim3d_step=4, save=False):
 
     # Metrics
     if save:
-        cprint("yellow:Saving results...", f"[{print_mem()}]", f"[{elapsed()}s]")
+        clog("yellow:Saving results...")
         np.save(RES_DIR / f"dct_fused_{suffx}.npy", fused)
 
-    cprint("yellow:Computing PSNR3D...", f"[{print_mem()}]", f"[{elapsed()}s]")
-    psnr_ = psnr3d(gt.np[:end], fused[:end], data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
-    cprint("yellow:Computing SSIM3D...", f"[{print_mem()}]", f"[{elapsed()}s]")
-    ssim_ = ssim3d(gt.np[:end:ssim3d_step], fused[:end:ssim3d_step])
+    clog("yellow:Computing PSNR3D...")
+    # psnr_ = psnr3d(gt.np[:end], fused[:end], data_range=1_520)  # 1_520 is the 99.9% Quantile of GT
+    # clog("yellow:Computing SSIM3D...")
+    # ssim_ = ssim3d(gt.np[:end:ssim3d_step], fused[:end:ssim3d_step])
+    psnr_ = psnr3d(gt, fused, data_range=meta.data_range)
+    ssim_ = ssim3d(gt.normalized, Recording(fused).normalized, step=ssim3d_step)
 
     df.loc[suffx] = [psnr_, ssim_]
     df.to_csv(METRICS_PATH)
-    cprint("\tPSNR3D=", f"cyan:{psnr_:.2f}", "SSIM3D=", f"cyan:{ssim_:.2f}", f"[{print_mem()}]", f"[{elapsed()}s]")
+    clog("\tPSNR3D=", f"cyan:{psnr_:.2f}", "SSIM3D=", f"cyan:{ssim_:.2f}")
 
 
 # Weights test
