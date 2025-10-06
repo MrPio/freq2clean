@@ -52,7 +52,12 @@ def test(frames, alphas, ssim3d_step=4, save=False):
         )
         df.loc[denoiser_name] = [psnr_, ssim_]
         df.to_csv(METRICS_PATH)
-        clog(f"\t{denoiser_name} --> PSNR3D=", f"cyan:{psnr_:.2f}", "SSIM3D=", f"cyan:{ssim_:.2f}")
+        clog(
+            f"\t{denoiser_name} --> PSNR3D=",
+            f"cyan:{psnr_:.2f}",
+            "SSIM3D=",
+            f"cyan:{ssim_:.2f}",
+        )
         # df.loc[denoiser_name] = [0, 0]
 
     def fft_fusion(vox):
@@ -116,12 +121,17 @@ def test(frames, alphas, ssim3d_step=4, save=False):
     for i in trange(x.frames // frames, desc="FFT fusion...", colour="cyan"):
         start = i * frames
         end = start + frames
-        fused[start:end] = (fft_fusion_gpu if CUPY_AVAILABLE else fft_fusion_optimized)(y.np[start:end])
+        fused[start:end] = (fft_fusion_gpu if CUPY_AVAILABLE else fft_fusion_optimized)(
+            y.np[start:end]
+        )
 
     # Metrics
     if save:
         clog("yellow:Saving results...")
-        np.save(RES_DIR / f"ftt_{dataset}_{suffx}{denoiser_name}_{denoiser_suffx}.npy", fused)
+        np.save(
+            RES_DIR / f"ftt_{dataset}_{suffx}{denoiser_name}_{denoiser_suffx}.npy",
+            fused,
+        )
 
     if meta.labelled:
         clog("yellow:Computing PSNR3D...")
@@ -152,4 +162,4 @@ def test(frames, alphas, ssim3d_step=4, save=False):
 #     test(frames=frames, alphas=ALPHAS)
 
 # BEST
-test(frames=1_000, alphas=[0.85], ssim3d_step=4, save=True)
+test(frames=3_000, alphas=[0.85], ssim3d_step=4, save=True)

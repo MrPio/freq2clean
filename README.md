@@ -79,6 +79,6 @@ My method is designed to enhance the performance of an upstream denoiser. As suc
 ### Algorithm optimization
 In my initial implementation, I used the functions `np.fft.fft` and `np.fft.ifft` to translate between the temporal and frequency domains. For a $6{,}000\times 512 \times 512$ video, this took about **200 seconds**
 
-Then, since the angles are left untouched, I moved to `np.fft.rfft` and `np.fft.irfft`, improving time cost to **48 seconds**.
+Then, since the input signal is real, I moved to `np.fft.rfft` and `np.fft.irfft`, which leverage Hermitian symmetry reducing the time cost to **48 seconds**.
 
 Finally, by leveraging the GPU and moving from *NumPy* to *CuPy*, I achieved a processing time of **16 seconds**.
