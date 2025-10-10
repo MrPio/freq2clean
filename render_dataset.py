@@ -6,27 +6,25 @@ CWD-independent. GPU may help H265 codec.
 import sys
 
 sys.path.append(".")
-from src import Recording, DATASETS, tqdm, np, Path
+from src import Recording, DATASETS, tqdm, np, mkdir
 
 # ARGS ========================================
-CODEC = "libx265"
-BITRATE = 10_000
+CODEC = "libx264"
+BITRATE = 20_000
 FPS = 30
-MAX_FRAMES = FPS * 20
+MAX_FRAMES = 3000
 
-dataset = "oabf_vpm"
-y_path = "dataset/oabf/vpm/y.tiff"
-fft_path = "3-video_fusion/results/oabf_vpm/ftt_oabf_vpm_frame1000_alphas0.85deepcad_theirs.npy"
-# =============================================
+dataset = "zebrafish"
+y_path = "2-sota/deepcad_results/tif/synthetic_150-150.tif"
+fft_path = "3-video_fusion/results/zebrafish/ftt_zebrafish_frame3000_alphas1_60-150.npy"
 
-OUT_DIR = Path(f"renderings/{dataset}")
-OUT_DIR.mkdir(exist_ok=True, parents=True)
+OUT_DIR = mkdir(f"renderings/{dataset}")
 metadata = DATASETS[dataset]
 recs = {
     k: Recording(path, max_frames=MAX_FRAMES)
     for k, path in {
         # "x": metadata.x,
-        "y": y_path,
+        # "y": y_path,
         # "gt": metadata.gt,
     }.items()
 }

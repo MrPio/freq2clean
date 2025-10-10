@@ -12,10 +12,9 @@ from src import *
 # Args
 denoiser_name: Literal["deepcad", "noise2noise", "noise2void"] = "deepcad"
 denoiser_suffx = "theirs"
-dataset = "oabf_vpm"
-y_path = "../dataset/oabf/vpm/y.tiff"
-max_frames = 2_000
-CUPY_AVAILABLE = False
+dataset = "oabf_resonant_neuro"
+y_path = "../dataset/oabf/resonant_neuro/y.tiff"
+max_frames = 3_000
 
 # Init
 METRICS_PATH = Path(f"fft_{dataset}_metrics_{denoiser_name}_{denoiser_suffx}.csv")
