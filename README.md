@@ -1,4 +1,4 @@
-# Enhancing Denoiser Models with FFT/DCT Video Fusion
+# Freq2Clean: enhancing calcium imaging denoising via frequency-domain video fusion
 My method provides a substantial improvement over the denoiser ([*DeepCAD-RT*](https://github.com/cabooster/DeepCAD-RT) in this example) prediction. As you can see, PSNR increases by $2dB$, but the most interesting result is the improvement of SSIM3D by $0.1$ points.
 <p align="center">
   <img width="90%" src="assets/fft_vs_baseline.png"/>
@@ -6,6 +6,10 @@ My method provides a substantial improvement over the denoiser ([*DeepCAD-RT*](h
 The x-axis refers to the value used for the `patch_t` hyperparameter during training. `patch_t` indicates the size of frames considered in each training sample. This value is directly proportional to the training time.
 
 As shown in the figure above, **FFT video fusion post-processing enables a value of `patch_t = 30` to outscore predictions made with `patch_t = 300` (which requires $5\times$ more training time) in terms of both PSNR and SSIM3D.**
+
+#### 📘 Thesis - *Freq2Clean: enhancing calcium imaging denoising via frequency-domain video fusion* [`.PDF`](assets/Freq2Clean_enhancing_calcium_imaging_denoising_via_frequency_domain_video_fusion%20-%20Valerio%20Morelli%20PDFA1b.pdf) 
+#### 📙 Slideshow - *Graduation slideshow* [`.PPTX`](assets/Slideshow%20-%20Valerio%20Morelli.pdf) 
+#### 📽️ Demo - *Demo Video* [`.MP4`](assets/Freq2Clean%20vs%20DeepCAD.mp4) 
 
 ## 📦 TL;DR
 _Freq2Clean_ is a simple, yet effective post-processing technique that recovers high-frequency spatial details by leveraging the low-frequency temporal dynamics of still recordings. To do so, it performs a video fusion in the frequency domain. The results show that **_Freq2Clean_ significantly improves the PSNR, SSIM3D, and IoU metrics on labeled synthetic datasets and increases the number of recognized regions of interest (ROIs)**.
