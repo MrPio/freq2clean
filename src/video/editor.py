@@ -94,7 +94,7 @@ class Editor:
             idx = i % len(clips)
             base_clip = clips[idx].subclip(i, i + delta)
             title = (
-                TextClip(titles[idx], fontsize=fontsize, color="white", font=font)
+                TextClip(titles[idx], fontsize=fontsize / (zoom**0.5), color="white", font=font)
                 .set_position(("center", "top"))
                 .set_duration(delta)
             )
