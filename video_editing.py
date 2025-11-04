@@ -9,7 +9,7 @@ sys.path.append(".")
 from src import *
 
 # ARGS ========================================
-datasets = ["oabf_astro", "oabf_vpm", "oabf_resonant_neuro"]
+datasets = ["oabf_resonant_neuro"]#["oabf_astro", "oabf_vpm", "oabf_resonant_neuro"]
 ZOOMS = [1, 2.5]
 CODEC = "libx265"
 BITRATE = 5_000
