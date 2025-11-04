@@ -64,13 +64,29 @@ class Editor:
         font="SourceCodeVF-Black",
         delta=1.0,
         codec="libx265",
+        duration=None,
+        zoom=None,
+        speed=None,
     ):
         """
         Create a video alternating every second between videos.
         """
         if isinstance(videos, list):
             videos = {Path(_).stem: _ for _ in videos}
-        clips = [VideoFileClip(str(p)) for _, p in videos.items()]
+        clips = []
+        for _, p in videos.items():
+            clip = VideoFileClip(str(p))
+            if speed:
+                clip = vfx.speedx(clip, factor=speed)
+            if duration:
+                clip = clip.set_duration(duration)
+            if zoom:
+                w, h = clip.size
+                new_w = int(w / zoom)
+                new_h = int(h / zoom)
+                clip = vfx.crop(clip, width=new_w, height=new_h, x_center=w / 2, y_center=h / 2)
+            clips.append(clip)
+
         titles = [t for t, _ in videos.items()]
         duration = min(map(lambda _: _.duration, clips))
         sequence = []
