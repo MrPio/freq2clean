@@ -24,8 +24,8 @@ folders = [
 num_frames = 50
 model_names = ["cpsam"]  # "cyto3", "nuclei"] They perform the same
 
+# Init
 for folder in folders:
-    # Init
     clog(f"Processing folder", f"red:{folder}...")
     data_path = f"dataset/{dataset}/{folder}/data.tiff"
     vid = Recording(data_path, max_frames=None)

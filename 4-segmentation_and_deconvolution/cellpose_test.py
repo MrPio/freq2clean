@@ -24,22 +24,6 @@ model = "cpsam"  # ["cpsam", "cyto3", "nuclei"]
 METRICS_PATH = Path(f"cellpose_metrics.csv")
 
 
-def create_mask(stat_item, ly, lx):
-    """Converts a suite2p ROI 'stat' item into a 2D boolean mask."""
-    mask = np.zeros((ly, lx), dtype=bool)
-    mask[stat_item["ypix"], stat_item["xpix"]] = True
-    return mask
-
-
-def iou(mask1, mask2):
-    """Calculates the Intersection over Union (IoU) for two boolean masks."""
-    intersection = np.sum(mask1 & mask2)
-    union = np.sum(mask1 | mask2)
-    if union == 0:
-        return 0.0
-    return intersection / union
-
-
 def compare(test: str, gt: str = "gt"):
     """
     Compares two suite2p segmentations and computes performance metrics.

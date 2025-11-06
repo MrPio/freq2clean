@@ -24,7 +24,7 @@ OUT_DIR = mkdir(f"renderings/{dataset}")
 recs = {
     k: Recording(path, max_frames=MAX_FRAMES)
     for k, path in {
-        "x": meta.x,
+        # "x": meta.x,
         "y": y_path,
         # "gt": meta.gt,
     }.items()
