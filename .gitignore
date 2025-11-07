@@ -17,6 +17,9 @@ TODO.md
 
 4-segmentation_and_deconvolution/dataset/
 4-segmentation_and_deconvolution/cellpose_results/**/*.npy
+4-segmentation_and_deconvolution/suite2p_results/**/*.npy
+
+5-freq2clean/snapshots/
 
 # other_experiments ====================
 other_experiments/diffdenoise/dataset/

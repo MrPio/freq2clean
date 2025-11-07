@@ -126,7 +126,9 @@ def imshow(
     plt.tight_layout()
     if path:
         plt.savefig(path)
-    plt.show()
+        plt.close()
+    else:
+        plt.show()
 
 
 def get_gpu_memory():
