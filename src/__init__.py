@@ -24,6 +24,7 @@ from .video.recording import Recording
 
 # Metrics
 from .metrics.ssim import ssim, ssim3d
+from .metrics.torch_ssim import SSIM, SSIM3D
 from .metrics.psnr import psnr, psnr3d
 from .metrics.ale import ale
 from .metrics.pearson import pearson3d
@@ -41,7 +42,7 @@ from .utils import (
     pil_stack,
     gauss1D,
     elapsed,
-    mkdir
+    mkdir,
 )
 
 # Configuration
