@@ -71,10 +71,11 @@ class Recording:
         fps=30,
         codec="libx265",
         silent=True,
+        normalize=True
     ):
         iio.imwrite(
             uri=str(path),
-            image=(self.normalized[start:end] * 255).astype(np.uint8),
+            image=((self.normalized if normalize else self.np)[start:end] * 255).astype(np.uint8),
             fps=fps,
             codec=codec,
             bitrate=f"{bitrate}k",

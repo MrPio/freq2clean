@@ -37,17 +37,20 @@ def __ssim_3d(img1, img2, window, window_size, channel, size_average=True):
 
 
 def __create_window_3D(window_size, channel):
-    _1D_window = __gaussian(window_size, 1.5).unsqueeze(1)
-    _2D_window = _1D_window.mm(_1D_window.t())
-    _3D_window = (
-        _1D_window.mm(_2D_window.reshape(1, -1))
-        .reshape(window_size, window_size, window_size)
-        .float()
-        .unsqueeze(0)
-        .unsqueeze(0)
-    )
-    window = Variable(_3D_window.expand(channel, 1, window_size, window_size, window_size).contiguous())
-    return window
+    g = __gaussian(window_size, 1.5)
+    _3D = g[:, None, None] * g[None, :, None] * g[None, None, :]
+    return _3D.float()[None, None, :, :, :].expand(channel, 1, -1, -1, -1).contiguous()
+    # _1D_window = __gaussian(window_size, 1.5).unsqueeze(1)
+    # _2D_window = _1D_window.mm(_1D_window.t())
+    # _3D_window = (
+    #     _1D_window.mm(_2D_window.reshape(1, -1))
+    #     .reshape(window_size, window_size, window_size)
+    #     .float()
+    #     .unsqueeze(0)
+    #     .unsqueeze(0)
+    # )
+    # window = Variable(_3D_window.expand(channel, 1, window_size, window_size, window_size).contiguous())
+    # return window
 
 
 def __gaussian(window_size, sigma):
@@ -79,10 +82,10 @@ def ssim3d(vox1, vox2, window_size=11, size_average=True, device="cuda", step=No
         return __ssim_3d(vox1, vox2, window, window_size, channel, size_average).item()
 
     if require_grad:
-        compute_ssim3d()
+        return compute_ssim3d()
     else:
         with torch.no_grad():
-            compute_ssim3d()
+            return compute_ssim3d()
 
 
 def ssim(img1: np.ndarray | Recording, img2: np.ndarray | Recording, data_range=1):
