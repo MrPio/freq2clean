@@ -20,6 +20,10 @@ TODO.md
 4-segmentation_and_deconvolution/suite2p_results/**/*.npy
 
 5-freq2clean/snapshots/
+5-freq2clean/trainings/*/snaps/
+5-freq2clean/trainings/*/weights/
+5-freq2clean/recordings/
+5-freq2clean/Freq2Clean_Train.ipynb
 
 # other_experiments ====================
 other_experiments/diffdenoise/dataset/

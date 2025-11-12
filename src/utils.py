@@ -24,10 +24,10 @@ logger = logging.getLogger("src")
 
 COLORS = [
     # "black",
-    "red",
-    "green",
-    "yellow",
     "blue",
+    "yellow",
+    "green",
+    "red",
     "magenta",
     "cyan",
     # "white",
@@ -46,7 +46,7 @@ __eta = time_ns()
 
 def clog(*vals, sep=" "):
     # if len(vals) == 1 and ":" not in vals[0]:
-        # vals = (random.choice(COLORS) + ":" + vals[0],)
+    # vals = (random.choice(COLORS) + ":" + vals[0],)
     cprint(*vals, f"light_red:[{print_mem()}]", f"light_yellow:[{elapsed()}s]", sep=sep)
 
 
@@ -203,7 +203,10 @@ def elapsed():
     return (time_ns() - __eta) // 10**9
 
 
-def mkdir(path: str | Path) -> Path:
+def mkdir(path: str | Path, clear=False) -> Path:
     path = Path(path)
     path.mkdir(exist_ok=True, parents=True)
+    if clear:
+        for file in path.glob("*"):
+            file.unlink()
     return path

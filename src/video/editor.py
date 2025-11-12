@@ -2,6 +2,7 @@ from pathlib import Path
 from PIL import Image
 from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, clips_array, concatenate_videoclips
 import moviepy.video.fx.all as vfx
+import numpy as np
 from tqdm import tqdm
 from IPython.display import Video
 
@@ -13,6 +14,12 @@ Note: Ensure you have Magik installed.
 
 
 class Editor:
+    GREEN_GRADIENT = (
+        (0, (0, 0, 0)),
+        (184, (98, 255, 67)),
+        (255, (255, 255, 255)),
+    )
+
     def __init__(self):
         pass
 
@@ -61,20 +68,18 @@ class Editor:
         output: Path | str,
         fontsize=26,
         bitrate=4500,
+        codec="libx265",
         font="SourceCodeVF-Black",
         delta=1.0,
-        codec="libx265",
         duration=None,
-        zoom=None,
+        zoom=1.0,
         speed=None,
     ):
         """
         Create a video alternating every second between videos.
         """
-        if isinstance(videos, list):
-            videos = {Path(_).stem: _ for _ in videos}
         clips = []
-        for _, p in videos.items():
+        for p in videos.keys() if isinstance(videos, dict) else videos:
             clip = VideoFileClip(str(p))
             if speed:
                 clip = vfx.speedx(clip, factor=speed)
@@ -87,7 +92,7 @@ class Editor:
                 clip = vfx.crop(clip, width=new_w, height=new_h, x_center=w / 2, y_center=h / 2)
             clips.append(clip)
 
-        titles = [t for t, _ in videos.items()]
+        titles = [t for t, _ in videos.items()] if isinstance(videos, dict) else [""] * len(videos)
         duration = min(map(lambda _: _.duration, clips))
         sequence = []
         for i in range(int(duration / delta)):
@@ -103,3 +108,38 @@ class Editor:
             str(output), bitrate=f"{bitrate}k", codec=codec
         )
         return Video(output)
+
+    def make_green(
+        self,
+        input: Path | str,
+        output: Path | str = None,
+        bitrate=4500,
+        codec="libx265",
+    ):
+        # Generating LUT
+        x_coords = np.array([s[0] for s in self.GREEN_GRADIENT])
+        colors = np.array([s[1] for s in self.GREEN_GRADIENT], dtype=np.float32)
+        lut_inputs = np.arange(256)  # The 256 possible input values
+        output_channels = []
+        for i in range(3):
+            interpolated_channel = np.interp(lut_inputs, x_coords, colors[:, i])
+            output_channels.append(interpolated_channel)
+        lut = np.stack(output_channels, axis=-1)
+        lut = np.clip(lut, 0, 255).astype(np.uint8)
+
+        def gradient(frame: np.ndarray) -> np.ndarray:
+            return lut[frame[:, :, 0]]
+
+        input = Path(input)
+        clip = VideoFileClip(str(input))
+        green_clip = clip.fl_image(gradient)
+        green_clip.write_videofile(
+            str(output or (output_tmp := input.with_name(f"tmp.mp4"))),
+            codec=codec,
+            bitrate=f"{bitrate}k",
+            verbose=False,
+            logger="bar",
+        )
+        if output is None:
+            input.unlink()
+            output_tmp.rename(input)
