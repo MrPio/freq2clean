@@ -11,6 +11,33 @@ from freq2clean import Freq2Clean
 sys.path.append("..")
 from src import *
 
+
+# %%
+class CorrelationLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x, y):
+        B, T, W, H = x.shape
+        N = W * H
+
+        x2 = x.reshape(B, T, N)
+        y2 = y.reshape(B, T, N)
+
+        xm = x2.mean(1, keepdim=True)
+        ym = y2.mean(1, keepdim=True)
+        xs = x2.std(1, unbiased=False, keepdim=True)
+        ys = y2.std(1, unbiased=False, keepdim=True)
+
+        xz = (x2 - xm) / torch.max(torch.tensor(1e-6), xs)
+        yz = (y2 - ym) / torch.max(torch.tensor(1e-6), ys)
+
+        corr = (xz * yz).mean(1)  # (B, N)
+        mean_corr = corr.mean()  # scalar
+
+        return 1.0 - mean_corr
+
+
 # %% Args
 denoiser_name: Literal["deepcad", "noise2noise", "noise2void"] = "deepcad"
 denoiser_variant = "_150"
@@ -19,10 +46,10 @@ CUPY_AVAILABLE = False
 PATCH_T = 600
 AVG_WIN = 2024
 BATCH_SIZE = 1
-EPOCHS = 100
-LEARNING_RATE = 0.0075
+EPOCHS = 30
+LEARNING_RATE = 0.02
 SAVE_SNAPS = True
-METRICS_PATH = Path(f"f2c_{dataset}_metrics_{denoiser_name}.csv")
+METRICS_PATH = Path(f"f2c_{dataset}_metrics_{denoiser_name}{denoiser_variant}.csv")
 RES_DIR = mkdir(f"results/{dataset}/")
 MAX_FRAMES = 3000
 device = "cuda"
@@ -57,14 +84,18 @@ optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=1e-6)
 ssim3d = SSIM3D()
 l1 = nn.L1Loss().cuda()
 mse = nn.MSELoss().cuda()
-lambda_reg = 1e-4
+correlation = CorrelationLoss().cuda()
 init_alphas = model.alphas.detach().clone()
+df = pd.DataFrame(columns=["step", "epoch", "l1", "l2", "corr", "reg", "loss"]).set_index("step")
 
-for dir in [snapdir, alphadir, checkpointdir]:
+for dir in [snapdir, alphadir]:
     for file in dir.glob("*.png"):
         file.unlink()
+for file in checkpointdir.glob("*.pt"):
+    file.unlink()
 
 pbar = trange(EPOCHS)
+last_loss = 0
 for epoch in pbar:
     # Validate
     x, x_bar, y, gt = validset
@@ -96,14 +127,27 @@ for epoch in pbar:
         f2c = model(y.to(device), x_bar.to(device))
 
         # loss_ssim = -ssim3d(f2c[:, ::4].unsqueeze(1), gt[:, ::4].to(device).unsqueeze(1))
-        loss_l1 = l1(f2c, gt.to(device))
-        loss_mse = mse(f2c, gt.to(device))
-        loss_reg = lambda_reg * torch.mean((model.alphas - init_alphas) ** 2)
-        loss = 0.5 * loss_l1 + 0.5 * loss_mse + loss_reg
+        loss_l1 = 0.1 * l1(f2c, gt.to(device))
+        loss_mse = 1.5 * mse(f2c, gt.to(device))
+        loss_correlation = 0.5 * correlation(f2c, y.to(device))
+        loss_reg = 0.1 * torch.mean((model.alphas - init_alphas) ** 2)
+        loss = loss_l1 + loss_mse + loss_reg + loss_correlation
 
         loss.backward()
         optimizer.step()
         with torch.no_grad():
             model.alphas.clamp_(0.0, 1.0)
 
-        pbar.set_description(f"[{i}/{len(dataloader)}] Loss={loss.item():.5f}")
+        pbar.set_description(
+            f"[{i}/{len(dataloader)}] Loss={loss.item():.4f}{'🔼'if loss.item()>last_loss else '🔽'} [L1={loss_l1.item():.4f},L2={loss_mse.item():.4f},CORR={loss_correlation.item():.4f},REG={loss_reg.item():.4f}]"
+        )
+        df.loc[i + epoch * len(dataloader)] = [
+            epoch,
+            loss_l1.item(),
+            loss_mse.item(),
+            loss_correlation.item(),
+            loss_reg.item(),
+            loss.item(),
+        ]
+        df.to_csv(METRICS_PATH)
+        last_loss = loss.item()

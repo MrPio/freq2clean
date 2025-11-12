@@ -22,7 +22,7 @@ class Freq2Clean(nn.Module):
         super().__init__()
         self.frames = frames
         if not alphas:
-            alphas = [0.001] * (frames // 2 + 1)
+            alphas = [0.85] + [0.001] * (frames // 2)
         self.alphas = nn.Parameter(torch.tensor(alphas))
 
     def forward(self, y_hat: torch.Tensor, y_bar: torch.Tensor) -> torch.Tensor:
@@ -40,5 +40,5 @@ class Freq2Clean(nn.Module):
         Y_abs = Y_bar_abs * (self.alphas).view(1, -1, 1, 1) + Y_hat_abs * (1 - self.alphas).view(1, -1, 1, 1)
         Y = torch.polar(Y_abs, Y_hat_angle)
         return torch.fft.irfft(Y, dim=1).real
-    
+
     # SSIM WIN ++, DCAD loss
