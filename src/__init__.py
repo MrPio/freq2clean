@@ -43,6 +43,7 @@ from .utils import (
     gauss1D,
     elapsed,
     mkdir,
+    barchart,
 )
 
 # Configuration

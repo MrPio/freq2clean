@@ -23,7 +23,7 @@ TODO.md
 5-freq2clean/trainings/*/snaps/
 5-freq2clean/trainings/*/weights/
 5-freq2clean/recordings/
-5-freq2clean/Freq2Clean_Train.ipynb
+5-freq2clean/*Freq2Clean_Train.ipynb
 
 # other_experiments ====================
 other_experiments/diffdenoise/dataset/

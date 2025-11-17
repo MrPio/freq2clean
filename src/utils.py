@@ -14,6 +14,7 @@ from torchvision.transforms import ToPILImage
 import torch
 from csbdeep.utils import normalize
 from scipy.ndimage import zoom as ndi_zoom
+import seaborn as sns
 
 logging.basicConfig(
     level="INFO",
@@ -210,3 +211,35 @@ def mkdir(path: str | Path, clear=False) -> Path:
         for file in path.glob("*"):
             file.unlink()
     return path
+
+def barchart(
+    data: dict[str, float],
+    bounds: tuple[float, float] = None,
+    yaxis=None,
+    title=None,
+    ysteps=None,
+    color="steelblue",
+    figsize=(8, 6),
+    dpi=300,
+    ax=None,
+):
+    labels = list(data.keys())
+    values = list(data.values())
+
+    if ax:
+        sns.barplot(x=labels, y=values, color=color, ax=ax)
+    else:
+        plt.figure(figsize=figsize, dpi=dpi)
+        ax = sns.barplot(x=labels, y=values, color=color)
+    if ysteps and bounds:
+        ax.set_yticks([i / ysteps * (bounds[1] - bounds[0]) + bounds[0] for i in range(ysteps + 1)])
+
+    if bounds:
+        ax.set_ylim(bounds)
+    ax.set_xlabel("")
+    if yaxis:
+        ax.set_ylabel(yaxis)
+    if title:
+        ax.set_title(title)
+
+    plt.tight_layout()
