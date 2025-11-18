@@ -18,10 +18,10 @@ def match(src, trg):
 
 
 class Freq2Clean(nn.Module):
-    def __init__(self, num_frames, avg_frame: np.array, alphas=None):
+    def __init__(self, num_frames, avg_frame: torch.tensor, alphas=None):
         super().__init__()
         self.frames = num_frames
-        self.avg_frame = torch.tensor(avg_frame)
+        self.avg_frame = avg_frame
         if not alphas:
             alphas = [0.85] + [0.001] * (num_frames // 2)
         self.alphas = nn.Parameter(torch.tensor(alphas))

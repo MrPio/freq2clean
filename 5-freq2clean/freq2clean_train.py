@@ -43,14 +43,14 @@ class CorrelationLoss(nn.Module):
 cfg = {
     # Data
     "denoiser_name": "deepcad",
-    "denoiser_variant": "_15",
+    "denoiser_variant": "_150",
     "dataset_name": "synthetic",
     # Training
     "patch_t": 3000,
     "overlap": 0.8,
     "avg_win": 1024,
     "batch_size": 1,
-    "epochs": 30,
+    "epochs": 20,
     "learning_rate": 0.0075,
     "save_snaps": True,
     "max_frames": 6000,
@@ -65,15 +65,19 @@ cfg = {
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # %%
+clog("blue:Loading dataset...")
 x = Recording(f"dataset/{cfg['dataset_name']}/x.tif", max_frames=cfg["max_frames"]).normalized
 y = Recording(
     f"dataset/{cfg['dataset_name']}/{cfg['denoiser_name']}{cfg['denoiser_variant']}.tif", max_frames=cfg["max_frames"]
 ).normalized
 gt = Recording(f"dataset/{cfg['dataset_name']}/gt.tif", max_frames=cfg["max_frames"]).normalized
+
+clog("cyan:Computing temporal averaged video...")
 x_bar = uniform_filter1d(x, size=cfg["avg_win"], axis=0, mode="reflect")
-x_avg = np.mean(x.np, axis=0)
+x_avg = np.mean(x, axis=0)
 
 # %%
+clog("green:Subdividing dataset in overlapping patches...")
 new_patcht = cfg["patch_t"] * (1 - cfg["overlap"])
 discard = math.ceil(1 / (1 - cfg["overlap"]) - 1)
 idx = (np.arange(x.shape[0] // new_patcht)[:-discard, None] * new_patcht + np.arange(cfg["patch_t"])).astype(int)
@@ -88,7 +92,9 @@ del x, x_bar, y, gt
 cprint(f"Dataset has", len(idx), "samples.")
 
 # %%
-model = Freq2Clean(num_frames=cfg["patch_t"]).to(device)
+clog("yellow:Loading Freq2Clean...")
+avg_frame = torch.tensor(x_avg).to(device)
+model = Freq2Clean(num_frames=cfg["patch_t"], avg_frame=avg_frame).to(device)
 optimizer = optim.Adam(model.parameters(), lr=cfg["learning_rate"], weight_decay=cfg["weight_decay"])
 ssim3d = SSIM3D()
 l1 = nn.L1Loss().cuda()
@@ -109,6 +115,7 @@ loss_trend_path = base_dir / "loss_trend.png"
 json.dump(cfg, open(base_dir / "cfg.json", "w"))
 
 last_loss = 0
+clog("light_red:Starting Freq2Clean train...")
 for epoch in (pbar := trange(cfg["epochs"])):
     # Validate
     x, x_bar, y, gt = validset
