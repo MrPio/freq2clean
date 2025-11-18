@@ -65,11 +65,11 @@ cfg = {
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # %%
-x = Recording(f"dataset/{cfg["dataset_name"]}/x.tif", max_frames=cfg["max_frames"]).normalized
+x = Recording(f"dataset/{cfg['dataset_name']}/x.tif", max_frames=cfg["max_frames"]).normalized
 y = Recording(
-    f"dataset/{cfg["dataset_name"]}/{cfg["denoiser_name"]}{cfg["denoiser_variant"]}.tif", max_frames=cfg["max_frames"]
+    f"dataset/{cfg['dataset_name']}/{cfg['denoiser_name']}{cfg['denoiser_variant']}.tif", max_frames=cfg["max_frames"]
 ).normalized
-gt = Recording(f"dataset/{cfg["dataset_name"]}/gt.tif", max_frames=cfg["max_frames"]).normalized
+gt = Recording(f"dataset/{cfg['dataset_name']}/gt.tif", max_frames=cfg["max_frames"]).normalized
 x_bar = uniform_filter1d(x, size=cfg["avg_win"], axis=0, mode="reflect")
 x_avg = np.mean(x.np, axis=0)
 
@@ -98,7 +98,7 @@ init_alphas = model.alphas.detach().clone()
 df = pd.DataFrame(columns=["step", "epoch", "l1", "l2", "corr", "reg", "loss"]).set_index("step")
 
 suffx = (
-    f"{datetime.now().strftime("%Y%m%d-%H%M")}-{cfg['dataset_name']}_{cfg['denoiser_name']}{cfg['denoiser_variant']}"
+    f"{datetime.now().strftime('%Y%m%d-%H%M')}-{cfg['dataset_name']}_{cfg['denoiser_name']}{cfg['denoiser_variant']}"
 )
 base_dir = mkdir(f"trainings/{suffx}")
 snaps_dir = mkdir(base_dir / "snaps", clear=True)

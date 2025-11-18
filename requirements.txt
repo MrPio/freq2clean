@@ -21,3 +21,4 @@ h5py
 cupy-cuda12x
 careamics
 suite2p
+seaborn

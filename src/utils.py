@@ -212,6 +212,7 @@ def mkdir(path: str | Path, clear=False) -> Path:
             file.unlink()
     return path
 
+
 def barchart(
     data: dict[str, float],
     bounds: tuple[float, float] = None,
