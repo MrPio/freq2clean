@@ -18,11 +18,12 @@ def match(src, trg):
 
 
 class Freq2Clean(nn.Module):
-    def __init__(self, frames, alphas=None):
+    def __init__(self, num_frames, avg_frame: np.array, alphas=None):
         super().__init__()
-        self.frames = frames
+        self.frames = num_frames
+        self.avg_frame = torch.tensor(avg_frame)
         if not alphas:
-            alphas = [0.85] + [0.001] * (frames // 2)
+            alphas = [0.85] + [0.001] * (num_frames // 2)
         self.alphas = nn.Parameter(torch.tensor(alphas))
 
     def forward(self, y_hat: torch.Tensor, y_bar: torch.Tensor) -> torch.Tensor:
@@ -34,7 +35,7 @@ class Freq2Clean(nn.Module):
         Y_hat_angle = torch.angle(Y_hat)
         # alpha_factor = torch.clamp(self.alphas, 0.0, 1.0) # Clamping for stability
 
-        freq0 = match(torch.mean(y_bar, axis=1), Y_hat_abs[:, 0] / self.frames) * self.frames
+        freq0 = match(self.avg_frame.repeat(y_hat.shape[0], 1, 1), Y_hat_abs[:, 0] / self.frames) * self.frames
         Y_bar_abs[:, 0] = freq0
 
         Y_abs = Y_bar_abs * (self.alphas).view(1, -1, 1, 1) + Y_hat_abs * (1 - self.alphas).view(1, -1, 1, 1)

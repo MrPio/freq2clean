@@ -12,8 +12,6 @@ from freq2clean import Freq2Clean
 sys.path.append("..")
 from src import *
 
-0.1
-
 
 # %%
 class CorrelationLoss(nn.Module):
@@ -45,18 +43,19 @@ class CorrelationLoss(nn.Module):
 cfg = {
     # Data
     "denoiser_name": "deepcad",
-    "denoiser_variant": "_150",
+    "denoiser_variant": "_15",
     "dataset_name": "synthetic",
     # Training
-    "patch_t": 600,
-    "avg_win": 2024,
+    "patch_t": 3000,
+    "overlap": 0.8,
+    "avg_win": 1024,
     "batch_size": 1,
-    "epochs": 20,
-    "learning_rate": 0.01,
+    "epochs": 30,
+    "learning_rate": 0.0075,
     "save_snaps": True,
-    "max_frames": 2000,
+    "max_frames": 6000,
     "weight_decay": 1e-5,
-    "clamp01": True,
+    "alpha_clamp01": True,
     # Loss
     "w_l1": 1e-1,
     "w_mse": 1e-0,
@@ -72,11 +71,11 @@ y = Recording(
 ).normalized
 gt = Recording(f"dataset/{cfg["dataset_name"]}/gt.tif", max_frames=cfg["max_frames"]).normalized
 x_bar = uniform_filter1d(x, size=cfg["avg_win"], axis=0, mode="reflect")
+x_avg = np.mean(x.np, axis=0)
 
 # %%
-overlap = 0.7
-new_patcht = cfg["patch_t"] * (1 - overlap)
-discard = math.ceil(1 / (1 - overlap) - 1)
+new_patcht = cfg["patch_t"] * (1 - cfg["overlap"])
+discard = math.ceil(1 / (1 - cfg["overlap"]) - 1)
 idx = (np.arange(x.shape[0] // new_patcht)[:-discard, None] * new_patcht + np.arange(cfg["patch_t"])).astype(int)
 x = torch.from_numpy(x[idx]).float()
 x_bar = torch.from_numpy(x_bar[idx]).float()
@@ -89,7 +88,7 @@ del x, x_bar, y, gt
 cprint(f"Dataset has", len(idx), "samples.")
 
 # %%
-model = Freq2Clean(frames=cfg["patch_t"]).to(device)
+model = Freq2Clean(num_frames=cfg["patch_t"]).to(device)
 optimizer = optim.Adam(model.parameters(), lr=cfg["learning_rate"], weight_decay=cfg["weight_decay"])
 ssim3d = SSIM3D()
 l1 = nn.L1Loss().cuda()
@@ -148,7 +147,7 @@ for epoch in (pbar := trange(cfg["epochs"])):
 
         loss.backward()
         optimizer.step()
-        if cfg["clamp01"]:
+        if cfg["alpha_clamp01"]:
             with torch.no_grad():
                 model.alphas.clamp_(0.0, 1.0)
 
