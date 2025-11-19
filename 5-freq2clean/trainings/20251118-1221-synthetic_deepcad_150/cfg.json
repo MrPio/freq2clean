@@ -1,1 +1,19 @@
-{"denoiser_name": "deepcad", "denoiser_variant": "_150", "dataset_name": "synthetic", "patch_t": 3000, "overlap": 0.8, "avg_win": 1024, "batch_size": 1, "epochs": 20, "learning_rate": 0.0075, "save_snaps": true, "max_frames": 6000, "weight_decay": 1e-05, "alpha_clamp01": true, "w_l1": 0.1, "w_mse": 1.0, "w_corr": 0.2, "w_reg": 0.05}
+{
+    "denoiser_name": "deepcad",
+    "denoiser_variant": "_150",
+    "dataset_name": "synthetic",
+    "patch_t": 3000,
+    "overlap": 0.8,
+    "avg_win": 1024,
+    "batch_size": 1,
+    "epochs": 20,
+    "learning_rate": 0.0075,
+    "save_snaps": true,
+    "max_frames": 6000,
+    "weight_decay": 1e-05,
+    "alpha_clamp01": true,
+    "w_l1": 0.1,
+    "w_mse": 1.0,
+    "w_corr": 0.2,
+    "w_reg": 0.05
+}
