@@ -45,13 +45,14 @@ cfg = {
     "denoiser_name": "deepcad",
     "denoiser_variant": "_15",
     "dataset_name": "mouse_neuronal_populations",
+    "gt_variant": "",
     # Training
-    "patch_t": 1200,
+    "patch_t": 2000,
     "overlap": 0.5,
-    "avg_win": 96,
-    "batch_size": 1,
+    "avg_win": 512,  # doesnt affect the training that much
+    "batch_size": 2,
     "epochs": 20,
-    "learning_rate": 0.0075,
+    "learning_rate": 0.025,
     "save_snaps": True,
     "max_frames": 6000,
     "weight_decay": 1e-5,
@@ -63,6 +64,7 @@ cfg = {
     "w_reg": 5e-2,
 }
 device = "cuda" if torch.cuda.is_available() else "cpu"
+cprint("Using device", f"cyan:{device}")
 
 # %%
 clog("blue:Loading dataset...")
@@ -70,7 +72,7 @@ x = Recording(f"dataset/{cfg['dataset_name']}/x.tif", max_frames=cfg["max_frames
 y = Recording(
     f"dataset/{cfg['dataset_name']}/{cfg['denoiser_name']}{cfg['denoiser_variant']}.tif", max_frames=cfg["max_frames"]
 ).normalized
-gt = Recording(f"dataset/{cfg['dataset_name']}/gt.tif", max_frames=cfg["max_frames"]).normalized
+gt = Recording(f"dataset/{cfg['dataset_name']}/gt{cfg['gt_variant']}.tif", max_frames=cfg["max_frames"]).normalized
 
 clog("cyan:Computing temporal averaged video...")
 x_bar = uniform_filter1d(x, size=cfg["avg_win"], axis=0, mode="reflect")
@@ -159,7 +161,7 @@ for epoch in (pbar := trange(cfg["epochs"])):
                 model.alphas.clamp_(0.0, 1.0)
 
         pbar.set_description(
-            f"[{i}/{len(dataloader)}] Loss={loss.item():.4f}{'🔼'if loss.item()>last_loss else '🔽'} [L1={loss_l1.item():.4f},L2={loss_mse.item():.4f},CORR={loss_correlation.item():.4f},REG={loss_reg.item():.4f}]"
+            f"[{i+1}/{len(dataloader)}] Loss={loss.item():.4f}{'🔼'if loss.item()>last_loss else '🔽'} [L1={loss_l1.item():.4f},L2={loss_mse.item():.4f},CORR={loss_correlation.item():.4f},REG={loss_reg.item():.4f}]"
         )
         df.loc[i + epoch * len(dataloader)] = [
             epoch,
