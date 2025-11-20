@@ -43,12 +43,12 @@ class CorrelationLoss(nn.Module):
 cfg = {
     # Data
     "denoiser_name": "deepcad",
-    "denoiser_variant": "_150",
-    "dataset_name": "synthetic",
+    "denoiser_variant": "_15",
+    "dataset_name": "mouse_neuronal_populations",
     # Training
-    "patch_t": 3000,
-    "overlap": 0.8,
-    "avg_win": 1024,
+    "patch_t": 1200,
+    "overlap": 0.5,
+    "avg_win": 96,
     "batch_size": 1,
     "epochs": 20,
     "learning_rate": 0.0075,
@@ -74,7 +74,7 @@ gt = Recording(f"dataset/{cfg['dataset_name']}/gt.tif", max_frames=cfg["max_fram
 
 clog("cyan:Computing temporal averaged video...")
 x_bar = uniform_filter1d(x, size=cfg["avg_win"], axis=0, mode="reflect")
-x_avg = np.mean(x, axis=0)
+# x_avg = np.mean(x, axis=0)
 
 # %%
 clog("green:Subdividing dataset in overlapping patches...")
@@ -93,8 +93,8 @@ cprint(f"Dataset has", len(idx), "samples.")
 
 # %%
 clog("yellow:Loading Freq2Clean...")
-avg_frame = torch.tensor(x_avg).to(device)
-model = Freq2Clean(num_frames=cfg["patch_t"], avg_frame=avg_frame).to(device)
+# avg_frame = torch.tensor(x_avg).to(device)
+model = Freq2Clean(num_frames=cfg["patch_t"]).to(device)
 optimizer = optim.Adam(model.parameters(), lr=cfg["learning_rate"], weight_decay=cfg["weight_decay"])
 ssim3d = SSIM3D()
 l1 = nn.L1Loss().cuda()

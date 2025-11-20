@@ -79,7 +79,7 @@ class Editor:
         Create a video alternating every second between videos.
         """
         clips = []
-        for p in videos.keys() if isinstance(videos, dict) else videos:
+        for p in videos.values() if isinstance(videos, dict) else videos:
             clip = VideoFileClip(str(p))
             if speed:
                 clip = vfx.speedx(clip, factor=speed)

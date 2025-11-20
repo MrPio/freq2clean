@@ -9,9 +9,9 @@ testing_class(
         "overlap_factor": 0.6,  # overlap factor,
         "scale_factor": 1,  # the factor for image intensity scaling
         "test_datasize": 6000,  # the number of frames to be tested
-        "datasets_path": "dataset/mouse_neuronal_populations",  # folder containing all files to be tested
+        "datasets_path": "dataset/mouse_neuronal_populations_gt",  # folder containing all files to be tested
         "pth_dir": "./pth",  # pth file root path
-        "denoise_model": "mouse_neuronal_populations_202511201009",  # A folder containing all models to be tested
+        "denoise_model": "mouse_neuronal_populations_gt_202511201345",  # A folder containing all models to be tested
         "output_dir": "./results",  # result file root path
         # network related parameters
         "fmap": 16,  # number of feature maps

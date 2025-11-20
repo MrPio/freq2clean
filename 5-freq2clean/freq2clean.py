@@ -18,10 +18,9 @@ def match(src, trg):
 
 
 class Freq2Clean(nn.Module):
-    def __init__(self, num_frames, avg_frame: torch.tensor, alphas=None):
+    def __init__(self, num_frames, alphas=None):
         super().__init__()
         self.frames = num_frames
-        self.avg_frame = avg_frame
         if not alphas:
             alphas = [0.85] + [0.001] * (num_frames // 2)
         self.alphas = nn.Parameter(torch.tensor(alphas))
@@ -35,11 +34,11 @@ class Freq2Clean(nn.Module):
         Y_hat_angle = torch.angle(Y_hat)
         # alpha_factor = torch.clamp(self.alphas, 0.0, 1.0) # Clamping for stability
 
-        freq0 = match(self.avg_frame.repeat(y_hat.shape[0], 1, 1), Y_hat_abs[:, 0] / self.frames) * self.frames
+        # freq0 = match(self.avg_frame.repeat(y_hat.shape[0], 1, 1), Y_hat_abs[:, 0] / self.frames) * self.frames
+        # The mean of means is not the mean of all the values! The smaller the AVG_WIN/PATCH_T the better the approximation is
+        freq0 = match(torch.mean(y_bar, dim=1), Y_hat_abs[:, 0] / self.frames) * self.frames
         Y_bar_abs[:, 0] = freq0
 
         Y_abs = Y_bar_abs * (self.alphas).view(1, -1, 1, 1) + Y_hat_abs * (1 - self.alphas).view(1, -1, 1, 1)
         Y = torch.polar(Y_abs, Y_hat_angle)
         return torch.fft.irfft(Y, dim=1).real
-
-    # SSIM WIN ++, DCAD loss
