@@ -51,6 +51,12 @@ DATASETS = {
         dir="dataset/zenodo/neutrophils",
         data_range=49_978,
     ),
+    "mouse_neuronal_populations": DatasetMetadata(
+        dir="dataset/zenodo/mouse_neuronal_populations_5",
+        shape=(6500, 490, 490),
+        data_range=47_939,
+        hz=30,
+    ),
 }
 
 

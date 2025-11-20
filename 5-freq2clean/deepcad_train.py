@@ -19,10 +19,10 @@ training_class(
         "select_img_num": 6000,  # select the number of frames used for training
         "train_datasets_size": 1200,  # datasets size for training (how many 3D patches)
         # "max_frames": 6_000,
-        "datasets_path": "dataset/synthetic",  # folder containing files for training
+        "datasets_path": "dataset/mouse_neuronal_populations",  # folder containing files for training
         "pth_dir": "./pth",  # the path for pth file and result images
         # network related parameters
-        "n_epochs": 10,  # the number of training epochs
+        "n_epochs": 20,  # the number of training epochs
         "lr": 0.00005,  # learning rate
         "b1": 0.5,  # Adam: bata1
         "b2": 0.999,  # Adam: bata2

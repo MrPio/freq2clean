@@ -13,7 +13,10 @@ from src import *
 # %% Args
 BATCH_SIZE = 1
 SELECTED_TRAINING = "20251118-1221-synthetic_deepcad_150"
-DENOISER_VARIANT: str | None = None  # Use this to test F2C on a testset that differs from the trainset
+# Use this to test F2C on a testset that differs from the trainset
+DATASET_NAME: str | None = None
+DENOISER_VARIANT: str | None = None
+
 
 # %% Dataset Loading
 cprint("Loading checkpoint", f"yellow:{SELECTED_TRAINING}")
