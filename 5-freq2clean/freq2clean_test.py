@@ -14,30 +14,32 @@ from src import *
 BATCH_SIZE = 1
 SELECTED_TRAINING = "20251118-1221-synthetic_deepcad_150"
 # Use this to test F2C on a testset that differs from the trainset
-DATASET_NAME: str | None = None
-DENOISER_VARIANT: str | None = None
+DATASET_NAME: str | None = "mouse_neuronal_populations"
+DENOISER_VARIANT: str | None = "_150"
+AVG_WIN: str | None = None
 
 
 # %% Dataset Loading
 cprint("Loading checkpoint", f"yellow:{SELECTED_TRAINING}")
-clog("Loading data...")
 device = "cuda" if torch.cuda.is_available() else "cpu"
 cfg = json.load(open(f"trainings/{SELECTED_TRAINING}/cfg.json"))
+dataset_name = DATASET_NAME or cfg["dataset_name"]
 variant = DENOISER_VARIANT or cfg["denoiser_variant"]
-out_dir = mkdir(f"results/{cfg['dataset_name']}/{cfg['denoiser_name']}{variant}")
+out_dir = mkdir(f"results/{dataset_name}/{cfg['denoiser_name']}{variant}")
+clog(f'Loading dataset {dataset_name}, variant "{variant}"...')
 metrics_path = out_dir / f"metrics.json"
 metrics = json.load(metrics_path.open()) if metrics_path.exists() else {}
 
 x = Recording(
-    f"dataset/{cfg['dataset_name']}/x.tif",
+    f"dataset/{dataset_name}/x.tif",
     max_frames=None,
 )
 y = Recording(
-    f"dataset/{cfg['dataset_name']}/{cfg['denoiser_name']}{variant}.tif",
+    f"dataset/{dataset_name}/{cfg['denoiser_name']}{variant}.tif",
     max_frames=None,
 )
 gt = Recording(
-    f"dataset/{cfg['dataset_name']}/gt.tif",
+    f"dataset/{dataset_name}/gt.tif",
     max_frames=None,
 )
 
@@ -48,7 +50,8 @@ y = y.normalized
 gt = gt.normalized
 
 clog("Computing averaged vid/frame...")
-x_bar = uniform_filter1d(x, size=cfg["avg_win"], axis=0, mode="reflect")
+avg_win = AVG_WIN or cfg["avg_win"]
+x_bar = uniform_filter1d(x, size=avg_win, axis=0, mode="reflect")
 x_avg = np.mean(x, axis=0)
 
 # %% Batching
@@ -92,6 +95,7 @@ def run_inference(model: Freq2Clean, dataloader, save_path=None) -> np.ndarray:
 
 clog("Running Freq2Clean (network) test...")
 f2c_net = run_inference(model, dataloader, save_path=out_dir / f"{SELECTED_TRAINING}.tiff")
+gt = gt[: f2c_net.shape[0]] # The number of frames in F2C is a multiple of the number of patches
 metrics[SELECTED_TRAINING] = {
     "psnr3d": psnr3d(gt, f2c_net),
     "ssim3d": ssim3d(gt, f2c_net),

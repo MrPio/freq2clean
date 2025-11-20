@@ -1,7 +1,7 @@
 GPU: '0'
 batch_size: 1
-datasets_path: dataset/resonant_neuro
-denoise_model: resonant_neuro_202511041002
+datasets_path: dataset/mouse_neuronal_populations
+denoise_model: mouse_neuronal_populations_202511201009
 fmap: 16
 gap_t: 60
 gap_x: 60
