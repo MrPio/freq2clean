@@ -46,15 +46,16 @@ __eta = time_ns()
 
 
 def clog(*vals, sep=" "):
-    # if len(vals) == 1 and ":" not in vals[0]:
-    # vals = (random.choice(COLORS) + ":" + vals[0],)
-    cprint(*vals, f"light_red:[{print_mem()}]", f"light_yellow:[{elapsed()}s]", sep=sep)
+    if len(vals) == 1 and ":" not in vals[0]:
+        vals = (f"rand:{vals[0]}", *vals[1:])
+    cprint(*vals, f"light_red:[{print_mem()}]", f"light_yellow:[{elapsed()}s]", sep=sep, reset_counter=False)
 
 
-def cprint(*vals, sep=" "):
+def cprint(*vals, sep=" ", reset_counter=True):
     """Log values, highlighting any prefixed by a color tag (e.g., 'red:error')."""
     global __counter
-    __counter = 0
+    if reset_counter:
+        __counter = 0
 
     def fmt(v):
         if isinstance(v, (int, float)):
