@@ -26,20 +26,20 @@ logger = logging.getLogger("src")
 COLORS = [
     # "black",
     "blue",
-    "yellow",
+    "cyan",
     "green",
+    "yellow",
     "red",
     "magenta",
-    "cyan",
     # "white",
-    "light_grey",
-    "dark_grey",
-    "light_red",
+    "light_blue",
+    "light_cyan",
     "light_green",
     "light_yellow",
-    "light_blue",
+    "light_red",
     "light_magenta",
-    "light_cyan",
+    "dark_grey",
+    "light_grey",
 ]
 __counter = 0
 __eta = time_ns()
@@ -52,7 +52,7 @@ def clog(*vals, sep=" "):
 
 
 def cprint(*vals, sep=" ", reset_counter=True):
-    """Log values, highlighting any prefixed by a color tag (e.g., 'red:error')."""
+    """Log values, highlighting any prefixed by a color tag (e.g., 'red:error'). cprint stands for colored-print btw"""
     global __counter
     if reset_counter:
         __counter = 0
@@ -125,6 +125,32 @@ def imshow(
         if titles:
             axes[i].set_title(titles[i])
         axes[i].axis("off")
+    plt.tight_layout()
+    if path:
+        plt.savefig(path)
+        plt.close()
+    else:
+        plt.show()
+
+
+def vidshow(vid, alpha=0.25, dpi=300, cmap="gray", path: Path | str = None):
+    idx = np.indices(vid.shape).reshape(vid.ndim, -1).T
+    fig = plt.figure(figsize=(10, 10), dpi=dpi)
+    ax = fig.add_subplot(111, projection="3d")
+    ax.scatter(
+        idx[:, 0],
+        idx[:, 1],
+        idx[:, 2],
+        c=vid,
+        cmap=cmap,
+        s=100000 / vid.shape[0] ** 2,
+        alpha=alpha,
+        linewidths=0,
+    )
+
+    ax.set_axis_off()
+    ax.grid(False)
+    ax.view_init(elev=30, azim=225)
     plt.tight_layout()
     if path:
         plt.savefig(path)

@@ -33,6 +33,7 @@ from .metrics.iou import iou
 # Utils
 from .utils import (
     imshow,
+    vidshow,
     cprint,
     clog,
     get_gpu_memory,

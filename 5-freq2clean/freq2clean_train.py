@@ -13,7 +13,7 @@ sys.path.append("..")
 from src import *
 
 
-# %%
+# %% Correlation loss
 class CorrelationLoss(nn.Module):
     def __init__(self):
         super().__init__()
@@ -44,42 +44,44 @@ cfg = {
     # Data
     "denoiser_name": "deepcad",
     "denoiser_variant": "_15",
-    "dataset_name": "mouse_neuronal_populations",
+    "dataset_name": "synthetic",
     "gt_variant": "",
+    "frequency_transform": "dct3d",
     # Training
-    "patch_t": 2000,
-    "overlap": 0.5,
-    "avg_win": 512,  # doesnt affect the training that much
-    "batch_size": 2,
-    "epochs": 20,
-    "learning_rate": 0.025,
+    "patch_t": 3000,
+    "overlap": 0.7,
+    "avg_win": 1024,  # doesnt affect the training that much
+    "batch_size": 1,
+    "epochs": 50,
+    "learning_rate": 0.05,
     "save_snaps": True,
     "max_frames": 6000,
     "weight_decay": 1e-5,
-    "alpha_clamp01": True,
+    "weight_clamp01": True,
     # Loss
-    "w_l1": 1e-1,
-    "w_mse": 1e-0,
-    "w_corr": 2e-1,
-    "w_reg": 5e-2,
+    "w_l1": 1,  # 1e-1,
+    "w_mse": 1,  # 1e-0,
+    "w_corr": 0,  # 2e-1,
+    "w_reg": 0,  # 5e-2,
 }
 device = "cuda" if torch.cuda.is_available() else "cpu"
 cprint("Using device", f"cyan:{device}")
+cprint("Using frequency transform", f"red:{cfg['frequency_transform']}")
 
-# %%
-clog("blue:Loading dataset...")
+# %% Dataset
+clog("Loading and Normalizing dataset...")
 x = Recording(f"dataset/{cfg['dataset_name']}/x.tif", max_frames=cfg["max_frames"]).normalized
 y = Recording(
     f"dataset/{cfg['dataset_name']}/{cfg['denoiser_name']}{cfg['denoiser_variant']}.tif", max_frames=cfg["max_frames"]
 ).normalized
 gt = Recording(f"dataset/{cfg['dataset_name']}/gt{cfg['gt_variant']}.tif", max_frames=cfg["max_frames"]).normalized
 
-clog("cyan:Computing temporal averaged video...")
+clog("Computing temporal averaged video...")
 x_bar = uniform_filter1d(x, size=cfg["avg_win"], axis=0, mode="reflect")
 # x_avg = np.mean(x, axis=0)
 
-# %%
-clog("green:Subdividing dataset in overlapping patches...")
+# %% Batching
+clog("Subdividing dataset in overlapping patches...")
 new_patcht = cfg["patch_t"] * (1 - cfg["overlap"])
 discard = math.ceil(1 / (1 - cfg["overlap"]) - 1)
 idx = (np.arange(x.shape[0] // new_patcht)[:-discard, None] * new_patcht + np.arange(cfg["patch_t"])).astype(int)
@@ -87,27 +89,31 @@ x = torch.from_numpy(x[idx]).float()
 x_bar = torch.from_numpy(x_bar[idx]).float()
 y = torch.from_numpy(y[idx]).float()
 gt = torch.from_numpy(gt[idx]).float()
+patch_shape = x[0].shape
 dataset = TensorDataset(x[1:], x_bar[1:], y[1:], gt[1:])
 validset = (x[0], x_bar[0], y[0], gt[0])
 dataloader = DataLoader(dataset, batch_size=cfg["batch_size"], shuffle=True)
 del x, x_bar, y, gt
 cprint(f"Dataset has", len(idx), "samples.")
 
-# %%
-clog("yellow:Loading Freq2Clean...")
+# %% Model
+clog("Loading Freq2Clean...")
 # avg_frame = torch.tensor(x_avg).to(device)
-model = Freq2Clean(num_frames=cfg["patch_t"]).to(device)
+model = Freq2Clean(shape=patch_shape, mode=cfg["frequency_transform"]).to(device)
 optimizer = optim.Adam(model.parameters(), lr=cfg["learning_rate"], weight_decay=cfg["weight_decay"])
 ssim3d = SSIM3D()
 l1 = nn.L1Loss().cuda()
 mse = nn.MSELoss().cuda()
 correlation = CorrelationLoss().cuda()
-init_alphas = model.alphas.detach().clone()
-df = pd.DataFrame(columns=["step", "epoch", "l1", "l2", "corr", "reg", "loss"]).set_index("step")
 
-suffx = (
-    f"{datetime.now().strftime('%Y%m%d-%H%M')}-{cfg['dataset_name']}_{cfg['denoiser_name']}{cfg['denoiser_variant']}"
-)
+# Reg mask
+coords = [torch.linspace(0, 1, d) for d in model.mask.shape]
+grid = torch.meshgrid(*coords, indexing="ij")
+reg_mask = ((sum(grid) / len(grid)) ** 2).to(device)
+
+df = pd.DataFrame(columns=["step", "epoch", "l1", "l2", "corr", "reg", "loss"]).set_index("step")
+now_date = datetime.now().strftime("%Y%m%d-%H%M")
+suffx = f"{now_date}-{cfg['dataset_name']}_{cfg['denoiser_name']}{cfg['denoiser_variant']}"
 base_dir = mkdir(f"trainings/{suffx}")
 snaps_dir = mkdir(base_dir / "snaps", clear=True)
 weights_dir = mkdir(base_dir / "weights", clear=True)
@@ -116,8 +122,9 @@ metrics_path = base_dir / "metrics.csv"
 loss_trend_path = base_dir / "loss_trend.png"
 json.dump(cfg, open(base_dir / "cfg.json", "w"))
 
+# %% Training
 last_loss = 0
-clog("light_red:Starting Freq2Clean train...")
+clog("Starting Freq2Clean train...")
 for epoch in (pbar := trange(cfg["epochs"])):
     # Validate
     x, x_bar, y, gt = validset
@@ -136,10 +143,15 @@ for epoch in (pbar := trange(cfg["epochs"])):
         size=5,
         vrange=(0, 1),
     )
-    fig = plt.figure(figsize=(20, 6))
-    pd.Series(model.alphas.cpu().detach().numpy()).plot()
-    fig.savefig(weights_dir / f"{epoch}.png", dpi=150, bbox_inches="tight")
-    plt.close(fig)
+    # Save parameters plot
+    mask_plot_path = weights_dir / f"{epoch}.png"
+    if cfg["frequency_transform"] == "dft1d":
+        fig = plt.figure(figsize=(20, 6))
+        pd.Series(model.mask.cpu().detach().numpy()).plot()
+        fig.savefig(mask_plot_path, dpi=150, bbox_inches="tight")
+        plt.close(fig)
+    elif cfg["frequency_transform"] == "dct3d":
+        vidshow(model.mask.cpu().detach().numpy()[::8, ::8, ::8], path=mask_plot_path)
 
     # Train
     for i, (x, x_bar, y, gt) in enumerate(dataloader):
@@ -151,14 +163,14 @@ for epoch in (pbar := trange(cfg["epochs"])):
         loss_l1 = cfg["w_l1"] * l1(f2c, gt.to(device))
         loss_mse = cfg["w_mse"] * mse(f2c, gt.to(device))
         loss_correlation = cfg["w_corr"] * correlation(f2c, y.to(device))
-        loss_reg = cfg["w_reg"] * torch.mean((model.alphas - init_alphas) ** 2)
+        loss_reg = cfg["w_reg"] * torch.mean(model.mask * reg_mask)
         loss = loss_l1 + loss_mse + loss_reg + loss_correlation
 
         loss.backward()
         optimizer.step()
-        if cfg["alpha_clamp01"]:
+        if cfg["weight_clamp01"]:
             with torch.no_grad():
-                model.alphas.clamp_(0.0, 1.0)
+                model.mask.clamp_(0.0, 1.0)
 
         pbar.set_description(
             f"[{i+1}/{len(dataloader)}] Loss={loss.item():.4f}{'🔼'if loss.item()>last_loss else '🔽'} [L1={loss_l1.item():.4f},L2={loss_mse.item():.4f},CORR={loss_correlation.item():.4f},REG={loss_reg.item():.4f}]"

@@ -12,12 +12,12 @@ from src import *
 
 # %% Args
 BATCH_SIZE = 1
-SELECTED_TRAINING = "20251118-1221-synthetic_deepcad_150"
+SELECTED_TRAINING = "20251118-1205-synthetic_deepcad_15"
 # Use this to test F2C on a testset that differs from the trainset
-DATASET_NAME: str | None = "mouse_neuronal_populations"
-DENOISER_VARIANT: str | None = "_150"
+DATASET_NAME: str | None = "synthetic"
+DENOISER_VARIANT: str | None = "_15"
 AVG_WIN: int | None = None
-GT_VARIANT: str | None = ""
+GT_VARIANT: str | None = None
 
 # %% Dataset Loading
 cprint("Loading checkpoint", f"yellow:{SELECTED_TRAINING}")
@@ -71,7 +71,8 @@ checkpointdir = Path("trainings") / SELECTED_TRAINING / "pth"
 ckpt = sorted(checkpointdir.glob("*.pt"), key=lambda file: int(file.stem))[-1]
 cprint("cyan:Loading checkpoint", ckpt.stem)
 # avg_frame = torch.tensor(x_avg).to(device)
-model = Freq2Clean(num_frames=cfg["patch_t"])
+model = Freq2Clean(num_frames=cfg["patch_t"], train_phase=cfg.get("train_phase", False))
+cprint("Training of phase coefficients is", "green:enabled" if model.train_phase else "red:disabled")
 model.to(device)
 model.load_state_dict(torch.load(ckpt, map_location=device))
 model.eval()
@@ -106,6 +107,8 @@ if (k := "grid") not in metrics:
     with torch.no_grad():
         model.alphas[0] = 0.85
         model.alphas[1:] = 0
+        if model.train_phase:
+            model.betas[:] = 0
     f2c_grid = run_inference(model, dataloader, save_path=out_dir / "grid.tiff")
     metrics[k] = {
         "psnr3d": psnr3d(gt, f2c_grid),
