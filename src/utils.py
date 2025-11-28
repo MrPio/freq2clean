@@ -15,6 +15,9 @@ import torch
 from csbdeep.utils import normalize
 from scipy.ndimage import zoom as ndi_zoom
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
+from .video.editor import Editor
+import matplotlib as mpl
 
 logging.basicConfig(
     level="INFO",
@@ -44,6 +47,17 @@ COLORS = [
 __counter = 0
 __eta = time_ns()
 
+
+dcad_cmap = LinearSegmentedColormap.from_list(
+    "dcad",
+    list(
+        zip(
+            [p / 255 for p, _ in Editor.GREEN_GRADIENT],
+            [(c[0] / 255, c[1] / 255, c[2] / 255) for _, c in Editor.GREEN_GRADIENT],
+        )
+    ),
+)
+base_mpl_font_size = mpl.rcParams["font.size"]
 
 def clog(*vals, sep=" "):
     if len(vals) == 1 and ":" not in vals[0]:
@@ -82,8 +96,9 @@ def cprint(*vals, sep=" ", reset_counter=True):
 def imshow(
     images: list[Image.Image | np.ndarray | str | Path] | dict[str, Image.Image | np.ndarray | str | Path],
     size=4,
+    dpi=300,
     cols: int = None,
-    cmap="grey",
+    cmap=None,
     vrange=(None, None),
     zoom=1.0,
     path: Path | str = None,
@@ -115,13 +130,13 @@ def imshow(
         (image.size[0] / image.size[1] if isinstance(image, (Image.Image)) else image.shape[0] / image.shape[1])
         for image in images
     )
-    _, axes = plt.subplots(rows, cols, figsize=(cols * size, int(rows * size * max_ratio)))
+    _, axes = plt.subplots(rows, cols, figsize=(cols * size, int(rows * size * max_ratio)), dpi=dpi)
     if rows > 1 or cols > 1:
         axes = axes.flatten()
     else:
         axes = [axes]
     for i, img in enumerate(images):
-        axes[i].imshow(zoom_img(img, zoom), cmap=cmap, vmin=vrange[0], vmax=vrange[1])
+        axes[i].imshow(zoom_img(img, zoom), cmap=cmap if cmap else dcad_cmap, vmin=vrange[0], vmax=vrange[1])
         if titles:
             axes[i].set_title(titles[i])
         axes[i].axis("off")
@@ -133,7 +148,7 @@ def imshow(
         plt.show()
 
 
-def vidshow(vid, alpha=0.25, dpi=300, cmap="gray", path: Path | str = None):
+def vidshow(vid, alpha=0.25, dpi=300, cmap=None, path: Path | str = None):
     idx = np.indices(vid.shape).reshape(vid.ndim, -1).T
     fig = plt.figure(figsize=(10, 10), dpi=dpi)
     ax = fig.add_subplot(111, projection="3d")
@@ -142,7 +157,7 @@ def vidshow(vid, alpha=0.25, dpi=300, cmap="gray", path: Path | str = None):
         idx[:, 1],
         idx[:, 2],
         c=vid,
-        cmap=cmap,
+        cmap=cmap if cmap else dcad_cmap,
         s=100000 / vid.shape[0] ** 2,
         alpha=alpha,
         linewidths=0,

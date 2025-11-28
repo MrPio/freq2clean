@@ -16,7 +16,7 @@ Note: Ensure you have Magik installed.
 class Editor:
     GREEN_GRADIENT = (
         (0, (0, 0, 0)),
-        (184, (98, 255, 67)),
+        (200, (98, 255, 67)),
         (255, (255, 255, 255)),
     )
 
@@ -143,3 +143,25 @@ class Editor:
         if output is None:
             input.unlink()
             output_tmp.rename(input)
+
+    def make_green_img(self, img):
+        arr = img.astype(np.float32)
+
+        values = np.array([v for v, _ in self.GREEN_GRADIENT], dtype=np.float32)
+        colors = np.array([c for _, c in self.GREEN_GRADIENT], dtype=np.float32)  # shape (N,3)
+
+        h, w = arr.shape
+        out = np.zeros((h, w, 3), dtype=np.uint8)
+
+        for i in range(len(values) - 1):
+            v0, v1 = values[i], values[i+1]
+            c0, c1 = colors[i], colors[i+1]
+
+            mask = (arr >= v0) & (arr <= v1)
+            if not np.any(mask):
+                continue
+
+            t = (arr[mask] - v0) / (v1 - v0)
+            out[mask] = (c0 + t[:, None] * (c1 - c0)).clip(0, 255).astype(np.uint8)
+
+        return out

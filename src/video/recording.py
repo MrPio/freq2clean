@@ -31,18 +31,23 @@ class Recording:
         ),
     }
 
-    def __init__(self, video: PathLike | np.ndarray, max_frames: int | None = 300):
-        self.np = (
-            video
-            if isinstance(video, np.ndarray)
-            else (
-                np.load(str(video))[:max_frames]
-                if str(video).endswith(".npy")
-                else tiff.imread(
-                    str(video), key=range(max_frames) if max_frames else None
-                )
-            )
-        )
+    def __init__(self, video: PathLike | np.ndarray, max_frames: int | None = 300, norm=False):
+        if isinstance(video, np.ndarray):
+            self.np = video
+        elif str(video).endswith(".npy"):
+            self.np = np.load(str(video))[:max_frames]
+        else:
+            video = Path(video)
+            if norm:
+                norm_path = video.with_name(f"{video.stem}_norm{video.suffix}")
+                if not norm_path.exists():
+                    pass
+            tiff_path = str(video if not norm or not norm_path.exists() else norm_path)
+            self.np = tiff.imread(tiff_path, key=range(max_frames) if max_frames else None)
+            if norm and not norm_path.exists():
+                print(f"No normalized version for ({video.stem}) found on disk. Generating one...")
+                self.np = self.normalized
+                self.save(norm_path)
 
     @property
     def frames(self) -> int:
@@ -71,7 +76,7 @@ class Recording:
         fps=30,
         codec="libx265",
         silent=True,
-        normalize=True
+        normalize=True,
     ):
         iio.imwrite(
             uri=str(path),
@@ -84,14 +89,10 @@ class Recording:
         return Video(path)
 
     def hist(self, figsize=(12, 5), bins=100):
-        ax = pd.Series(self.np.flatten()).hist(
-            figsize=figsize, bins=bins, edgecolor="white"
-        )
+        ax = pd.Series(self.np.flatten()).hist(figsize=figsize, bins=bins, edgecolor="white")
         ax.set_yscale("log")
 
-    def avg_frame(
-        self, frame: int, window=1, type: Literal["box", "gauss"] = "box"
-    ) -> np.ndarray:
+    def avg_frame(self, frame: int, window=1, type: Literal["box", "gauss"] = "box") -> np.ndarray:
         if window == 1:
             return self.np[frame]
         start = max(0, frame - window // 2)

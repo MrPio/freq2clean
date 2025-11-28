@@ -24,6 +24,9 @@ TODO.md
 5-freq2clean/trainings/*/weights/
 5-freq2clean/recordings/
 5-freq2clean/*Freq2Clean_Train.ipynb
+5-freq2clean/onnx/
+5-freq2clean/deepcad_pth/
+5-freq2clean/deepcad_results/
 
 # other_experiments ====================
 other_experiments/diffdenoise/dataset/
