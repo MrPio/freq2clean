@@ -14,10 +14,11 @@ from src import *
 BATCH_SIZE = 1
 SELECTED_TRAINING = "20251118-1205-synthetic_deepcad_15"
 # Use this to test F2C on a testset that differs from the trainset
-DATASET_NAME: str | None = "synthetic"
-DENOISER_VARIANT: str | None = "_15"
+DATASET_NAME: str | None = None
+DENOISER_VARIANT: str | None = None
 AVG_WIN: int | None = None
 GT_VARIANT: str | None = None
+SAVE_TIFF: bool = False
 
 # %% Dataset Loading
 cprint("Loading checkpoint", f"yellow:{SELECTED_TRAINING}")
@@ -33,21 +34,18 @@ metrics = json.load(metrics_path.open()) if metrics_path.exists() else {}
 x = Recording(
     f"dataset/{dataset_name}/x.tif",
     max_frames=None,
-)
+    norm=True,
+).np
 y = Recording(
     f"dataset/{dataset_name}/{cfg['denoiser_name']}{variant}.tif",
     max_frames=None,
-)
+    norm=True,
+).np
 gt = Recording(
     f"dataset/{dataset_name}/gt{GT_VARIANT or ''}.tif",
     max_frames=None,
-)
-
-# %% Normalization
-clog("Normalizing data...")
-x = x.normalized
-y = y.normalized
-gt = gt.normalized
+    norm=True,
+).np
 
 clog("Computing averaged vid/frame...")
 avg_win = AVG_WIN or cfg["avg_win"]
@@ -60,6 +58,7 @@ n = x.shape[0] // cfg["patch_t"]
 idx = (np.arange(n)[:, None] * cfg["patch_t"] + np.arange(cfg["patch_t"])).astype(int)
 x_bar = torch.from_numpy(x_bar[idx]).float()
 y_ = torch.from_numpy(y[idx]).float()
+patch_shape = x_bar[0].shape
 testset = TensorDataset(x_bar, y_)
 dataloader = DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False)
 del x, x_bar
@@ -71,8 +70,8 @@ checkpointdir = Path("trainings") / SELECTED_TRAINING / "pth"
 ckpt = sorted(checkpointdir.glob("*.pt"), key=lambda file: int(file.stem))[-1]
 cprint("cyan:Loading checkpoint", ckpt.stem)
 # avg_frame = torch.tensor(x_avg).to(device)
-model = Freq2Clean(num_frames=cfg["patch_t"], train_phase=cfg.get("train_phase", False))
-cprint("Training of phase coefficients is", "green:enabled" if model.train_phase else "red:disabled")
+model = Freq2Clean(shape=patch_shape, mode=cfg.get("frequency_transform", "dft1d"))
+cprint("Selected Frequency Transform=", f"green:{model.mode}")
 model.to(device)
 model.load_state_dict(torch.load(ckpt, map_location=device))
 model.eval()
@@ -95,7 +94,7 @@ def run_inference(model: Freq2Clean, dataloader, save_path=None) -> np.ndarray:
 
 
 clog("Running Freq2Clean (network) test...")
-f2c_net = run_inference(model, dataloader, save_path=out_dir / f"{SELECTED_TRAINING}.tiff")
+f2c_net = run_inference(model, dataloader, save_path=out_dir / f"{SELECTED_TRAINING}.tiff" if SAVE_TIFF else None)
 gt = gt[: f2c_net.shape[0]]  # The number of frames in F2C is a multiple of the number of patches
 metrics[SELECTED_TRAINING] = {
     "psnr3d": psnr3d(gt, f2c_net),
@@ -105,11 +104,12 @@ metrics[SELECTED_TRAINING] = {
 if (k := "grid") not in metrics:
     clog("Running Freq2Clean (grid search) test...")
     with torch.no_grad():
-        model.alphas[0] = 0.85
-        model.alphas[1:] = 0
-        if model.train_phase:
-            model.betas[:] = 0
-    f2c_grid = run_inference(model, dataloader, save_path=out_dir / "grid.tiff")
+        if model.mode == "dft1d":
+            model.mask[0] = 0.85
+            model.mask[1:] = 0
+        elif model.mode == "dct3d":
+            raise "Grid search mode not implemented in dct3d"
+    f2c_grid = run_inference(model, dataloader, save_path=out_dir / "grid.tiff" if SAVE_TIFF else None)
     metrics[k] = {
         "psnr3d": psnr3d(gt, f2c_grid),
         "ssim3d": ssim3d(gt, f2c_grid),
@@ -121,3 +121,4 @@ if (k := "deepcad") not in metrics:
         "ssim3d": ssim3d(gt, y),
     }
 json.dump(metrics, metrics_path.open("w"), indent=4)
+jprint(metrics)

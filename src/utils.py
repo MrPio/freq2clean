@@ -92,6 +92,50 @@ def cprint(*vals, sep=" ", reset_counter=True):
     vals = map(fmt, vals)
     print(*vals, sep=sep)
 
+def jprint(json):
+    def pprint(
+        json,
+        level=0,
+        tab=4,
+        ck="red",
+        cv=("blue", "green", "cyan", "yellow", "light_grey"),
+    ):
+        space = " " * tab
+        if isinstance(json, dict):
+            args: list = [(space * level, "{")]
+            for k, v in json.items():
+                _v = pprint(v, level=level + 1, ck=ck, cv=cv)
+                arg = [space * (level + 1), f"{ck}:{k}", ":"]
+                if isinstance(_v, str):
+                    arg.append(_v)
+                args.append(tuple(arg))
+                if not isinstance(_v, str):
+                    args.extend(_v)
+            return args + [(space * level, "}")]
+        elif isinstance(json, list) and (len(json) == 0 or isinstance(json[0], str)):
+            return f"{cv[3]}:[" + ", ".join(json) + "]"
+        elif isinstance(json, list):
+            args: list = [(space * level, "[")]
+            for v in json:
+                _v = pprint(v, level=level + 1, ck=ck, cv=cv)
+                arg = [space * (level + 1)]
+                if isinstance(_v, str):
+                    arg.append(_v)
+                args.append(tuple(arg))
+                if not isinstance(_v, str):
+                    args.extend(_v)
+            return args + [(space * level, "]")]
+        elif isinstance(json, bool):
+            return f"{cv[2]}:{json}"
+        elif isinstance(json, (int, float)):
+            return f"{cv[0]}:{json}"
+        elif isinstance(json, str):
+            return f"{cv[1]}:{json}"
+        else:
+            return f"{cv[-1]}:{json}"
+
+    for args in pprint(json):
+        cprint(*args)
 
 def imshow(
     images: list[Image.Image | np.ndarray | str | Path] | dict[str, Image.Image | np.ndarray | str | Path],

@@ -28,7 +28,7 @@ class Freq2Clean(nn.Module):
         self.mode = mode
         # init_alphas = [1] + [0.0] * (num_frames // 2)
         mask_shapes = {
-            "dft1d": (shape[0],),
+            "dft1d": (shape[0] // 2 + 1,),  # Hermitian symmetry
             "dct3d": shape,
         }
         self.mask = nn.Parameter(torch.empty(*mask_shapes[mode]))
@@ -55,8 +55,7 @@ class Freq2Clean(nn.Module):
 
         # freq0 = match(self.avg_frame.repeat(y_hat.shape[0], 1, 1), Y_hat_abs[:, 0] / self.frames) * self.frames
         # The mean of means is not the mean of all the values! The smaller the AVG_WIN/PATCH_T the better the approximation is
-        freq0 = match(torch.mean(y_bar, dim=1), Y_hat_abs[:, 0] / self.frames) * self.frames
-        Y_bar_abs[:, 0] = freq0
+        Y_bar_abs[:, 0] = match(Y_bar_abs[:, 0], Y_hat_abs[:, 0] / self.shape[0]) * self.shape[0]
 
         Y_abs = Y_bar_abs * (self.mask).view(1, -1, 1, 1) + Y_hat_abs * (1 - self.mask).view(1, -1, 1, 1)
         Y = torch.polar(Y_abs, Y_hat_angle)

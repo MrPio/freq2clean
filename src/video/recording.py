@@ -88,9 +88,10 @@ class Recording:
         )
         return Video(path)
 
-    def hist(self, figsize=(12, 5), bins=100):
-        ax = pd.Series(self.np.flatten()).hist(figsize=figsize, bins=bins, edgecolor="white")
-        ax.set_yscale("log")
+    def hist(self, figsize=(12, 5), bins=100, step=1, log=False):
+        ax = pd.Series(self.np[::step].flatten()).hist(figsize=figsize, bins=bins, edgecolor="white")
+        if log:
+            ax.set_yscale("log")
 
     def avg_frame(self, frame: int, window=1, type: Literal["box", "gauss"] = "box") -> np.ndarray:
         if window == 1:
