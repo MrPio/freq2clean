@@ -48,13 +48,13 @@ cfg = {
     "gt_variant": "",
     "frequency_transform": "dct3d",
     # Training
-    "patch_t": 3000,
-    "overlap": 0.7,
+    "patch_t": 600,
+    "overlap": 0.5,
     "avg_win": 1024,  # doesnt affect the training that much
     "batch_size": 1,
     "epochs": 50,
     "learning_rate": 0.05,
-    "save_snaps": True,
+    "save_checkpoints": True,
     "max_frames": 6000,
     "weight_decay": 1e-5,
     "weight_clamp01": True,
@@ -140,7 +140,7 @@ for epoch in (pbar := trange(cfg["epochs"])):
     x, x_bar, y, gt = validset
     model.eval()
     f2c = model(y.to(device).unsqueeze(0), x_bar.to(device).unsqueeze(0))
-    loss = -ssim3d(f2c[:, ::4].unsqueeze(0), gt[::4].to(device).unsqueeze(0).unsqueeze(0))
+    loss = -ssim3d(f2c[:, ::8].unsqueeze(0), gt[::8].to(device).unsqueeze(0).unsqueeze(0))
     imshow(
         {
             "Noisy": x[-1].numpy(),
@@ -161,7 +161,8 @@ for epoch in (pbar := trange(cfg["epochs"])):
         fig.savefig(mask_plot_path, dpi=150, bbox_inches="tight")
         plt.close(fig)
     elif cfg["frequency_transform"] == "dct3d":
-        vidshow(model.mask.cpu().detach().numpy()[::8, ::8, ::8], path=mask_plot_path)
+        vidshow(model.mask.cpu().detach().numpy()[:128, :128, :128], path=mask_plot_path, alpha=0.75)
+        vidshow(model.mask.cpu().detach().numpy()[::8, ::8, ::8], path=mask_plot_path.with_name(f"{epoch}_2.png"))
 
     # Train
     for i, (x, x_bar, y, gt) in enumerate(dataloader):
@@ -196,7 +197,8 @@ for epoch in (pbar := trange(cfg["epochs"])):
         df.to_csv(metrics_path)
         last_loss = loss.item()
 
-    torch.save(model.state_dict(), pth_dir / f"{epoch}.pt")
+    if cfg["save_checkpoints"]:
+        torch.save(model.state_dict(), pth_dir / f"{epoch}.pt")
     fig, ax = plt.subplots(figsize=(16, 8))
     df.drop(columns="epoch").plot(ax=ax)
     ax.set_yscale("log")

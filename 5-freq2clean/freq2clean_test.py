@@ -103,12 +103,7 @@ metrics[SELECTED_TRAINING] = {
 
 if (k := "grid") not in metrics:
     clog("Running Freq2Clean (grid search) test...")
-    with torch.no_grad():
-        if model.mode == "dft1d":
-            model.mask[0] = 0.85
-            model.mask[1:] = 0
-        elif model.mode == "dct3d":
-            raise "Grid search mode not implemented in dct3d"
+    model.initialize_mask()
     f2c_grid = run_inference(model, dataloader, save_path=out_dir / "grid.tiff" if SAVE_TIFF else None)
     metrics[k] = {
         "psnr3d": psnr3d(gt, f2c_grid),

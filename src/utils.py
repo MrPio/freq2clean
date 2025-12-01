@@ -192,7 +192,7 @@ def imshow(
         plt.show()
 
 
-def vidshow(vid, alpha=0.25, dpi=300, cmap=None, path: Path | str = None):
+def vidshow(vid, alpha=0.25, dpi=300, cmap=None, path: Path | str = None, grid=False):
     idx = np.indices(vid.shape).reshape(vid.ndim, -1).T
     fig = plt.figure(figsize=(10, 10), dpi=dpi)
     ax = fig.add_subplot(111, projection="3d")
@@ -207,8 +207,13 @@ def vidshow(vid, alpha=0.25, dpi=300, cmap=None, path: Path | str = None):
         linewidths=0,
     )
 
-    ax.set_axis_off()
-    ax.grid(False)
+    if not grid:
+        ax.set_axis_off()
+        ax.grid(False)
+    else:
+        ax.set_xlabel("t")
+        ax.set_ylabel("x")
+        ax.set_zlabel("y")
     ax.view_init(elev=30, azim=225)
     plt.tight_layout()
     if path:

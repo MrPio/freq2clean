@@ -31,11 +31,26 @@ class Freq2Clean(nn.Module):
             "dft1d": (shape[0] // 2 + 1,),  # Hermitian symmetry
             "dct3d": shape,
         }
-        self.mask = nn.Parameter(torch.empty(*mask_shapes[mode]))
-        init.uniform_(self.mask, a=0.0, b=1.0)
+        self.initialize_mask()
         if mode == "dct3d":
             self.dct3d = DCT3D()
             self.idct3d = IDCT3D()
+
+    def initialize_mask(self):
+        if self.mode == "dft1d":
+            self.mask = nn.Parameter(torch.tensor([0.85] + [0] * (self.shape[0] // 2)))
+        elif self.mode == "dct3d":
+            s0, δs, t0, δt = 36, 72, -6, 16
+            W_s = np.clip(
+                (np.sqrt(np.arange(self.shape[1])[None, :] ** 2 + np.arange(self.shape[2])[:, None] ** 2) - (s0 - δs))
+                / (2 * δs),
+                0,
+                1,
+            )
+            W_t = 1 - np.clip((np.arange(self.shape[0]) - (t0 - δt)) / (2 * δt), 0, 1)
+            W = (W_s[:, :, None] * W_t).transpose(2, 0, 1)
+            self.mask = nn.Parameter(torch.tensor(W))
+        # init.uniform_(self.mask, a=0.0, b=1.0)
 
     def forward(self, y_hat: torch.Tensor, y_bar: torch.Tensor) -> torch.Tensor:
         if self.mode == "dft1d":
