@@ -43,7 +43,7 @@ class CorrelationLoss(nn.Module):
 cfg = {
     # Data
     "denoiser_name": "deepcad",
-    "denoiser_variant": "_15",
+    "denoiser_variant": "_150",
     "dataset_name": "synthetic",
     "gt_variant": "",
     "frequency_transform": "dct3d",
@@ -70,11 +70,21 @@ cprint("Using frequency transform", f"red:{cfg['frequency_transform']}")
 
 # %% Dataset
 clog("Loading and Normalizing dataset...")
-x = Recording(f"dataset/{cfg['dataset_name']}/x.tif", max_frames=cfg["max_frames"]).normalized
+x = Recording(
+    f"dataset/{cfg['dataset_name']}/x.tif",
+    max_frames=cfg["max_frames"],
+    norm=True,
+).np
 y = Recording(
-    f"dataset/{cfg['dataset_name']}/{cfg['denoiser_name']}{cfg['denoiser_variant']}.tif", max_frames=cfg["max_frames"]
-).normalized
-gt = Recording(f"dataset/{cfg['dataset_name']}/gt{cfg['gt_variant']}.tif", max_frames=cfg["max_frames"]).normalized
+    f"dataset/{cfg['dataset_name']}/{cfg['denoiser_name']}{cfg['denoiser_variant']}.tif",
+    max_frames=cfg["max_frames"],
+    norm=True,
+).np
+gt = Recording(
+    f"dataset/{cfg['dataset_name']}/gt{cfg['gt_variant']}.tif",
+    max_frames=cfg["max_frames"],
+    norm=True,
+).np
 
 clog("Computing temporal averaged video...")
 x_bar = uniform_filter1d(x, size=cfg["avg_win"], axis=0, mode="reflect")
