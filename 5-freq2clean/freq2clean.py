@@ -36,7 +36,7 @@ class Freq2Clean(nn.Module):
             self.dct3d = DCT3D()
             self.idct3d = IDCT3D()
 
-    def initialize_mask(self):
+    def initialize_mask(self, device=None):
         if self.mode == "dft1d":
             self.mask = nn.Parameter(torch.tensor([0.85] + [0] * (self.shape[0] // 2)))
         elif self.mode == "dct3d":
@@ -50,6 +50,8 @@ class Freq2Clean(nn.Module):
             W_t = 1 - np.clip((np.arange(self.shape[0]) - (t0 - δt)) / (2 * δt), 0, 1)
             W = (W_s[:, :, None] * W_t).transpose(2, 0, 1)
             self.mask = nn.Parameter(torch.tensor(W))
+        if device:
+            self.to(device)
         # init.uniform_(self.mask, a=0.0, b=1.0)
 
     def forward(self, y_hat: torch.Tensor, y_bar: torch.Tensor) -> torch.Tensor:

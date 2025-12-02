@@ -12,13 +12,19 @@ from src import *
 
 # %% Args
 BATCH_SIZE = 1
+
+# dft1d (15) --> 20251118-1205-synthetic_deepcad_15
+# dft1d (150) --> 20251118-1221-synthetic_deepcad_150
+# dct3d (15) --> 20251202-0738-synthetic_deepcad_15
+# dct3d (150) --> 20251202-0835-synthetic_deepcad_150
 SELECTED_TRAINING = "20251118-1205-synthetic_deepcad_15"
+
 # Use this to test F2C on a testset that differs from the trainset
-DATASET_NAME: str | None = None
+DATASET_NAME: str | None = "mouse_neuronal_populations"
 DENOISER_VARIANT: str | None = None
 AVG_WIN: int | None = None
 GT_VARIANT: str | None = None
-SAVE_TIFF: bool = False
+SAVE_TIFF: bool = True
 
 # %% Dataset Loading
 cprint("Loading checkpoint", f"yellow:{SELECTED_TRAINING}")
@@ -101,9 +107,9 @@ metrics[SELECTED_TRAINING] = {
     "ssim3d": ssim3d(gt, f2c_net),
 }
 
-if (k := "grid") not in metrics:
+if (k := f"grid_{model.mode}") not in metrics:
     clog("Running Freq2Clean (grid search) test...")
-    model.initialize_mask()
+    model.initialize_mask(device=device)
     f2c_grid = run_inference(model, dataloader, save_path=out_dir / "grid.tiff" if SAVE_TIFF else None)
     metrics[k] = {
         "psnr3d": psnr3d(gt, f2c_grid),
