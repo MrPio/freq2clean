@@ -27,6 +27,8 @@ TODO.md
 5-freq2clean/onnx/
 5-freq2clean/deepcad_pth/
 5-freq2clean/deepcad_results/
+5-freq2clean/trainings/20251202-0738-synthetic_deepcad_15/pth/18.pt
+5-freq2clean/trainings/20251202-0835-synthetic_deepcad_150/pth/13.pt
 
 # other_experiments ====================
 other_experiments/diffdenoise/dataset/

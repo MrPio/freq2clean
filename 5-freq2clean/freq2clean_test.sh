@@ -1,0 +1,11 @@
+echo "synthetic"
+python freq2clean_test.py synthetic 20251118-1205-synthetic_deepcad_15
+python freq2clean_test.py synthetic 20251118-1221-synthetic_deepcad_150
+python freq2clean_test.py synthetic 20251202-0738-synthetic_deepcad_15
+python freq2clean_test.py synthetic 20251202-0835-synthetic_deepcad_150
+
+echo "mouse_neuronal_populations"
+python freq2clean_test.py mouse_neuronal_populations 20251118-1205-synthetic_deepcad_15
+python freq2clean_test.py mouse_neuronal_populations 20251118-1221-synthetic_deepcad_150
+python freq2clean_test.py mouse_neuronal_populations 20251202-0738-synthetic_deepcad_15
+python freq2clean_test.py mouse_neuronal_populations 20251202-0835-synthetic_deepcad_150

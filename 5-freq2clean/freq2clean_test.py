@@ -17,14 +17,16 @@ BATCH_SIZE = 1
 # dft1d (150) --> 20251118-1221-synthetic_deepcad_150
 # dct3d (15) --> 20251202-0738-synthetic_deepcad_15
 # dct3d (150) --> 20251202-0835-synthetic_deepcad_150
-SELECTED_TRAINING = "20251118-1205-synthetic_deepcad_15"
+SELECTED_TRAINING = sys.argv[2] if len(sys.argv) > 2 else "20251202-0835-synthetic_deepcad_150"
 
 # Use this to test F2C on a testset that differs from the trainset
-DATASET_NAME: str | None = "mouse_neuronal_populations"
+DATASET_NAME: str | None = sys.argv[1] if len(sys.argv) > 1 else "synthetic"
 DENOISER_VARIANT: str | None = None
 AVG_WIN: int | None = None
 GT_VARIANT: str | None = None
-SAVE_TIFF: bool = True
+SAVE_TIFF: bool = False
+SKIP_NET: bool = False
+FORCE_GRID: bool = True
 
 # %% Dataset Loading
 cprint("Loading checkpoint", f"yellow:{SELECTED_TRAINING}")
@@ -99,18 +101,32 @@ def run_inference(model: Freq2Clean, dataloader, save_path=None) -> np.ndarray:
     return result
 
 
-clog("Running Freq2Clean (network) test...")
-f2c_net = run_inference(model, dataloader, save_path=out_dir / f"{SELECTED_TRAINING}.tiff" if SAVE_TIFF else None)
-gt = gt[: f2c_net.shape[0]]  # The number of frames in F2C is a multiple of the number of patches
-metrics[SELECTED_TRAINING] = {
-    "psnr3d": psnr3d(gt, f2c_net),
-    "ssim3d": ssim3d(gt, f2c_net),
-}
+if not SKIP_NET:
+    clog("Running Freq2Clean (network) test...")
+    f2c_net = run_inference(model, dataloader, save_path=out_dir / f"{SELECTED_TRAINING}.tiff" if SAVE_TIFF else None)
+    imshow(
+        {f"Frame:{i}": f2c_net[i] for i in range(0, f2c_net.shape[0], 500)},
+        size=8,
+        cols=4,
+        path=out_dir / f"{SELECTED_TRAINING}_snap.png",
+    )
+    gt = gt[: f2c_net.shape[0]]  # The number of frames in F2C is a multiple of the number of patches
+    metrics[SELECTED_TRAINING] = {
+        "psnr3d": psnr3d(gt, f2c_net),
+        "ssim3d": ssim3d(gt, f2c_net),
+    }
 
-if (k := f"grid_{model.mode}") not in metrics:
+if (k := f"grid_{model.mode}") not in metrics or FORCE_GRID:
     clog("Running Freq2Clean (grid search) test...")
     model.initialize_mask(device=device)
-    f2c_grid = run_inference(model, dataloader, save_path=out_dir / "grid.tiff" if SAVE_TIFF else None)
+    f2c_grid = run_inference(model, dataloader, save_path=out_dir / f"{k}.tiff" if SAVE_TIFF else None)
+    imshow(
+        {f"Frame:{i}": f2c_grid[i] for i in range(0, f2c_grid.shape[0], 500)},
+        size=8,
+        cols=4,
+        path=out_dir / f"{k}_snap.png",
+    )
+    gt = gt[: f2c_grid.shape[0]]  # The number of frames in F2C is a multiple of the number of patches
     metrics[k] = {
         "psnr3d": psnr3d(gt, f2c_grid),
         "ssim3d": ssim3d(gt, f2c_grid),
@@ -123,3 +139,4 @@ if (k := "deepcad") not in metrics:
     }
 json.dump(metrics, metrics_path.open("w"), indent=4)
 jprint(metrics)
+

@@ -46,8 +46,11 @@ class Recording:
             self.np = tiff.imread(tiff_path, key=range(max_frames) if max_frames else None)
             if norm and not norm_path.exists():
                 print(f"No normalized version for ({video.stem}) found on disk. Generating one...")
+                if max_frames != None:
+                    self.np = tiff.imread(tiff_path)
                 self.np = self.normalized
                 self.save(norm_path)
+                self.np = self.np[:max_frames]
 
     @property
     def frames(self) -> int:
