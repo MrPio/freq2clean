@@ -10,18 +10,19 @@ from src import clog, Recording, imshow, mkdir, np, tqdm
 dataset = sys.argv[1]
 folders = [
     "gt",
+    "x",
     "deepcad_15",
     "fft_15",
-    "deepcad_30",
-    "fft_30",
-    "deepcad_75",
-    "fft_75",
+    # "deepcad_30",
+    # "fft_30",
+    # "deepcad_75",
+    # "fft_75",
     "deepcad_150",
     "fft_150",
-    "deepcad_300",
-    "fft_300",
+    # "deepcad_300",
+    # "fft_300",
 ]
-num_frames = 50
+num_frames = 100
 model_names = ["cpsam"]  # "cyto3", "nuclei"] They perform the same
 
 # Init

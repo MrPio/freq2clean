@@ -18,6 +18,7 @@ TODO.md
 4-segmentation_and_deconvolution/dataset/
 4-segmentation_and_deconvolution/cellpose_results/**/*.npy
 4-segmentation_and_deconvolution/suite2p_results/**/*.npy
+4-segmentation_and_deconvolution/stardist_results/**/*.npy
 
 5-freq2clean/snapshots/
 5-freq2clean/trainings/*/snaps/

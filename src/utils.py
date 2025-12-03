@@ -59,6 +59,7 @@ dcad_cmap = LinearSegmentedColormap.from_list(
 )
 base_mpl_font_size = mpl.rcParams["font.size"]
 
+
 def clog(*vals, sep=" "):
     if len(vals) == 1 and ":" not in vals[0]:
         vals = (f"rand:{vals[0]}", *vals[1:])
@@ -91,6 +92,7 @@ def cprint(*vals, sep=" ", reset_counter=True):
 
     vals = map(fmt, vals)
     print(*vals, sep=sep)
+
 
 def jprint(json):
     def pprint(
@@ -137,6 +139,7 @@ def jprint(json):
     for args in pprint(json):
         cprint(*args)
 
+
 def imshow(
     images: list[Image.Image | np.ndarray | str | Path] | dict[str, Image.Image | np.ndarray | str | Path],
     size=4,
@@ -145,6 +148,7 @@ def imshow(
     cmap=None,
     vrange=(None, None),
     zoom=1.0,
+    shift=(0, 0),
     path: Path | str = None,
 ):
     """Plot a list of PIL images in a grid
@@ -180,7 +184,7 @@ def imshow(
     else:
         axes = [axes]
     for i, img in enumerate(images):
-        axes[i].imshow(zoom_img(img, zoom), cmap=cmap if cmap else dcad_cmap, vmin=vrange[0], vmax=vrange[1])
+        axes[i].imshow(zoom_img(img, zoom, shift), cmap=cmap if cmap else dcad_cmap, vmin=vrange[0], vmax=vrange[1])
         if titles:
             axes[i].set_title(titles[i])
         axes[i].axis("off")
@@ -192,7 +196,7 @@ def imshow(
         plt.show()
 
 
-def vidshow(vid, alpha=0.25, dpi=300, cmap=None, path: Path | str = None, grid=False):
+def vidshow(vid, alpha=0.25, dpi=150, cmap=None, path: Path | str = None, grid=False):
     idx = np.indices(vid.shape).reshape(vid.ndim, -1).T
     fig = plt.figure(figsize=(10, 10), dpi=dpi)
     ax = fig.add_subplot(111, projection="3d")
@@ -283,11 +287,11 @@ def gauss1D(size, mu=None, sigma=None):
     return gaussian_weights / gaussian_weights.sum()
 
 
-def zoom_img(x, factor: float = 1):
+def zoom_img(x, factor: float = 1, shift: tuple[int, int] = (0, 0)):
     x = np.array(x)
     h, w = x.shape[:2]
     new_h, new_w = int(h / factor), int(w / factor)
-    top, left = (h - new_h) // 2, (w - new_w) // 2
+    top, left = (h - new_h) // 2 + shift[1], (w - new_w) // 2 + shift[0]
     return x[top : top + new_h, left : left + new_w]
 
 
