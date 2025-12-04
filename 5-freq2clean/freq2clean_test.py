@@ -13,20 +13,24 @@ from src import *
 # %% Args
 BATCH_SIZE = 1
 
-# dft1d (15) --> 20251118-1205-synthetic_deepcad_15
-# dft1d (150) --> 20251118-1221-synthetic_deepcad_150
-# dct3d (15) --> 20251202-0738-synthetic_deepcad_15
-# dct3d (150) --> 20251202-0835-synthetic_deepcad_150
-SELECTED_TRAINING = sys.argv[2] if len(sys.argv) > 2 else "20251202-0835-synthetic_deepcad_150"
+checkpoints = {
+    "dft1d_15": "20251118-1205-synthetic_deepcad_15",
+    "dft1d_150": "20251118-1221-synthetic_deepcad_150",
+    "dct3d_15": "20251202-0738-synthetic_deepcad_15",
+    "dct3d_150": "20251202-0835-synthetic_deepcad_150",
+}
+SELECTED_TRAINING = checkpoints[sys.argv[2]]
 
 # Use this to test F2C on a testset that differs from the trainset
-DATASET_NAME: str | None = sys.argv[1] if len(sys.argv) > 1 else "synthetic"
+DATASET_NAME: str | None = sys.argv[1]
 DENOISER_VARIANT: str | None = None
 AVG_WIN: int | None = None
 GT_VARIANT: str | None = None
-SAVE_TIFF: bool = False
+SAVE_TIFF: bool = True
 SKIP_NET: bool = False
 FORCE_GRID: bool = True
+MAX_FRAMES: int | None = 3000
+SSIM3D_STEPS: int | None = 6
 
 # %% Dataset Loading
 cprint("Loading checkpoint", f"yellow:{SELECTED_TRAINING}")
@@ -41,17 +45,17 @@ metrics = json.load(metrics_path.open()) if metrics_path.exists() else {}
 
 x = Recording(
     f"dataset/{dataset_name}/x.tif",
-    max_frames=None,
+    max_frames=MAX_FRAMES,
     norm=True,
 ).np
 y = Recording(
     f"dataset/{dataset_name}/{cfg['denoiser_name']}{variant}.tif",
-    max_frames=None,
+    max_frames=MAX_FRAMES,
     norm=True,
 ).np
 gt = Recording(
     f"dataset/{dataset_name}/gt{GT_VARIANT or ''}.tif",
-    max_frames=None,
+    max_frames=MAX_FRAMES,
     norm=True,
 ).np
 
@@ -86,17 +90,28 @@ model.eval()
 
 
 # %% Test
-def run_inference(model: Freq2Clean, dataloader, save_path=None) -> np.ndarray:
+def run_inference(model: Freq2Clean, dataloader, save_path=None, patch_xy=128) -> np.ndarray:
+    assert not (model.mode == "dct3d" and patch_xy)
     f2cs = []
     with torch.no_grad():
         for x_bar, y in tqdm(dataloader):
-            out = model(y.to(device), x_bar.to(device))
-            f2cs.append(out.cpu())
+            B, T, H, W = y.shape
+            out = torch.empty_like(y)
+
+            for i in trange(0, H, patch_xy, leave=False):
+                for j in trange(0, W, patch_xy, leave=False):
+                    y_p = y[:, :, i : i + patch_xy, j : j + patch_xy]
+                    x_bar_p = x_bar[:, :, i : i + patch_xy, j : j + patch_xy]
+                    op = model(y_p.to(device), x_bar_p.to(device)).cpu()
+                    out[:, :, i : i + patch_xy, j : j + patch_xy] = op
+
+            f2cs.append(out)
 
     f2cs = torch.cat(f2cs, dim=0)
     result = f2cs.reshape(-1, f2cs.shape[2], f2cs.shape[3]).numpy()
     if save_path:
         clog(f"Saving {save_path.stem}...")
+        tiff.imwrite(save_path, result)
         tiff.imwrite(save_path, result)
     return result
 
@@ -113,7 +128,7 @@ if not SKIP_NET:
     gt = gt[: f2c_net.shape[0]]  # The number of frames in F2C is a multiple of the number of patches
     metrics[SELECTED_TRAINING] = {
         "psnr3d": psnr3d(gt, f2c_net),
-        "ssim3d": ssim3d(gt, f2c_net),
+        "ssim3d": ssim3d(gt, f2c_net, step=SSIM3D_STEPS),
     }
 
 if (k := f"grid_{model.mode}") not in metrics or FORCE_GRID:
@@ -129,14 +144,13 @@ if (k := f"grid_{model.mode}") not in metrics or FORCE_GRID:
     gt = gt[: f2c_grid.shape[0]]  # The number of frames in F2C is a multiple of the number of patches
     metrics[k] = {
         "psnr3d": psnr3d(gt, f2c_grid),
-        "ssim3d": ssim3d(gt, f2c_grid),
+        "ssim3d": ssim3d(gt, f2c_grid, step=SSIM3D_STEPS),
     }
 
 if (k := "deepcad") not in metrics:
     metrics[k] = {
         "psnr3d": psnr3d(gt, y),
-        "ssim3d": ssim3d(gt, y),
+        "ssim3d": ssim3d(gt, y, step=SSIM3D_STEPS),
     }
 json.dump(metrics, metrics_path.open("w"), indent=4)
 jprint(metrics)
-

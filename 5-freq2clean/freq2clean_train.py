@@ -19,7 +19,7 @@ class CorrelationLoss(nn.Module):
         super().__init__()
 
     def forward(self, x, y):
-        B, T, W, H = x.shape
+        B, T, H, W = x.shape
         N = W * H
 
         x2 = x.reshape(B, T, N)

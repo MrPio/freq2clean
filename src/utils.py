@@ -143,7 +143,7 @@ def jprint(json):
 def imshow(
     images: list[Image.Image | np.ndarray | str | Path] | dict[str, Image.Image | np.ndarray | str | Path],
     size=4,
-    dpi=300,
+    dpi=150,
     cols: int = None,
     cmap=None,
     vrange=(None, None),
@@ -308,7 +308,7 @@ def mkdir(path: str | Path, clear=False) -> Path:
     return path
 
 
-def barchart(
+def barchart(   
     data: dict[str, float],
     bounds: tuple[float, float] = None,
     yaxis=None,
