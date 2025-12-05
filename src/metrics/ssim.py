@@ -58,7 +58,7 @@ def __gaussian(window_size, sigma):
     return gauss / gauss.sum()
 
 
-def ssim3d(vox1, vox2, window_size=11, size_average=True, device="cuda", step=None, require_grad=False):
+def ssim3d(vox1, vox2, window_size=11, size_average=True, device="cuda", step=None, patch_xy=None, require_grad=False):
     """Data must be normalized [0,1]"""
     if isinstance(vox1, Recording):
         vox1 = vox1.np
@@ -67,6 +67,18 @@ def ssim3d(vox1, vox2, window_size=11, size_average=True, device="cuda", step=No
     if step:
         vox1 = vox1[::step]
         vox2 = vox2[::step]
+    if patch_xy:
+        vox1 = vox1[
+            :,
+            vox1.shape[1] // 2 - patch_xy // 2 : vox1.shape[1] // 2 + patch_xy // 2,
+            vox1.shape[2] // 2 - patch_xy // 2 : vox1.shape[2] // 2 + patch_xy // 2,
+        ]
+        vox2 = vox2[
+            :,
+            vox2.shape[1] // 2 - patch_xy // 2 : vox2.shape[1] // 2 + patch_xy // 2,
+            vox2.shape[2] // 2 - patch_xy // 2 : vox2.shape[2] // 2 + patch_xy // 2,
+        ]
+
     if isinstance(vox1, np.ndarray) and isinstance(vox2, np.ndarray):
         vox1 = torch.from_numpy(vox1).unsqueeze(0).unsqueeze(0).float().to(device)  # -> (N=1,C=1,D,H,W)
         vox2 = torch.from_numpy(vox2).unsqueeze(0).unsqueeze(0).float().to(device)  # -> (N=1,C=1,D,H,W)

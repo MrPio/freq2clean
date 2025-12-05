@@ -23,14 +23,15 @@ SELECTED_TRAINING = checkpoints[sys.argv[2]]
 
 # Use this to test F2C on a testset that differs from the trainset
 DATASET_NAME: str | None = sys.argv[1]
-DENOISER_VARIANT: str | None = None
+DENOISER_VARIANT: str | None = "_30"
 AVG_WIN: int | None = None
 GT_VARIANT: str | None = None
 SAVE_TIFF: bool = True
 SKIP_NET: bool = False
 FORCE_GRID: bool = True
-MAX_FRAMES: int | None = 3000
-SSIM3D_STEPS: int | None = 6
+MAX_FRAMES: int | None = 6000
+SSIM3D_STEPS: int | None = 4
+SSIM3D_PATCHXY: int | None = 256
 
 # %% Dataset Loading
 cprint("Loading checkpoint", f"yellow:{SELECTED_TRAINING}")
@@ -38,14 +39,14 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 cfg = json.load(open(f"trainings/{SELECTED_TRAINING}/cfg.json"))
 dataset_name = DATASET_NAME or cfg["dataset_name"]
 variant = DENOISER_VARIANT or cfg["denoiser_variant"]
-out_dir = mkdir(f"results/{dataset_name}/{cfg['denoiser_name']}{variant}{AVG_WIN or ''}")
+out_dir = mkdir(f"results/{dataset_name}/{cfg['denoiser_name']}{variant}{(f"_{AVG_WIN}" if AVG_WIN else '')}")
 clog(f'Loading dataset {dataset_name}, y_variant="{variant}", gt_variant="{GT_VARIANT}"...')
 metrics_path = out_dir / f"metrics.json"
 metrics = json.load(metrics_path.open()) if metrics_path.exists() else {}
 
 x = Recording(
     f"dataset/{dataset_name}/x.tif",
-    max_frames=MAX_FRAMES,
+    max_frames=None,
     norm=True,
 ).np
 y = Recording(
@@ -61,19 +62,19 @@ gt = Recording(
 
 clog("Computing averaged vid/frame...")
 avg_win = AVG_WIN or cfg["avg_win"]
-x_bar = uniform_filter1d(x, size=avg_win, axis=0, mode="reflect")
-# x_avg = np.mean(x, axis=0)
+x_bar = uniform_filter1d(x, size=avg_win, axis=0, mode="reflect")[:MAX_FRAMES]
+del x
 
 # %% Batching
 clog("Batching...")
-n = x.shape[0] // cfg["patch_t"]
+n = y.shape[0] // cfg["patch_t"]
 idx = (np.arange(n)[:, None] * cfg["patch_t"] + np.arange(cfg["patch_t"])).astype(int)
 x_bar = torch.from_numpy(x_bar[idx]).float()
 y_ = torch.from_numpy(y[idx]).float()
 patch_shape = x_bar[0].shape
 testset = TensorDataset(x_bar, y_)
 dataloader = DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False)
-del x, x_bar
+del x_bar
 cprint(f"Testset has", len(idx), "samples.")
 
 # %% Model
@@ -128,7 +129,7 @@ if not SKIP_NET:
     gt = gt[: f2c_net.shape[0]]  # The number of frames in F2C is a multiple of the number of patches
     metrics[SELECTED_TRAINING] = {
         "psnr3d": psnr3d(gt, f2c_net),
-        "ssim3d": ssim3d(gt, f2c_net, step=SSIM3D_STEPS),
+        "ssim3d": ssim3d(gt, f2c_net, step=SSIM3D_STEPS, patch_xy=SSIM3D_PATCHXY),
     }
 
 if (k := f"grid_{model.mode}") not in metrics or FORCE_GRID:
@@ -144,13 +145,13 @@ if (k := f"grid_{model.mode}") not in metrics or FORCE_GRID:
     gt = gt[: f2c_grid.shape[0]]  # The number of frames in F2C is a multiple of the number of patches
     metrics[k] = {
         "psnr3d": psnr3d(gt, f2c_grid),
-        "ssim3d": ssim3d(gt, f2c_grid, step=SSIM3D_STEPS),
+        "ssim3d": ssim3d(gt, f2c_grid, step=SSIM3D_STEPS, patch_xy=SSIM3D_PATCHXY),
     }
 
 if (k := "deepcad") not in metrics:
     metrics[k] = {
         "psnr3d": psnr3d(gt, y),
-        "ssim3d": ssim3d(gt, y, step=SSIM3D_STEPS),
+        "ssim3d": ssim3d(gt, y, step=SSIM3D_STEPS, patch_xy=SSIM3D_PATCHXY),
     }
 json.dump(metrics, metrics_path.open("w"), indent=4)
 jprint(metrics)

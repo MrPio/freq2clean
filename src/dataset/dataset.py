@@ -43,7 +43,7 @@ DATASETS = {
     ),  # 1_520 is the 99.9% Quantile of GT
     "zebrafish": DatasetMetadata(
         dir="dataset/zenodo/zebrafish",
-        shape=(9000, 485, 400),
+        shape=(9800, 400, 485),
         data_range=32_767,
         hz=15,
     ),
@@ -55,6 +55,14 @@ DATASETS = {
         dir="dataset/zenodo/mouse_neuronal_populations_5",
         shape=(6500, 490, 490),
         data_range=47_939,
+        hz=30,
+    ),
+    "mouse_dendritic_spines": DatasetMetadata(
+        dir="dataset/zenodo/mouse_dendritic_spines",
+        x="x.tiff",
+        gt="gt.tiff",
+        shape=(6500, 492, 978),
+        data_range=30_666,
         hz=30,
     ),
 }
