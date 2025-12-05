@@ -65,6 +65,14 @@ DATASETS = {
         data_range=30_666,
         hz=30,
     ),
+    "mouse_dendritic_spines_115mw": DatasetMetadata(
+        dir="dataset/zenodo/mouse_dendritic_spines_115mw",
+        x="x.tif",
+        gt="gt.tif",
+        shape=(6500, 432, 944),
+        data_range=62_523,
+        hz=30,
+    ),
 }
 
 
