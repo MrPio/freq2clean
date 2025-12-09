@@ -1,7 +1,7 @@
 GPU: '0'
 batch_size: 1
-datasets_path: dataset/zebrafish
-denoise_model: zebrafish_202512051454
+datasets_path: dataset/mouse_dendritic_spines_115mw
+denoise_model: mouse_dendritic_spines_115mw_202512090753
 fmap: 16
 gap_t: 90
 gap_x: 90

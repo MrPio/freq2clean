@@ -9,9 +9,9 @@ testing_class(
         "overlap_factor": 0.4,  # overlap factor,
         "scale_factor": 1,  # the factor for image intensity scaling
         "test_datasize": 6000,  # the number of frames to be tested
-        "datasets_path": "dataset/zebrafish",  # folder containing all files to be tested
+        "datasets_path": "dataset/mouse_dendritic_spines_115mw",  # folder containing all files to be tested
         "pth_dir": "./pth",  # pth file root path
-        "denoise_model": "zebrafish_202512051454",  # A folder containing all models to be tested
+        "denoise_model": "mouse_dendritic_spines_115mw_202512090753",  # A folder containing all models to be tested
         "output_dir": "./results",  # result file root path
         # network related parameters
         "fmap": 16,  # number of feature maps

@@ -9,7 +9,7 @@ import imageio.v3 as iio
 from os import PathLike
 from IPython.display import Video
 from tqdm import tqdm
-from src.utils import gauss1D
+from src.utils import gauss1D, imshow
 from multiprocessing import Pool
 from scipy.ndimage import uniform_filter1d
 
@@ -40,8 +40,6 @@ class Recording:
             video = Path(video)
             if norm:
                 norm_path = video.with_name(f"{video.stem}_norm{video.suffix}")
-                if not norm_path.exists():
-                    pass
             tiff_path = str(video if not norm or not norm_path.exists() else norm_path)
             self.np = tiff.imread(tiff_path, key=range(max_frames) if max_frames else None)
             if norm and not norm_path.exists():
@@ -119,3 +117,11 @@ class Recording:
 
     def __getitem__(self, i):
         return Recording(self.np[i])
+
+    def preview(self, row=2, col=3, zoom=1):
+        imshow(
+            {f"Frame {int(i)}": self.np[int(i)] for i in np.linspace(0, self.frames - 1, row * col)},
+            size=8,
+            cols=col,
+            zoom=zoom,
+        )

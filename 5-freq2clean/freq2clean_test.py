@@ -23,14 +23,15 @@ SELECTED_TRAINING = checkpoints[sys.argv[2]]
 
 # Use this to test F2C on a testset that differs from the trainset
 DATASET_NAME: str | None = sys.argv[1]
-DENOISER_VARIANT: str | None = "_30"
+DENOISER_NAME: str | None = "ted"
+DENOISER_VARIANT: str | None = ""
 AVG_WIN: int | None = None
 GT_VARIANT: str | None = None
 SAVE_TIFF: bool = True
 SKIP_NET: bool = False
-FORCE_GRID: bool = True
-MAX_FRAMES: int | None = 6000
-SSIM3D_STEPS: int | None = 4
+FORCE_GRID: bool = False
+MAX_FRAMES: int | None = 3000
+SSIM3D_STEPS: int | None = 2
 SSIM3D_PATCHXY: int | None = 256
 
 # %% Dataset Loading
@@ -38,8 +39,9 @@ cprint("Loading checkpoint", f"yellow:{SELECTED_TRAINING}")
 device = "cuda" if torch.cuda.is_available() else "cpu"
 cfg = json.load(open(f"trainings/{SELECTED_TRAINING}/cfg.json"))
 dataset_name = DATASET_NAME or cfg["dataset_name"]
-variant = DENOISER_VARIANT or cfg["denoiser_variant"]
-out_dir = mkdir(f"results/{dataset_name}/{cfg['denoiser_name']}{variant}{(f"_{AVG_WIN}" if AVG_WIN else '')}")
+denoiser_name = DENOISER_NAME or cfg["denoiser_name"]
+variant = DENOISER_VARIANT if DENOISER_VARIANT != None else cfg["denoiser_variant"]
+out_dir = mkdir(f"results/{dataset_name}/{denoiser_name}{variant}{(f"_{AVG_WIN}" if AVG_WIN else '')}")
 clog(f'Loading dataset {dataset_name}, y_variant="{variant}", gt_variant="{GT_VARIANT}"...')
 metrics_path = out_dir / f"metrics.json"
 metrics = json.load(metrics_path.open()) if metrics_path.exists() else {}
@@ -50,7 +52,7 @@ x = Recording(
     norm=True,
 ).np
 y = Recording(
-    f"dataset/{dataset_name}/{cfg['denoiser_name']}{variant}.tif",
+    f"dataset/{dataset_name}/{denoiser_name}{variant}.tif",
     max_frames=MAX_FRAMES,
     norm=True,
 ).np
@@ -62,8 +64,10 @@ gt = Recording(
 
 clog("Computing averaged vid/frame...")
 avg_win = AVG_WIN or cfg["avg_win"]
-x_bar = uniform_filter1d(x, size=avg_win, axis=0, mode="reflect")[:MAX_FRAMES]
+x_bar = uniform_filter1d(x, size=avg_win, axis=0, mode="reflect")
 del x
+x_bar = x_bar[: y.shape[0], : y.shape[1], : y.shape[2]]
+gt = gt[: y.shape[0], : y.shape[1], : y.shape[2]]
 
 # %% Batching
 clog("Batching...")
@@ -148,7 +152,7 @@ if (k := f"grid_{model.mode}") not in metrics or FORCE_GRID:
         "ssim3d": ssim3d(gt, f2c_grid, step=SSIM3D_STEPS, patch_xy=SSIM3D_PATCHXY),
     }
 
-if (k := "deepcad") not in metrics:
+if (k := denoiser_name) not in metrics:
     metrics[k] = {
         "psnr3d": psnr3d(gt, y),
         "ssim3d": ssim3d(gt, y, step=SSIM3D_STEPS, patch_xy=SSIM3D_PATCHXY),
