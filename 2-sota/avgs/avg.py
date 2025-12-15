@@ -2,7 +2,7 @@ import sys
 from PIL import Image
 from csbdeep.utils import normalize
 
-sys.path.append("..")
+sys.path.append("../..")
 from src import *
 
 out_dir = mkdir("avgs")
