@@ -48,9 +48,9 @@ cfg = {
     "gt_variant": "",
     "frequency_transform": "dct3d",
     # Training
-    "patch_t": 1024,
-    "patch_xy": 64,
-    "overlap": 0.5,
+    "patch_t": 512,
+    "patch_xy": 128,
+    "overlap": 0.3,
     "avg_win": 1024,  # doesnt affect the training that much
     "batch_size": 1,
     "epochs": 50,
@@ -113,9 +113,9 @@ patches_x = []
 patches_xbar = []
 patches_y = []
 patches_gt = []
-for ti in t_idx:
-    for xi in x_idx:
-        for yi in y_idx:
+for ti in tqdm(t_idx, leave=False):
+    for xi in tqdm(x_idx, leave=False):
+        for yi in tqdm(y_idx, leave=False):
             patches_x.append(x[np.ix_(ti, xi, yi)])
             patches_xbar.append(x_bar[np.ix_(ti, xi, yi)])
             patches_y.append(y[np.ix_(ti, xi, yi)])

@@ -16,7 +16,7 @@ BATCH_SIZE = 1
 checkpoints = {
     "dft1d_15": "20251118-1205-synthetic_deepcad_15",
     "dft1d_150": "20251118-1221-synthetic_deepcad_150",
-    "dct3d_15": "20251202-0738-synthetic_deepcad_15",
+    "dct3d_15": "20251218-1607-synthetic_deepcad_15",
     "dct3d_150": "20251202-0835-synthetic_deepcad_150",
 }
 SELECTED_TRAINING = checkpoints[sys.argv[2]]
@@ -27,7 +27,7 @@ DENOISER_NAME: str | None = "noise2noise"
 DENOISER_VARIANT: str | None = ""
 AVG_WIN: int | None = None
 GT_VARIANT: str | None = None
-SAVE_TIFF: bool = True
+SAVE_TIFF: bool = False
 SKIP_NET: bool = False
 FORCE_GRID: bool = False
 MAX_FRAMES: int | None = 3000
@@ -41,6 +41,7 @@ cfg = json.load(open(f"trainings/{SELECTED_TRAINING}/cfg.json"))
 dataset_name = DATASET_NAME or cfg["dataset_name"]
 denoiser_name = DENOISER_NAME or cfg["denoiser_name"]
 variant = DENOISER_VARIANT if DENOISER_VARIANT != None else cfg["denoiser_variant"]
+patch_xy = cfg.get("patch_xy", 128)
 out_dir = mkdir(
     f"results/{dataset_name}/{denoiser_name}{variant}{(f"_{AVG_WIN}" if AVG_WIN else '')}"
 )
@@ -65,6 +66,13 @@ gt = Recording(
     max_frames=MAX_FRAMES,
     norm=True,
 ).np
+if "patch_xy" in cfg:
+    cprint("patch_xy=", cfg["patch_xy"])
+    max_y = cfg["patch_xy"] * (x.shape[1] // cfg["patch_xy"])
+    max_x = cfg["patch_xy"] * (x.shape[2] // cfg["patch_xy"])
+    x = x[:, :max_x, :max_y]
+    y = y[:, :max_x, :max_y]
+    gt = gt[:, :max_x, :max_y]
 
 clog("Computing averaged vid/frame...")
 avg_win = AVG_WIN or cfg["avg_win"]
@@ -79,7 +87,6 @@ n = y.shape[0] // cfg["patch_t"]
 idx = (np.arange(n)[:, None] * cfg["patch_t"] + np.arange(cfg["patch_t"])).astype(int)
 x_bar = torch.from_numpy(x_bar[idx]).float()
 y_ = torch.from_numpy(y[idx]).float()
-patch_shape = x_bar[0].shape
 testset = TensorDataset(x_bar, y_)
 dataloader = DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False)
 del x_bar
@@ -91,6 +98,7 @@ checkpointdir = Path("trainings") / SELECTED_TRAINING / "pth"
 ckpt = sorted(checkpointdir.glob("*.pt"), key=lambda file: int(file.stem))[-1]
 cprint("cyan:Loading checkpoint", ckpt.stem)
 # avg_frame = torch.tensor(x_avg).to(device)
+patch_shape = (cfg["patch_t"], patch_xy, patch_xy)
 model = Freq2Clean(shape=patch_shape, mode=cfg.get("frequency_transform", "dft1d"))
 cprint("Selected Frequency Transform=", f"green:{model.mode}")
 model.to(device)
@@ -99,16 +107,12 @@ model.eval()
 
 
 # %% Test
-def run_inference(
-    model: Freq2Clean, dataloader, save_path=None, patch_xy=128
-) -> np.ndarray:
-    assert not (model.mode == "dct3d" and patch_xy)
+def run_inference(model: Freq2Clean, dataloader, save_path=None) -> np.ndarray:
     f2cs = []
     with torch.no_grad():
         for x_bar, y in tqdm(dataloader):
             B, T, H, W = y.shape
             out = torch.empty_like(y)
-
             for i in trange(0, H, patch_xy, leave=False):
                 for j in trange(0, W, patch_xy, leave=False):
                     y_p = y[:, :, i : i + patch_xy, j : j + patch_xy]
@@ -140,12 +144,12 @@ if not SKIP_NET:
         cols=4,
         path=out_dir / f"{SELECTED_TRAINING}_snap.png",
     )
-    gt = gt[
-        : f2c_net.shape[0]
-    ]  # The number of frames in F2C is a multiple of the number of patches
+    # The number of frames in F2C is a multiple of the number of patches
     metrics[SELECTED_TRAINING] = {
-        "psnr3d": psnr3d(gt, f2c_net),
-        "ssim3d": ssim3d(gt, f2c_net, step=SSIM3D_STEPS, patch_xy=SSIM3D_PATCHXY),
+        "psnr3d": psnr3d(gt[: f2c_net.shape[0]], f2c_net),
+        "ssim3d": ssim3d(
+            gt[: f2c_net.shape[0]], f2c_net, step=SSIM3D_STEPS, patch_xy=SSIM3D_PATCHXY
+        ),
     }
 
 if (k := f"grid_{model.mode}") not in metrics or FORCE_GRID:
@@ -160,14 +164,18 @@ if (k := f"grid_{model.mode}") not in metrics or FORCE_GRID:
         cols=4,
         path=out_dir / f"{k}_snap.png",
     )
-    gt = gt[
-        : f2c_grid.shape[0]
-    ]  # The number of frames in F2C is a multiple of the number of patches
+    # The number of frames in F2C is a multiple of the number of patches
     metrics[k] = {
-        "psnr3d": psnr3d(gt, f2c_grid),
-        "ssim3d": ssim3d(gt, f2c_grid, step=SSIM3D_STEPS, patch_xy=SSIM3D_PATCHXY),
+        "psnr3d": psnr3d(gt[: f2c_grid.shape[0]], f2c_grid),
+        "ssim3d": ssim3d(
+            gt[: f2c_grid.shape[0]],
+            f2c_grid,
+            step=SSIM3D_STEPS,
+            patch_xy=SSIM3D_PATCHXY,
+        ),
     }
 
+print(y.shape, gt.shape)  # (3000, 448, 448) (2048, 448,448)
 if (k := denoiser_name) not in metrics:
     metrics[k] = {
         "psnr3d": psnr3d(gt, y),
