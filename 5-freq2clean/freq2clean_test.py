@@ -23,7 +23,7 @@ SELECTED_TRAINING = checkpoints[sys.argv[2]]
 
 # Use this to test F2C on a testset that differs from the trainset
 DATASET_NAME: str | None = sys.argv[1]
-DENOISER_NAME: str | None = "ted"
+DENOISER_NAME: str | None = "noise2noise"
 DENOISER_VARIANT: str | None = ""
 AVG_WIN: int | None = None
 GT_VARIANT: str | None = None
@@ -41,8 +41,12 @@ cfg = json.load(open(f"trainings/{SELECTED_TRAINING}/cfg.json"))
 dataset_name = DATASET_NAME or cfg["dataset_name"]
 denoiser_name = DENOISER_NAME or cfg["denoiser_name"]
 variant = DENOISER_VARIANT if DENOISER_VARIANT != None else cfg["denoiser_variant"]
-out_dir = mkdir(f"results/{dataset_name}/{denoiser_name}{variant}{(f"_{AVG_WIN}" if AVG_WIN else '')}")
-clog(f'Loading dataset {dataset_name}, y_variant="{variant}", gt_variant="{GT_VARIANT}"...')
+out_dir = mkdir(
+    f"results/{dataset_name}/{denoiser_name}{variant}{(f"_{AVG_WIN}" if AVG_WIN else '')}"
+)
+clog(
+    f'Loading dataset {dataset_name}, y_variant="{variant}", gt_variant="{GT_VARIANT}"...'
+)
 metrics_path = out_dir / f"metrics.json"
 metrics = json.load(metrics_path.open()) if metrics_path.exists() else {}
 
@@ -95,7 +99,9 @@ model.eval()
 
 
 # %% Test
-def run_inference(model: Freq2Clean, dataloader, save_path=None, patch_xy=128) -> np.ndarray:
+def run_inference(
+    model: Freq2Clean, dataloader, save_path=None, patch_xy=128
+) -> np.ndarray:
     assert not (model.mode == "dct3d" and patch_xy)
     f2cs = []
     with torch.no_grad():
@@ -123,14 +129,20 @@ def run_inference(model: Freq2Clean, dataloader, save_path=None, patch_xy=128) -
 
 if not SKIP_NET:
     clog("Running Freq2Clean (network) test...")
-    f2c_net = run_inference(model, dataloader, save_path=out_dir / f"{SELECTED_TRAINING}.tiff" if SAVE_TIFF else None)
+    f2c_net = run_inference(
+        model,
+        dataloader,
+        save_path=out_dir / f"{SELECTED_TRAINING}.tiff" if SAVE_TIFF else None,
+    )
     imshow(
         {f"Frame:{i}": f2c_net[i] for i in range(0, f2c_net.shape[0], 500)},
         size=8,
         cols=4,
         path=out_dir / f"{SELECTED_TRAINING}_snap.png",
     )
-    gt = gt[: f2c_net.shape[0]]  # The number of frames in F2C is a multiple of the number of patches
+    gt = gt[
+        : f2c_net.shape[0]
+    ]  # The number of frames in F2C is a multiple of the number of patches
     metrics[SELECTED_TRAINING] = {
         "psnr3d": psnr3d(gt, f2c_net),
         "ssim3d": ssim3d(gt, f2c_net, step=SSIM3D_STEPS, patch_xy=SSIM3D_PATCHXY),
@@ -139,14 +151,18 @@ if not SKIP_NET:
 if (k := f"grid_{model.mode}") not in metrics or FORCE_GRID:
     clog("Running Freq2Clean (grid search) test...")
     model.initialize_mask(device=device)
-    f2c_grid = run_inference(model, dataloader, save_path=out_dir / f"{k}.tiff" if SAVE_TIFF else None)
+    f2c_grid = run_inference(
+        model, dataloader, save_path=out_dir / f"{k}.tiff" if SAVE_TIFF else None
+    )
     imshow(
         {f"Frame:{i}": f2c_grid[i] for i in range(0, f2c_grid.shape[0], 500)},
         size=8,
         cols=4,
         path=out_dir / f"{k}_snap.png",
     )
-    gt = gt[: f2c_grid.shape[0]]  # The number of frames in F2C is a multiple of the number of patches
+    gt = gt[
+        : f2c_grid.shape[0]
+    ]  # The number of frames in F2C is a multiple of the number of patches
     metrics[k] = {
         "psnr3d": psnr3d(gt, f2c_grid),
         "ssim3d": ssim3d(gt, f2c_grid, step=SSIM3D_STEPS, patch_xy=SSIM3D_PATCHXY),

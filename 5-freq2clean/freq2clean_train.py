@@ -43,19 +43,20 @@ class CorrelationLoss(nn.Module):
 cfg = {
     # Data
     "denoiser_name": "deepcad",
-    "denoiser_variant": "_150",
+    "denoiser_variant": "_15",
     "dataset_name": "synthetic",
     "gt_variant": "",
     "frequency_transform": "dct3d",
     # Training
-    "patch_t": 600,
+    "patch_t": 1024,
+    "patch_xy": 64,
     "overlap": 0.5,
     "avg_win": 1024,  # doesnt affect the training that much
     "batch_size": 1,
     "epochs": 50,
     "learning_rate": 0.05,
     "save_checkpoints": True,
-    "max_frames": 6000,
+    "max_frames": 3000,
     "weight_decay": 1e-5,
     "weight_clamp01": True,
     # Loss
@@ -91,25 +92,51 @@ x_bar = uniform_filter1d(x, size=cfg["avg_win"], axis=0, mode="reflect")
 # x_avg = np.mean(x, axis=0)
 
 # %% Batching
-clog("Subdividing dataset in overlapping patches...")
-new_patcht = cfg["patch_t"] * (1 - cfg["overlap"])
-discard = math.ceil(1 / (1 - cfg["overlap"]) - 1)
-idx = (np.arange(x.shape[0] // new_patcht)[:-discard, None] * new_patcht + np.arange(cfg["patch_t"])).astype(int)
-x = torch.from_numpy(x[idx]).float()
-x_bar = torch.from_numpy(x_bar[idx]).float()
-y = torch.from_numpy(y[idx]).float()
-gt = torch.from_numpy(gt[idx]).float()
-patch_shape = x[0].shape
-dataset = TensorDataset(x[1:], x_bar[1:], y[1:], gt[1:])
-validset = (x[0], x_bar[0], y[0], gt[0])
-dataloader = DataLoader(dataset, batch_size=cfg["batch_size"], shuffle=True)
+clog("Subdividing dataset in overlapping spatiotemporal patches...")
+T, W, H = x.shape
+patch_t = cfg["patch_t"]
+patch_xy = cfg["patch_xy"]
+overlap = cfg["overlap"]
+stride_t = int(patch_t * (1 - cfg["overlap"]))
+stride_xy = int(patch_xy * (1 - cfg["overlap"]))
+nt = (T - patch_t) // stride_t + 1
+nx = (W - patch_xy) // stride_xy + 1
+ny = (H - patch_xy) // stride_xy + 1
+
+# Generate indices
+t_idx = np.arange(nt)[:, None] * stride_t + np.arange(patch_t)[None, :]
+x_idx = np.arange(nx)[:, None] * stride_xy + np.arange(patch_xy)[None, :]
+y_idx = np.arange(ny)[:, None] * stride_xy + np.arange(patch_xy)[None, :]
+
+# Extract patches
+patches_x = []
+patches_xbar = []
+patches_y = []
+patches_gt = []
+for ti in t_idx:
+    for xi in x_idx:
+        for yi in y_idx:
+            patches_x.append(x[np.ix_(ti, xi, yi)])
+            patches_xbar.append(x_bar[np.ix_(ti, xi, yi)])
+            patches_y.append(y[np.ix_(ti, xi, yi)])
+            patches_gt.append(gt[np.ix_(ti, xi, yi)])
+
+x_p = torch.from_numpy(np.stack(patches_x)).float()
+xbar_p = torch.from_numpy(np.stack(patches_xbar)).float()
+y_p = torch.from_numpy(np.stack(patches_y)).float()
+gt_p = torch.from_numpy(np.stack(patches_gt)).float()
+
+dataset = TensorDataset(x_p[1:], xbar_p[1:], y_p[1:], gt_p[1:])
+validset = (x_p[0], xbar_p[0], y_p[0], gt_p[0])
+dataloader = DataLoader(dataset, batch_size=cfg["batch_size"], shuffle=True, drop_last=True)
 del x, x_bar, y, gt
-cprint(f"Dataset has", len(idx), "samples.")
+patch_shape = (cfg["patch_t"], cfg["patch_xy"], cfg["patch_xy"])
+cprint(f"Dataset has", len(dataloader), "samples, each of shape", patch_shape)
 
 # %% Model
 clog("Loading Freq2Clean...")
 # avg_frame = torch.tensor(x_avg).to(device)
-model = Freq2Clean(shape=patch_shape, mode=cfg["frequency_transform"]).to(device)
+model = Freq2Clean(shape=(patch_shape), mode=cfg["frequency_transform"]).to(device)
 optimizer = optim.Adam(model.parameters(), lr=cfg["learning_rate"], weight_decay=cfg["weight_decay"])
 ssim3d = SSIM3D()
 l1 = nn.L1Loss().cuda()

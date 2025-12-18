@@ -18,6 +18,7 @@ TODO.md
 
 4-segmentation_and_deconvolution/dataset/
 4-segmentation_and_deconvolution/*_results/**/*.npy
+4-segmentation_and_deconvolution/cite-on
 
 5-freq2clean/snapshots/
 5-freq2clean/trainings/*/snaps/

@@ -11,7 +11,7 @@ from src import *
 
 dataset = "synthetic"
 max_frames = 3000
-patch_ts = [8, 16, 32, 64, 128]
+patch_ts = [8]#[8, 16, 32, 64, 128]
 epochs = 10
 bs = 64
 test_frame = 100

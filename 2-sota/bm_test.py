@@ -11,8 +11,8 @@ from src import *
 # Args
 dataset = "synthetic"
 frame = 100
-patch_ts = [8, 16, 32, 64]
-σs = [0.05, 0.1, 0.15, 0.2]
+patch_ts = [8]  # [8, 16, 32, 64]
+σs = [0.2]  # [0.05, 0.1, 0.15, 0.2]
 stage = bm3d.BM3DStages.ALL_STAGES
 
 # Init
