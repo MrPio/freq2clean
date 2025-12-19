@@ -5,6 +5,7 @@ TODO.md
 /bkp
 /**/__pycache__
 # /renderings/
+/other_experiments/
 
 # main route ===========================
 2-sota/pth/
@@ -15,20 +16,22 @@ TODO.md
 3-video_fusion/results/
 3-video_fusion/best/
 
-4-segmentation_and_deconvolution/dataset/
-4-segmentation_and_deconvolution/*_results/**/*.npy
-4-segmentation_and_deconvolution/cite-on
+4-freq2clean/snapshots/
+4-freq2clean/trainings/*/snaps/
+4-freq2clean/trainings/*/weights/
+4-freq2clean/recordings/
+4-freq2clean/*Freq2Clean_Train.ipynb
+4-freq2clean/onnx/
+4-freq2clean/deepcad_pth/
+4-freq2clean/deepcad_results/
+4-freq2clean/trainings/20251202-0738-synthetic_deepcad_15/pth/18.pt
+4-freq2clean/trainings/20251202-0835-synthetic_deepcad_150/pth/13.pt
 
-5-freq2clean/snapshots/
-5-freq2clean/trainings/*/snaps/
-5-freq2clean/trainings/*/weights/
-5-freq2clean/recordings/
-5-freq2clean/*Freq2Clean_Train.ipynb
-5-freq2clean/onnx/
-5-freq2clean/deepcad_pth/
-5-freq2clean/deepcad_results/
-5-freq2clean/trainings/20251202-0738-synthetic_deepcad_15/pth/18.pt
-5-freq2clean/trainings/20251202-0835-synthetic_deepcad_150/pth/13.pt
+5-segmentation/dataset/
+5-segmentation/*_results/**/*.npy
+5-segmentation/cite-on
+5-segmentation/crosscontamination
+5-segmentation/manual_corrected_masks
 
 # other_experiments ====================
 other_experiments/diffdenoise/dataset/
