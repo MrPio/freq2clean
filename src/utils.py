@@ -196,7 +196,8 @@ def imshow(
         plt.show()
 
 
-def vidshow(vid, alpha=0.25, dpi=150, cmap=None, path: Path | str = None, grid=False):
+def vidshow(vid, alpha=0.25, dpi=150, cmap=None, path: Path | str = None, grid=False, step=1):
+    vid = vid[::step, ::step, ::step]
     idx = np.indices(vid.shape).reshape(vid.ndim, -1).T
     fig = plt.figure(figsize=(10, 10), dpi=dpi)
     ax = fig.add_subplot(111, projection="3d")
@@ -308,7 +309,7 @@ def mkdir(path: str | Path, clear=False) -> Path:
     return path
 
 
-def barchart(   
+def barchart(
     data: dict[str, float],
     bounds: tuple[float, float] = None,
     yaxis=None,

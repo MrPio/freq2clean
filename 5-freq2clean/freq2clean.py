@@ -76,7 +76,8 @@ class Freq2Clean(nn.Module):
             * self.shape[0]
         )
 
-        Y_abs = Y_bar_abs * (self.mask).view(1, -1, 1, 1) + Y_hat_abs * (1 - self.mask).view(1, -1, 1, 1)
+        M = self.mask.view(1, -1, 1, 1)
+        Y_abs = Y_bar_abs * M + Y_hat_abs * (1 - M)
         Y = torch.polar(Y_abs, Y_hat_angle)
         return torch.fft.irfft(Y, dim=1).real
 
