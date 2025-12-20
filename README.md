@@ -56,15 +56,9 @@ When comparing frames side-by-side from two sample neurons, the Freq2Clean outpu
   <img width="100%" src="assets/results.jpg"/>
 </p>
 
-#### 📘 Thesis - *Freq2Clean: enhancing calcium imaging denoising via frequency-domain video fusion* [`.PDF`](assets/Freq2Clean_enhancing_calcium_imaging_denoising_via_frequency_domain_video_fusion%20-%20Valerio%20Morelli%20PDFA1b.pdf)
+### Table 1: Performance on the [NAOMi](https://zenodo.org/records/6254739) Synthetic Dataset
 
-#### 📙 Slideshow - *Graduation slideshow* [`.PPTX`](assets/Slideshow%20-%20Valerio%20Morelli.pdf)
-
-#### 📽️ Demo - *Demo Video* [`.MP4`](assets/Freq2Clean%20vs%20DeepCAD.mp4)
-
-#### 📽️ Other recordings - *recordings* [`Folder`](renderings/)
-
-### Table: Performance on the [NAOMi](https://zenodo.org/records/6254739) Synthetic Dataset
+Freq2Clean consistently improves PSNR3D and SSIM3D when applied to state-of-the-art denoisers.
 
 | Method      | *Baseline* PSNR3D ↑ | *Baseline* SSIM3D$ ↑ | *Freq2Clean* PSNR3D$ ↑ | *Freq2Clean* SSIM3D ↑ |
 | ----------- | :-----------------: | :------------------: | :--------------------: | :-------------------: |
@@ -74,3 +68,24 @@ When comparing frames side-by-side from two sample neurons, the Freq2Clean outpu
 | Noise2Noise |        18.64        |        0.499         |       **19.13**        |       **0.594**       |
 | DeepCAD-RT  |        27.94        |        0.760         |       **30.04**        |       **0.880**       |
 | TeD         |        22.64        |        0.546         |       **23.22**        |       **0.597**       |
+
+### Table 2: Performance on [Real Datasets](https://cabooster.github.io/DeepCAD-RT/Datasets/)
+
+The enhancement provided by Freq2Clean generalizes to real datasets. Even though only pseudo-ground truths with tenfold SNR compared to the inputs are available, Freq2Clean still systematically improves PSNR3D and SSIM3D.
+
+| Dataset                     | DeepCAD-RT PSNR3D ↑ | DeepCAD-RT SSIM3D ↑ | Freq2Clean PSNR3D ↑ | Freq2Clean SSIM3D ↑ |
+| --------------------------- | :-----------------: | :-----------------: | :-----------------: | :-----------------: |
+| Mouse neuronal populations  |        19.33        |        0.210        |      **19.52**      |      **0.244**      |
+| Zebrafish brain             |        16.84        |        0.259        |      **16.87**      |      **0.289**      |
+| Mouse dend. spines (50 mW)  |        13.38        |        0.090        |      **13.46**      |      **0.092**      |
+| Mouse dend. spines (115 mW) |        13.40        |        0.149        |      **13.43**      |      **0.155**      |
+
+### Supplementary materials
+
+- 📘 Thesis - *Freq2Clean: enhancing calcium imaging denoising via frequency-domain video fusion* [`.PDF`](assets/Freq2Clean_enhancing_calcium_imaging_denoising_via_frequency_domain_video_fusion%20-%20Valerio%20Morelli%20PDFA1b.pdf)
+
+- 📙 Slideshow - *Graduation slideshow* [`.PPTX`](assets/Slideshow%20-%20Valerio%20Morelli.pdf)
+
+- 📽️ Demo - *Demo Video* [`.MP4`](assets/Freq2Clean%20vs%20DeepCAD.mp4)
+
+- 📽️ Other recordings - *recordings* [`Folder`](renderings/)
