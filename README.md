@@ -6,7 +6,15 @@ Freq2Clean is a lightweight enhancement module trained on synthetic data that op
   <img width="100%" src="assets/cover.jpg"/>
 </p>
 
-## Assumptions
+## 📂 Repository structure
+
+1. [`1-eda`](1-eda) $-$ contains instructions to download datasets and visualizes them.
+2. [`2-sota`](2-sota) $-$ denoise data with state-of-the-art denoisers. These denoised recordings serve as a baseline for Freq2Clean.
+3. [`3-video_fusion`](3-video_fusion) $-$ explores multiple frequency transforms to combine the best features of temporally averaged and denoised videos. Runs a grid search to find a good combination for the coefficients of the frequency combination.
+4. [`4-freq2clean`](4-freq2clean) $-$ implements the parameter tuning as a torch module, trains and tests it against state-of-the-art baselines.
+5. [`5-segmentation`](5-segmentation) $-$ proves that Freq2Clean leads to segmentation predictions that more closely match those obtained from the ground-truth frames. Also proves that Freq2Clean doesn't affect temporal dynamics.
+
+## 💭 Assumptions
 
 1. The input video should be severely noisy, yielding a very low input SNR. Otherwise, there is little margin for improvement with SOTA denoisers.
 2. The recording should be still. The camera and the objects being recorded should both have slow spatial dynamics.
