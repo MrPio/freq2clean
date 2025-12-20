@@ -66,11 +66,11 @@ When comparing frames side-by-side from two sample neurons, the Freq2Clean outpu
 
 ### Table: Performance on the [NAOMi](https://zenodo.org/records/6254739) Synthetic Dataset
 
-| Method      | Baseline PSNR$_{3D}$ ↑ | Baseline SSIM$_{3D}$ ↑ | Freq2Clean PSNR$_{3D}$ ↑ | Freq2Clean SSIM$_{3D}$ ↑ |
-| ----------- | ---------------------- | ---------------------- | ------------------------ | ------------------------ |
-| BM3D        | 13.52                  | 0.207                  | **13.74**                | **0.280**                |
-| BM4D        | 14.61                  | 0.385                  | **14.79**                | **0.486**                |
-| Noise2Void  | 16.35                  | 0.267                  | **17.21**                | **0.288**                |
-| Noise2Noise | 18.64                  | 0.499                  | **19.13**                | **0.594**                |
-| DeepCAD-RT  | 27.94                  | 0.760                  | **30.04**                | **0.880**                |
-| TeD         | 22.64                  | 0.546                  | **23.22**                | **0.597**                |
+| Method      | *Baseline* PSNR3D ↑ | *Baseline* SSIM3D$ ↑ | *Freq2Clean* PSNR3D$ ↑ | *Freq2Clean* SSIM3D ↑ |
+| ----------- | :-----------------: | :------------------: | :--------------------: | :-------------------: |
+| BM3D        |        13.52        |        0.207         |       **13.74**        |       **0.280**       |
+| BM4D        |        14.61        |        0.385         |       **14.79**        |       **0.486**       |
+| Noise2Void  |        16.35        |        0.267         |       **17.21**        |       **0.288**       |
+| Noise2Noise |        18.64        |        0.499         |       **19.13**        |       **0.594**       |
+| DeepCAD-RT  |        27.94        |        0.760         |       **30.04**        |       **0.880**       |
+| TeD         |        22.64        |        0.546         |       **23.22**        |       **0.597**       |
