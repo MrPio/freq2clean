@@ -1,88 +1,76 @@
-# Freq2Clean: enhancing calcium imaging denoising via frequency-domain video fusion
-My method provides a substantial improvement over the denoiser ([*DeepCAD-RT*](https://github.com/cabooster/DeepCAD-RT) in this example) prediction. As you can see, PSNR increases by $2dB$, but the most interesting result is the improvement of SSIM3D by $0.1$ points.
+# Freq2Clean: enhancing calcium imaging denoising via frequency-domain fusion
+
+Freq2Clean is a lightweight enhancement module trained on synthetic data that operates *after* a denoiser. In the Fourier domain, it fuses the magnitude of the *temporally averaged* video containing **high spatial SNR** with the *denoiser*'s output, containing **fast transients**.
+
 <p align="center">
-  <img width="90%" src="assets/fft_vs_baseline.png"/>
+  <img width="100%" src="assets/cover.jpg"/>
 </p>
-The x-axis refers to the value used for the `patch_t` hyperparameter during training. `patch_t` indicates the size of frames considered in each training sample. This value is directly proportional to the training time.
 
-As shown in the figure above, **FFT video fusion post-processing enables a value of `patch_t = 30` to outscore predictions made with `patch_t = 300` (which requires $5\times$ more training time) in terms of both PSNR and SSIM3D.**
+## Assumptions
 
-#### 📘 Thesis - *Freq2Clean: enhancing calcium imaging denoising via frequency-domain video fusion* [`.PDF`](assets/Freq2Clean_enhancing_calcium_imaging_denoising_via_frequency_domain_video_fusion%20-%20Valerio%20Morelli%20PDFA1b.pdf) 
-#### 📙 Slideshow - *Graduation slideshow* [`.PPTX`](assets/Slideshow%20-%20Valerio%20Morelli.pdf) 
-#### 📽️ Demo - *Demo Video* [`.MP4`](assets/Freq2Clean%20vs%20DeepCAD.mp4) 
-
-## 📦 TL;DR
-_Freq2Clean_ is a simple, yet effective post-processing technique that recovers high-frequency spatial details by leveraging the low-frequency temporal dynamics of still recordings. To do so, it performs a video fusion in the frequency domain. The results show that **_Freq2Clean_ significantly improves the PSNR, SSIM3D, and IoU metrics on labeled synthetic datasets and increases the number of recognized regions of interest (ROIs)**.
-
-## Hyphotesis
-Two hypotheses are made:
 1. The input video should be severely noisy, yielding a very low input SNR. Otherwise, there is little margin for improvement with SOTA denoisers.
-2. The recording should be still. The camera and the objects being recorded should both have slow spatial dynamics. The most precious information in the recording is the temporal dynamics.
+2. The recording should be still. The camera and the objects being recorded should both have slow spatial dynamics.
 
-## Synthetic Datasets
-### [Synthetic Calcium Imaging](https://zenodo.org/records/6254739)
-This is the most relevant dataset in this study:
-- **It is synthetic**, yet very much alike the real dataset provided by the affiliated research group.
-- As such, **it has ground truths**. Therefore, we can assess the validity of the proposed solution by computing PSNR and SSIM3D, as shown above.
+## 1. Self-supervised denoisers oversmooth fine spatial details
+
+When operating under extremely low SNR conditions, which is common in *in-vivo* and miniature-microscope recordings, self-supervised denoisers can't capture fine details. This is **due to the limited temporal context provided during training**. This loss of spatial detail can negatively impact downstream analyses such as ROI segmentation, neuron extraction, and morphological assessment.
 
 <p align="center">
-  <img width="70%" src="assets/synthetic.gif"/>
-  <img width="70%" src="assets/synthetic.png"/>
+  <img width="75%" src="assets/self_supervised_limitation.jpg"/>
 </p>
 
-## Real Datasets
-### [Zebrafish Multiple Brain Regions](https://zenodo.org/records/6293696)
-A very slight improvement is measured with this dataset. Since the input recording does not have such a low SNR, DeepCAD-RT already converges on a very good solution.
+## 2. Temporal averaging
+
+Temporal averaging reduces noise variance under a Poisson–Gaussian model, commonly assumed in 2PM. However, **the spatial SNR gain comes at the cost of reduced temporal resolution** which makes it unsuitable for applications where preserving neuronal activity patterns is critical.
 
 <p align="center">
-  <img width="70%" src="assets/zebrafish.gif"/>
-  <img width="70%" src="assets/zebrafish.png"/>
+  <img width="75%" src="assets/temporal_averaging.jpg"/>
 </p>
 
-### [Mouse Brain Neutrophils](https://zenodo.org/records/6296569)
-This recording has slowly moving cells, which violates the hypothesis of this method. Nevertheless, SSIM3D increases by approximately $0.12$, while PSNR remains unchanged.
+## 3. Frequency-domain fusion
+
+Freq2Clean explicitly exploits the complementarity between *temporally averaged* recordings and *denoiser* outputs through a frequency-domain formulation. In doing so, **it increases spatial SNR while preserving temporal resolution altogether, all without requiring the presence of a clean version of the noisy recording**.
 
 <p align="center">
-  <img width="70%" src="assets/neutrophils.gif"/>
-  <img width="70%" src="assets/neutrophils.png"/>
+  <img width="75%" src="assets/freq2clean_architecture.jpg"/>
 </p>
 
-### Unlabeled datasets
-This dataset lacks any kind of ground truth.
+### 3.1. 1-Dimensional Discrete Fourier Transform (1D-DFT)
 
-#### Mouse Astrocyte
+One DFT is computed along the temporal dimension for each pixel sequence in the video (a). Then, the magnitude spectra of the *temporally averaged* signal and the *denoised* signal (b) are fused by a convex combination of their Fourier magnitudes (c). The coefficients should favor the *temporally averaged* signal in the low-frequency band and the *denoised* signal in the high-frequency band (d).
 <p align="center">
-  <img width="70%" src="assets/astro.gif"/>
+  <img width="75%" src="assets/dft1d.jpg"/>
 </p>
 
-#### Mouse Neuron with GRIN lenses
+### 3.2. 3-Dimensional Discrete Cosine Transform (3D-DCT)
+
+The 3D DCT expresses a volumetric video patch as a linear combination of 3D DCT basis functions (a). Accordingly, a 3D DCT is computed for both the temporal-averaged and baseline videos and fusion is then performed by taking a convex combination of the resulting DCT coefficients. These fusion coefficients form a 3D mask (b).
 <p align="center">
-  <img width="70%" src="assets/vpm.gif"/>
+  <img width="75%" src="assets/dct3d.jpg"/>
 </p>
 
-## ROIs segmentation 
+### 4. Results
 
-### [*Cellpose*](https://github.com/MouseLand/cellpose)
-A huge improvement is registered when segmenting with *Cellpose*. Results have been computed by averaging segmentation predictions over 50 sparse frames.
+When comparing frames side-by-side from two sample neurons, the Freq2Clean outputs are visibly closer to the ground truth (a). Furthermore, analyzing calcium transients from 80 isolated action potentials (b) reveals that Freq2Clean preserves baseline temporal dynamics. Freq2Clean leads to segmentation predictions that more closely match those obtained from the ground-truth frames (c).
 <p align="center">
-  <img width="90%" src="assets/deepcad_vs_fft_cellpose.png"/>
-  <img width="90%" src="assets/deepcad_vs_fft_cellpose_masks.png"/>
+  <img width="100%" src="assets/results.jpg"/>
 </p>
 
-### [*Suite2p*](https://github.com/MouseLand/suite2p)
-A slight improvement is registered when segmenting with *Suite2p*.
-<p align="center">
-  <img width="90%" src="assets/fft_vs_baseline_roi.png"/>
-  <img width="70%" src="assets/synthetic_roi.gif"/>
-  <img width="70%" src="assets/synthetic_roi.png"/>
-</p>
+#### 📘 Thesis - *Freq2Clean: enhancing calcium imaging denoising via frequency-domain video fusion* [`.PDF`](assets/Freq2Clean_enhancing_calcium_imaging_denoising_via_frequency_domain_video_fusion%20-%20Valerio%20Morelli%20PDFA1b.pdf)
 
-## The FFT-Fusion algorithm
-My method is designed to enhance the performance of an upstream denoiser. As such, it is a post-processing activity that uses *look-ahead* to recover long-range temporal information. However, due to its simplicity, it is only effective in still recordings. For this enhancement to work, both the camera and the objects need to be still. The faster the spatial dynamics, the shorter the temporal window should be.
+#### 📙 Slideshow - *Graduation slideshow* [`.PPTX`](assets/Slideshow%20-%20Valerio%20Morelli.pdf)
 
-### Algorithm optimization
-In my initial implementation, I used the functions `np.fft.fft` and `np.fft.ifft` to translate between the temporal and frequency domains. For a $6{,}000\times 512 \times 512$ video, this took about **200 seconds**
+#### 📽️ Demo - *Demo Video* [`.MP4`](assets/Freq2Clean%20vs%20DeepCAD.mp4)
 
-Then, since the input signal is real, I moved to `np.fft.rfft` and `np.fft.irfft`, which leverage Hermitian symmetry reducing the time cost to **48 seconds**.
+#### 📽️ Other recordings - *recordings* [`Folder`](renderings/)
 
-Finally, by leveraging the GPU and moving from *NumPy* to *CuPy*, I achieved a processing time of **16 seconds**.
+### Table: Performance on the [NAOMi](https://zenodo.org/records/6254739) Synthetic Dataset
+
+| Method      | Baseline PSNR$_{3D}$ ↑ | Baseline SSIM$_{3D}$ ↑ | Freq2Clean PSNR$_{3D}$ ↑ | Freq2Clean SSIM$_{3D}$ ↑ |
+| ----------- | ---------------------- | ---------------------- | ------------------------ | ------------------------ |
+| BM3D        | 13.52                  | 0.207                  | **13.74**                | **0.280**                |
+| BM4D        | 14.61                  | 0.385                  | **14.79**                | **0.486**                |
+| Noise2Void  | 16.35                  | 0.267                  | **17.21**                | **0.288**                |
+| Noise2Noise | 18.64                  | 0.499                  | **19.13**                | **0.594**                |
+| DeepCAD-RT  | 27.94                  | 0.760                  | **30.04**                | **0.880**                |
+| TeD         | 22.64                  | 0.546                  | **23.22**                | **0.597**                |
