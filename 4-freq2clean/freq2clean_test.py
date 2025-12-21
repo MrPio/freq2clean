@@ -23,7 +23,7 @@ SELECTED_TRAINING = checkpoints[sys.argv[2]]
 
 # Use this to test F2C on a testset that differs from the trainset
 DATASET_NAME: str | None = sys.argv[1]
-DENOISER_NAME: str | None = "noise2noise"
+DENOISER_NAME: str | None = "srd_1hz"
 DENOISER_VARIANT: str | None = ""
 AVG_WIN: int | None = None
 GT_VARIANT: str | None = None

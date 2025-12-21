@@ -6,12 +6,14 @@ TODO.md
 /**/__pycache__
 # /renderings/
 /other_experiments/
+.env
 
 # main route ===========================
 2-sota/pth/
 2-sota/n2n/
 2-sota/n2v/
 2-sota/bm4d/
+2-sota/SRDTrans/pth/
 
 3-video_fusion/results/
 3-video_fusion/best/
