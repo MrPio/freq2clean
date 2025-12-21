@@ -26,8 +26,6 @@ TODO.md
 3-freq2clean/onnx/
 3-freq2clean/deepcad_pth/
 3-freq2clean/deepcad_results/
-3-freq2clean/trainings/20251202-0738-synthetic_deepcad_15/pth/18.pt
-3-freq2clean/trainings/20251202-0835-synthetic_deepcad_150/pth/13.pt
 
 4-segmentation/dataset/
 4-segmentation/results/**/*.npy

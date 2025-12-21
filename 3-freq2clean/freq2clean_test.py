@@ -17,7 +17,7 @@ checkpoints = {
     "dft1d_15": "20251118-1205-synthetic_deepcad_15",
     "dft1d_150": "20251118-1221-synthetic_deepcad_150",
     "dct3d_15": "20251218-1607-synthetic_deepcad_15",
-    "dct3d_150": "20251202-0835-synthetic_deepcad_150",
+    "dct3d_150": None,
 }
 SELECTED_TRAINING = checkpoints[sys.argv[2]]
 
