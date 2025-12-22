@@ -6,6 +6,7 @@ from scipy.ndimage import uniform_filter1d
 from freq2clean import Freq2Clean
 import json
 import tifffile as tiff
+from typing import Literal
 
 sys.path.append("..")
 from src import *
@@ -19,11 +20,19 @@ checkpoints = {
     "dct3d_15": "20251218-1607-synthetic_deepcad_15",
     "dct3d_150": None,
 }
-SELECTED_TRAINING = checkpoints[sys.argv[2]]
+args = parse_args(
+    {
+        "checkpoint": checkpoints.keys(),
+        "dataset": DATASETS.keys(),
+        "denoiser": str,
+        "variant": "",
+    }
+)
 
 # Use this to test F2C on a testset that differs from the trainset
-DATASET_NAME: str | None = sys.argv[1]
-DENOISER_NAME: str | None = "srd_1hz"
+SELECTED_TRAINING = args.checkpoint
+DATASET_NAME: str | None = args.dataset
+DENOISER_NAME: str | None = args.denoiser
 DENOISER_VARIANT: str | None = ""
 AVG_WIN: int | None = None
 GT_VARIANT: str | None = None

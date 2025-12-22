@@ -18,6 +18,8 @@ import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 from .video.editor import Editor
 import matplotlib as mpl
+import argparse
+from collections.abc import Collection
 
 logging.basicConfig(
     level="INFO",
@@ -63,7 +65,13 @@ base_mpl_font_size = mpl.rcParams["font.size"]
 def clog(*vals, sep=" "):
     if len(vals) == 1 and ":" not in vals[0]:
         vals = (f"rand:{vals[0]}", *vals[1:])
-    cprint(*vals, f"light_red:[{print_mem()}]", f"light_yellow:[{elapsed()}s]", sep=sep, reset_counter=False)
+    cprint(
+        *vals,
+        f"light_red:[{print_mem()}]",
+        f"light_yellow:[{elapsed()}s]",
+        sep=sep,
+        reset_counter=False,
+    )
 
 
 def cprint(*vals, sep=" ", reset_counter=True):
@@ -141,7 +149,10 @@ def jprint(json):
 
 
 def imshow(
-    images: list[Image.Image | np.ndarray | str | Path] | dict[str, Image.Image | np.ndarray | str | Path],
+    images: (
+        list[Image.Image | np.ndarray | str | Path]
+        | dict[str, Image.Image | np.ndarray | str | Path]
+    ),
     size=4,
     dpi=150,
     cols: int = None,
@@ -175,16 +186,27 @@ def imshow(
         cols = min(10, len(images))
     rows = math.ceil(len(images) / cols)
     max_ratio = max(
-        (image.size[0] / image.size[1] if isinstance(image, (Image.Image)) else image.shape[0] / image.shape[1])
+        (
+            image.size[0] / image.size[1]
+            if isinstance(image, (Image.Image))
+            else image.shape[0] / image.shape[1]
+        )
         for image in images
     )
-    _, axes = plt.subplots(rows, cols, figsize=(cols * size, int(rows * size * max_ratio)), dpi=dpi)
+    _, axes = plt.subplots(
+        rows, cols, figsize=(cols * size, int(rows * size * max_ratio)), dpi=dpi
+    )
     if rows > 1 or cols > 1:
         axes = axes.flatten()
     else:
         axes = [axes]
     for i, img in enumerate(images):
-        axes[i].imshow(zoom_img(img, zoom, shift), cmap=cmap if cmap else dcad_cmap, vmin=vrange[0], vmax=vrange[1])
+        axes[i].imshow(
+            zoom_img(img, zoom, shift),
+            cmap=cmap if cmap else dcad_cmap,
+            vmin=vrange[0],
+            vmax=vrange[1],
+        )
         if titles:
             axes[i].set_title(titles[i])
         axes[i].axis("off")
@@ -196,7 +218,9 @@ def imshow(
         plt.show()
 
 
-def vidshow(vid, alpha=0.25, dpi=150, cmap=None, path: Path | str = None, grid=False, step=1):
+def vidshow(
+    vid, alpha=0.25, dpi=150, cmap=None, path: Path | str = None, grid=False, step=1
+):
     vid = vid[::step, ::step, ::step]
     idx = np.indices(vid.shape).reshape(vid.ndim, -1).T
     fig = plt.figure(figsize=(10, 10), dpi=dpi)
@@ -230,7 +254,9 @@ def vidshow(vid, alpha=0.25, dpi=150, cmap=None, path: Path | str = None, grid=F
 
 def get_gpu_memory():
     command = "nvidia-smi --query-gpu=memory.free --format=csv"
-    memory_free_info = sp.check_output(command.split()).decode("ascii").split("\n")[:-1][1:]
+    memory_free_info = (
+        sp.check_output(command.split()).decode("ascii").split("\n")[:-1][1:]
+    )
     memory_free_values = [int(x.split()[0]) for i, x in enumerate(memory_free_info)]
     return memory_free_values
 
@@ -329,7 +355,12 @@ def barchart(
         plt.figure(figsize=figsize, dpi=dpi)
         ax = sns.barplot(x=labels, y=values, color=color)
     if ysteps and bounds:
-        ax.set_yticks([i / ysteps * (bounds[1] - bounds[0]) + bounds[0] for i in range(ysteps + 1)])
+        ax.set_yticks(
+            [
+                i / ysteps * (bounds[1] - bounds[0]) + bounds[0]
+                for i in range(ysteps + 1)
+            ]
+        )
 
     if bounds:
         ax.set_ylim(bounds)
@@ -340,3 +371,16 @@ def barchart(
         ax.set_title(title)
 
     plt.tight_layout()
+
+
+def parse_args(args: dict[str, type | list | object]):
+    parser = argparse.ArgumentParser()
+    for k, v in args.items():
+        if isinstance(v, type):
+            parser.add_argument(f"--{k}", type=v, required=True)
+        elif v and isinstance(v, Collection):
+            parser.add_argument(f"--{k}", choices=list(v), required=True)
+        else:
+            parser.add_argument(f"--{k}", default=v, required=False)
+
+    return parser.parse_args()
