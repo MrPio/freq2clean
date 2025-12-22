@@ -19,7 +19,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from .video.editor import Editor
 import matplotlib as mpl
 import argparse
-from collections.abc import Collection
+from collections.abc import Collection, Generator
 
 logging.basicConfig(
     level="INFO",
@@ -378,7 +378,7 @@ def parse_args(args: dict[str, type | list | object]):
     for k, v in args.items():
         if isinstance(v, type):
             parser.add_argument(f"--{k}", type=v, required=True)
-        elif v and isinstance(v, Collection):
+        elif v and isinstance(v, (Collection, Generator)):
             parser.add_argument(f"--{k}", choices=list(v), required=True)
         else:
             parser.add_argument(f"--{k}", default=v, required=False)
