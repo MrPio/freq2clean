@@ -111,14 +111,18 @@ When comparing frames side-by-side from two sample neurons, the Freq2Clean outpu
 
 Freq2Clean consistently improves PSNR3D and SSIM3D when applied to state-of-the-art denoisers.
 
-| Method      | *Baseline* PSNR3D ↑ | *Baseline* SSIM3D$ ↑ | *Freq2Clean* PSNR3D$ ↑ | *Freq2Clean* SSIM3D ↑ |
+| Denoiser    | *Baseline* PSNR3D ↑ | *Baseline* SSIM3D$ ↑ | *Freq2Clean* PSNR3D$ ↑ | *Freq2Clean* SSIM3D ↑ |
 | ----------- | :-----------------: | :------------------: | :--------------------: | :-------------------: |
 | BM3D        |        13.52        |        0.207         |       **13.74**        |       **0.280**       |
 | BM4D        |        14.61        |        0.385         |       **14.79**        |       **0.486**       |
 | Noise2Void  |        16.35        |        0.267         |       **17.21**        |       **0.288**       |
 | Noise2Noise |        18.64        |        0.499         |       **19.13**        |       **0.594**       |
 | DeepCAD-RT  |        27.94        |        0.760         |       **30.04**        |       **0.880**       |
+| SRDTrans    |        25.48        |        0.635         |       **25.57**        |       **0.658**       |
+| DeepVIDv2   |        20.30        |        0.455         |       **21.19**        |       **0.486**       |
 | TeD         |        22.64        |        0.546         |       **23.22**        |       **0.597**       |
+| FAST        |        20.91        |        0.362         |       **22.19**        |       **0.495**       |
+
 
 ### Table 2: Performance on [Real Datasets](https://cabooster.github.io/DeepCAD-RT/Datasets/)
 
