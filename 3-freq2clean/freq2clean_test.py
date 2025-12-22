@@ -6,66 +6,52 @@ from scipy.ndimage import uniform_filter1d
 from freq2clean import Freq2Clean
 import json
 import tifffile as tiff
-from typing import Literal
 
 sys.path.append("..")
 from src import *
 
 # %% Args
-BATCH_SIZE = 1
-
 args = parse_args(
     {
         "checkpoint": (f.stem for f in Path("trainings").glob("*/")),
         "dataset": DATASETS.keys(),
         "denoiser": str,
-        "variant": "",
+        "args.variant": "",
+        "bs": 1,
     }
 )
 
 # Use this to test F2C on a testset that differs from the trainset
-SELECTED_TRAINING = args.checkpoint
-DATASET_NAME: str | None = args.dataset
-DENOISER_NAME: str | None = args.denoiser
-DENOISER_VARIANT: str | None = ""
 AVG_WIN: int | None = None
-GT_VARIANT: str | None = None
 SAVE_TIFF: bool = False
 SKIP_NET: bool = False
 FORCE_GRID: bool = False
-MAX_FRAMES: int | None = 3000
-SSIM3D_STEPS: int | None = 2
-SSIM3D_PATCHXY: int | None = 256
+MAX_FRAMES: int | None = None
+SSIM3D_STEPS: int | None = 1  # Increase if GPU raises OOM
+SSIM3D_PATCHXY: int | None = 192  # Decrease if GPU raises OOM
 
 # %% Dataset Loading
-cprint("Loading checkpoint", f"yellow:{SELECTED_TRAINING}")
+cprint("Loading checkpoint", f"yellow:{args.checkpoint}")
 device = "cuda" if torch.cuda.is_available() else "cpu"
-cfg = json.load(open(f"trainings/{SELECTED_TRAINING}/cfg.json"))
-dataset_name = DATASET_NAME or cfg["dataset_name"]
-denoiser_name = DENOISER_NAME or cfg["denoiser_name"]
-variant = DENOISER_VARIANT if DENOISER_VARIANT != None else cfg["denoiser_variant"]
+cfg = json.load(open(f"trainings/{args.checkpoint}/cfg.json"))
 patch_xy = cfg.get("patch_xy", 128)
-out_dir = mkdir(
-    f"results/{dataset_name}/{denoiser_name}{variant}{(f"_{AVG_WIN}" if AVG_WIN else '')}"
-)
-clog(
-    f'Loading dataset {dataset_name}, y_variant="{variant}", gt_variant="{GT_VARIANT}"...'
-)
+out_dir = mkdir(f"results/{args.dataset}/{args.denoiser}{args.variant}")
+clog(f'Loading dataset {args.dataset}, denoiser="{args.denoiser}"{args.variant}"')
 metrics_path = out_dir / f"metrics.json"
 metrics = json.load(metrics_path.open()) if metrics_path.exists() else {}
 
 x = Recording(
-    f"dataset/{dataset_name}/x.tif",
+    f"dataset/{args.dataset}/x.tif",
     max_frames=None,
     norm=True,
 ).np
 y = Recording(
-    f"dataset/{dataset_name}/{denoiser_name}{variant}.tif",
+    f"dataset/{args.dataset}/{args.denoiser}{args.variant}.tif",
     max_frames=MAX_FRAMES,
     norm=True,
 ).np
 gt = Recording(
-    f"dataset/{dataset_name}/gt{GT_VARIANT or ''}.tif",
+    f"dataset/{args.dataset}/gt{GT_VARIANT or ''}.tif",
     max_frames=MAX_FRAMES,
     norm=True,
 ).np
@@ -97,7 +83,7 @@ cprint(f"Testset has", len(idx), "samples.")
 
 # %% Model
 clog("Loading model...")
-checkpointdir = Path("trainings") / SELECTED_TRAINING / "pth"
+checkpointdir = Path("trainings") / args.checkpoint / "pth"
 ckpt = sorted(checkpointdir.glob("*.pt"), key=lambda file: int(file.stem))[-1]
 cprint("cyan:Loading checkpoint", ckpt.stem)
 # avg_frame = torch.tensor(x_avg).to(device)
@@ -139,16 +125,16 @@ if not SKIP_NET:
     f2c_net = run_inference(
         model,
         dataloader,
-        save_path=out_dir / f"{SELECTED_TRAINING}.tiff" if SAVE_TIFF else None,
+        save_path=out_dir / f"{args.checkpoint}.tiff" if SAVE_TIFF else None,
     )
     imshow(
         {f"Frame:{i}": f2c_net[i] for i in range(0, f2c_net.shape[0], 500)},
         size=8,
         cols=4,
-        path=out_dir / f"{SELECTED_TRAINING}_snap.png",
+        path=out_dir / f"{args.checkpoint}_snap.png",
     )
     # The number of frames in F2C is a multiple of the number of patches
-    metrics[SELECTED_TRAINING] = {
+    metrics[args.checkpoint] = {
         "psnr3d": psnr3d(gt[: f2c_net.shape[0]], f2c_net),
         "ssim3d": ssim3d(
             gt[: f2c_net.shape[0]], f2c_net, step=SSIM3D_STEPS, patch_xy=SSIM3D_PATCHXY
@@ -179,7 +165,7 @@ if (k := f"grid_{model.mode}") not in metrics or FORCE_GRID:
     }
 
 print(y.shape, gt.shape)  # (3000, 448, 448) (2048, 448,448)
-if (k := denoiser_name) not in metrics:
+if (k := args.denoiser) not in metrics:
     metrics[k] = {
         "psnr3d": psnr3d(gt, y),
         "ssim3d": ssim3d(gt, y, step=SSIM3D_STEPS, patch_xy=SSIM3D_PATCHXY),

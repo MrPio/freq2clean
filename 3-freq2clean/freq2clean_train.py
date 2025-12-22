@@ -8,36 +8,10 @@ from torch.utils.data import TensorDataset, DataLoader
 import sys
 from scipy.ndimage import uniform_filter1d
 from freq2clean import Freq2Clean
+from correlation_loss import CorrelationLoss
 
 sys.path.append("..")
 from src import *
-
-
-# %% Correlation loss
-class CorrelationLoss(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x, y):
-        B, T, H, W = x.shape
-        N = W * H
-
-        x2 = x.reshape(B, T, N)
-        y2 = y.reshape(B, T, N)
-
-        xm = x2.mean(1, keepdim=True)
-        ym = y2.mean(1, keepdim=True)
-        xs = x2.std(1, unbiased=False, keepdim=True)
-        ys = y2.std(1, unbiased=False, keepdim=True)
-
-        xz = (x2 - xm) / torch.max(torch.tensor(1e-6), xs)
-        yz = (y2 - ym) / torch.max(torch.tensor(1e-6), ys)
-
-        corr = (xz * yz).mean(1)  # (B, N)
-        mean_corr = corr.mean()  # scalar
-
-        return 1.0 - mean_corr
-
 
 # %% Args
 cfg = {
@@ -45,8 +19,7 @@ cfg = {
     "denoiser_name": "deepcad",
     "denoiser_variant": "_15",
     "dataset_name": "synthetic",
-    "gt_variant": "",
-    "frequency_transform": "dct3d",
+    "frequency_transform": "dft1d",
     # Training
     "patch_t": 512,
     "patch_xy": 128,
@@ -60,10 +33,10 @@ cfg = {
     "weight_decay": 1e-5,
     "weight_clamp01": True,
     # Loss
-    "w_l1": 1,  # 1e-1,
-    "w_mse": 1,  # 1e-0,
-    "w_corr": 0,  # 2e-1,
-    "w_reg": 0,  # 5e-2,
+    "w_l1": 1e-1,
+    "w_mse": 1e-0,
+    "w_corr": 2e-1,
+    "w_reg": 5e-2,
 }
 device = "cuda" if torch.cuda.is_available() else "cpu"
 cprint("Using device", f"cyan:{device}")
@@ -82,7 +55,7 @@ y = Recording(
     norm=True,
 ).np
 gt = Recording(
-    f"dataset/{cfg['dataset_name']}/gt{cfg['gt_variant']}.tif",
+    f"dataset/{cfg['dataset_name']}/gt.tif",
     max_frames=cfg["max_frames"],
     norm=True,
 ).np
@@ -128,7 +101,9 @@ gt_p = torch.from_numpy(np.stack(patches_gt)).float()
 
 dataset = TensorDataset(x_p[1:], xbar_p[1:], y_p[1:], gt_p[1:])
 validset = (x_p[0], xbar_p[0], y_p[0], gt_p[0])
-dataloader = DataLoader(dataset, batch_size=cfg["batch_size"], shuffle=True, drop_last=True)
+dataloader = DataLoader(
+    dataset, batch_size=cfg["batch_size"], shuffle=True, drop_last=True
+)
 del x, x_bar, y, gt
 patch_shape = (cfg["patch_t"], cfg["patch_xy"], cfg["patch_xy"])
 cprint(f"Dataset has", len(dataloader), "samples, each of shape", patch_shape)
@@ -137,7 +112,9 @@ cprint(f"Dataset has", len(dataloader), "samples, each of shape", patch_shape)
 clog("Loading Freq2Clean...")
 # avg_frame = torch.tensor(x_avg).to(device)
 model = Freq2Clean(shape=(patch_shape), mode=cfg["frequency_transform"]).to(device)
-optimizer = optim.Adam(model.parameters(), lr=cfg["learning_rate"], weight_decay=cfg["weight_decay"])
+optimizer = optim.Adam(
+    model.parameters(), lr=cfg["learning_rate"], weight_decay=cfg["weight_decay"]
+)
 ssim3d = SSIM3D()
 l1 = nn.L1Loss().cuda()
 mse = nn.MSELoss().cuda()
@@ -148,9 +125,13 @@ coords = [torch.linspace(0, 1, d) for d in model.mask.shape]
 grid = torch.meshgrid(*coords, indexing="ij")
 reg_mask = ((sum(grid) / len(grid)) ** 2).to(device)
 
-df = pd.DataFrame(columns=["step", "epoch", "l1", "l2", "corr", "reg", "loss"]).set_index("step")
+df = pd.DataFrame(
+    columns=["step", "epoch", "l1", "l2", "corr", "reg", "loss"]
+).set_index("step")
 now_date = datetime.now().strftime("%Y%m%d-%H%M")
-suffx = f"{now_date}-{cfg['dataset_name']}_{cfg['denoiser_name']}{cfg['denoiser_variant']}"
+suffx = (
+    f"{now_date}-{cfg['dataset_name']}_{cfg['denoiser_name']}{cfg['denoiser_variant']}"
+)
 base_dir = mkdir(f"trainings/{suffx}")
 snaps_dir = mkdir(base_dir / "snaps", clear=True)
 weights_dir = mkdir(base_dir / "weights", clear=True)
@@ -167,7 +148,9 @@ for epoch in (pbar := trange(cfg["epochs"])):
     x, x_bar, y, gt = validset
     model.eval()
     f2c = model(y.to(device).unsqueeze(0), x_bar.to(device).unsqueeze(0))
-    loss = -ssim3d(f2c[:, ::8].unsqueeze(0), gt[::8].to(device).unsqueeze(0).unsqueeze(0))
+    loss = -ssim3d(
+        f2c[:, ::8].unsqueeze(0), gt[::8].to(device).unsqueeze(0).unsqueeze(0)
+    )
     imshow(
         {
             "Noisy": x[-1].numpy(),
@@ -188,8 +171,15 @@ for epoch in (pbar := trange(cfg["epochs"])):
         fig.savefig(mask_plot_path, dpi=150, bbox_inches="tight")
         plt.close(fig)
     elif cfg["frequency_transform"] == "dct3d":
-        vidshow(model.mask.cpu().detach().numpy()[:128, :128, :128], path=mask_plot_path, alpha=0.75)
-        vidshow(model.mask.cpu().detach().numpy()[::8, ::8, ::8], path=mask_plot_path.with_name(f"{epoch}_2.png"))
+        vidshow(
+            model.mask.cpu().detach().numpy()[:128, :128, :128],
+            path=mask_plot_path,
+            alpha=0.75,
+        )
+        vidshow(
+            model.mask.cpu().detach().numpy()[::8, ::8, ::8],
+            path=mask_plot_path.with_name(f"{epoch}_2.png"),
+        )
 
     # Train
     for i, (x, x_bar, y, gt) in enumerate(dataloader):
