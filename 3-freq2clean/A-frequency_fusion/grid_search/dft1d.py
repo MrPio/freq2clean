@@ -22,7 +22,7 @@ clog("red:Loading Dataset...")
 meta = DATASETS[dataset]
 x, y = (Recording(_, max_frames=max_frames) for _ in [meta.x, y_path])
 x.np = x.np[: y.frames, : y.np.shape[1], : y.np.shape[2]]
-if meta.labelled:
+if meta.labeled:
     gt = Recording(meta.gt, max_frames=max_frames)
     gt.np = gt.np[: y.frames, : y.np.shape[1], : y.np.shape[2]]
 RES_DIR = FILE_DIR / f"results/{dataset}/"
@@ -42,7 +42,7 @@ def test(frames, alphas, ssim3d_step=4, save=False):
         if METRICS_PATH.exists()
         else pd.DataFrame(columns=["suffx", "PSNR", "SSIM"]).set_index("suffx")
     )
-    if denoiser_name not in df.index and meta.labelled:
+    if denoiser_name not in df.index and meta.labeled:
         clog("red:Initializing metrics...")
         psnr_ = psnr3d(gt, y, data_range=meta.data_range)
         ssim_ = ssim3d(
@@ -132,7 +132,7 @@ def test(frames, alphas, ssim3d_step=4, save=False):
             fused,
         )
 
-    if meta.labelled:
+    if meta.labeled:
         clog("yellow:Computing PSNR3D...")
         psnr_ = psnr3d(gt.np[:end], fused[:end], data_range=meta.data_range)
         clog("yellow:Computing SSIM3D...")

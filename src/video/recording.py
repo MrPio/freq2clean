@@ -34,7 +34,7 @@ class Recording:
     def __init__(
         self,
         video: PathLike | str | np.ndarray,
-        max_frames: int | None = 300,
+        max_frames: int | None = None,
         norm=False,
     ):
         if isinstance(video, np.ndarray):

@@ -46,7 +46,8 @@ from .utils import (
     mkdir,
     barchart,
     jprint,
-    parse_args
+    parse_args,
+    download,
 )
 
 # Configuration

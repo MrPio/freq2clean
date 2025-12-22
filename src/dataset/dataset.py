@@ -2,76 +2,121 @@ import torch
 from torchvision import transforms
 import random
 from pathlib import Path
+from tqdm import tqdm
+from ..utils import download, cprint
 
 _ROOT_DIR = Path(__file__).parents[2]
 
 
 class DatasetMetadata:
     def __init__(
-        self, dir, shape=None, data_range=2**16, max_value_x=None, max_value_y=None, x="x.tif", gt="gt.tif", hz=30
+        self,
+        dir,
+        shape=None,
+        data_range=2**16 - 1,  # uint16
+        x="x.tif",
+        gt: str | None = "gt.tif",
+        hz=30,
+        urls: tuple[str, str] | None = None,
     ):
         self.dir = _ROOT_DIR / dir
         self.shape = shape
-        self.max_val_x = max_value_x
-        self.max_val_y = max_value_y
         self.data_range = data_range
         self.x = self.dir / x
-        self.labelled = gt != None
+        self.labeled = gt != None
         self.hz = hz
+        self.urls = urls
         if gt:
             self.gt = self.dir / gt
+
+    def download(self):
+        if not self.urls:
+            raise Exception("No download URLs available for this dataset!")
+
+        paths = (self.x, self.gt if hasattr(self, "gt") else None)
+        for path, url in (pbar := tqdm(zip(paths, self.urls), leave=False)):
+            # Lazy
+            if path and url:
+                if path.exists():
+                    cprint(f"green:{path.stem}", "already exists!")
+                else:
+                    path.parent.mkdir(exist_ok=True, parents=True)
+                    pbar.set_description(f"Downloading [{path.stem}]...")
+                    download(url, path.resolve())
 
 
 DATASETS = {
     "oabf_astro": DatasetMetadata(
         dir="dataset/oabf/astro",
-        max_value_x=14_207,
-        max_value_y=6_521,
-        x="x.tiff",
+        data_range=14_207,
         gt=None,
         hz=7,
     ),
-    "oabf_vpm": DatasetMetadata(dir="dataset/oabf/vpm", x="x.tiff", gt=None),
-    "oabf_resonant_neuro": DatasetMetadata(dir="dataset/oabf/resonant_neuro", x="x.tiff", gt=None),
+    "oabf_vpm": DatasetMetadata(
+        dir="dataset/oabf/vpm",
+        gt=None,
+    ),
+    "oabf_resonant_neuro": DatasetMetadata(
+        dir="dataset/oabf/resonant_neuro",
+        gt=None,
+    ),
     "synthetic": DatasetMetadata(
         dir="dataset/zenodo/synthetic",
         shape=(6000, 490, 490),
         data_range=1_520,
-        x="noise_1Q_-5.52dBSNR_490x490x6000.tif",
-        gt="clean_30Hz_490x490x6000.tif",
         hz=30,
-    ),  # 1_520 is the 99.9% Quantile of GT
+        urls=(
+            "https://zenodo.org/records/6254739/files/noise_1Q_-5.52dBSNR_490x490x6000.tif?download=1",
+            "https://zenodo.org/records/6254739/files/clean_30Hz_490x490x6000.tif?download=1",
+        ),
+    ),
     "zebrafish": DatasetMetadata(
         dir="dataset/zenodo/zebrafish",
         shape=(9800, 400, 485),
         data_range=32_767,
         hz=15,
+        urls=(
+            "https://zenodo.org/records/6293696/files/01_ZebrafishMul_GCaMP6s_485x400x9800_lowSNR.tif?download=1",
+            "https://zenodo.org/records/6293696/files/01_ZebrafishMul_GCaMP6s_485x400x9800_highSNR.tif?download=1",
+        ),
     ),
     "neutrophils": DatasetMetadata(
         dir="dataset/zenodo/neutrophils",
         data_range=49_978,
+        urls=(
+            "https://zenodo.org/records/6296569/files/02_neutrophil_0.465umPerPixel_512x512x5706_lowSNR.tif?download=1",
+            "https://zenodo.org/records/6296569/files/02_neutrophil_0.465umPerPixel_512x512x5706_highSNR.tif?download=1",
+        ),
     ),
     "mouse_neuronal_populations": DatasetMetadata(
         dir="dataset/zenodo/mouse_neuronal_populations_5",
         shape=(6500, 490, 490),
         data_range=47_939,
         hz=30,
+        urls=(
+            "https://zenodo.org/records/6299096/files/05_MouseNeurons_GCaMP6f_100umdepth_50mWpower_30Hz_lowSNR_MCRound1.tif?download=1",
+            "https://zenodo.org/records/6299096/files/05_MouseNeurons_GCaMP6f_100umdepth_50mWpower_30Hz_highSNR_MCRound1.tif?download=1",
+        ),
     ),
     "mouse_dendritic_spines": DatasetMetadata(
         dir="dataset/zenodo/mouse_dendritic_spines",
-        x="x.tiff",
-        gt="gt.tiff",
         shape=(6500, 492, 978),
         data_range=30_666,
         hz=30,
+        urls=(
+            "https://zenodo.org/records/6275571/files/1_spine_GCaMP6f_50mWpower_978x492x6500_lowSNR.tif?download=1",
+            "https://zenodo.org/records/6275571/files/1_spine_GCaMP6f_50mWpower_978x492x6500_highSNR.tif?download=1",
+        ),
     ),
     "mouse_dendritic_spines_115mw": DatasetMetadata(
         dir="dataset/zenodo/mouse_dendritic_spines_115mw",
-        x="x.tif",
-        gt="gt.tif",
         shape=(6500, 432, 944),
         data_range=62_523,
         hz=30,
+        urls=(
+            "https://zenodo.org/records/6275571/files/2_spine_GCaMP6f_115mWpower_944x432x6500_lowSNR.tif?download=1",
+            "https://zenodo.org/records/6275571/files/2_spine_GCaMP6f_115mWpower_944x432x6500_highSNR.tif?download=1",
+        ),
     ),
 }
 

@@ -16,7 +16,7 @@ args = parse_args(
         "checkpoint": (f.stem for f in Path("trainings").glob("*/")),
         "dataset": DATASETS.keys(),
         "denoiser": str,
-        "args.variant": "",
+        "variant": "",
         "bs": 1,
     }
 )

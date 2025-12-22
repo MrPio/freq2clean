@@ -20,6 +20,8 @@ from .video.editor import Editor
 import matplotlib as mpl
 import argparse
 from collections.abc import Collection, Generator
+import requests
+from tqdm import tqdm
 
 logging.basicConfig(
     level="INFO",
@@ -384,3 +386,22 @@ def parse_args(args: dict[str, type | list | object]):
             parser.add_argument(f"--{k}", default=v, required=False)
 
     return parser.parse_args()
+
+
+def download(url: str | Path, path: str | Path, chunk_size: int = 8192):
+    with requests.get(str(url), stream=True) as r:
+        r.raise_for_status()
+        total = int(r.headers.get("Content-Length", 0))
+
+        with open(path, "wb") as f, tqdm(
+            total=total,
+            unit="B",
+            unit_scale=True,
+            unit_divisor=1024,
+            desc=str(path),
+            leave=False,
+        ) as bar:
+            for chunk in r.iter_content(chunk_size=chunk_size):
+                if chunk:  # filter out keep-alive chunks
+                    f.write(chunk)
+                    bar.update(len(chunk))
