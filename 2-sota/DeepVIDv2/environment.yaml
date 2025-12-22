@@ -1,0 +1,12 @@
+name: DeepVIDv2
+channels:
+  - defaults
+dependencies:
+  - python=3.8
+  - numpy
+  - matplotlib
+  - scikit-learn
+  - scikit-image
+  - tensorboard
+  - tqdm
+  - h5py
