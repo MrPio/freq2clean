@@ -17,7 +17,7 @@ args = parse_args(
         "dataset": DATASETS.keys(),
         "denoiser": str,
         "variant": "",
-        "bs": 1,
+        "batch_size": 1,
     }
 )
 
@@ -25,7 +25,7 @@ args = parse_args(
 AVG_WIN: int | None = None
 SAVE_TIFF: bool = False
 SKIP_NET: bool = False
-FORCE_GRID: bool = False
+SKIP_GRID: bool = True
 MAX_FRAMES: int | None = None
 SSIM3D_STEPS: int | None = 1  # Increase if GPU raises OOM
 SSIM3D_PATCHXY: int | None = 192  # Decrease if GPU raises OOM
@@ -39,22 +39,16 @@ out_dir = mkdir(f"results/{args.dataset}/{args.denoiser}{args.variant}")
 clog(f'Loading dataset {args.dataset}, denoiser="{args.denoiser}"{args.variant}"')
 metrics_path = out_dir / f"metrics.json"
 metrics = json.load(metrics_path.open()) if metrics_path.exists() else {}
+meta = DATASETS[args.dataset]
+meta.download()
 
-x = Recording(
-    f"dataset/{args.dataset}/x.tif",
-    max_frames=None,
-    norm=True,
-).np
+x = Recording(meta.x, max_frames=None, norm=True).np
 y = Recording(
-    f"dataset/{args.dataset}/{args.denoiser}{args.variant}.tif",
+    meta.dir / f"{args.denoiser}{args.variant}.tif",
     max_frames=MAX_FRAMES,
     norm=True,
 ).np
-gt = Recording(
-    f"dataset/{args.dataset}/gt{GT_VARIANT or ''}.tif",
-    max_frames=MAX_FRAMES,
-    norm=True,
-).np
+gt = Recording(meta.gt, max_frames=MAX_FRAMES, norm=True).np
 if "patch_xy" in cfg:
     cprint("patch_xy=", cfg["patch_xy"])
     max_y = cfg["patch_xy"] * (x.shape[1] // cfg["patch_xy"])
@@ -77,7 +71,7 @@ idx = (np.arange(n)[:, None] * cfg["patch_t"] + np.arange(cfg["patch_t"])).astyp
 x_bar = torch.from_numpy(x_bar[idx]).float()
 y_ = torch.from_numpy(y[idx]).float()
 testset = TensorDataset(x_bar, y_)
-dataloader = DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False)
+dataloader = DataLoader(testset, batch_size=args.batch_size, shuffle=False)
 del x_bar
 cprint(f"Testset has", len(idx), "samples.")
 
@@ -141,7 +135,7 @@ if not SKIP_NET:
         ),
     }
 
-if (k := f"grid_{model.mode}") not in metrics or FORCE_GRID:
+if (k := f"grid_{model.mode}") not in metrics and not SKIP_GRID:
     clog("Running Freq2Clean (grid search) test...")
     model.initialize_mask(device=device)
     f2c_grid = run_inference(
@@ -164,7 +158,6 @@ if (k := f"grid_{model.mode}") not in metrics or FORCE_GRID:
         ),
     }
 
-print(y.shape, gt.shape)  # (3000, 448, 448) (2048, 448,448)
 if (k := args.denoiser) not in metrics:
     metrics[k] = {
         "psnr3d": psnr3d(gt, y),

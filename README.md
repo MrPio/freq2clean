@@ -14,6 +14,49 @@ Freq2Clean is a lightweight enhancement module trained on synthetic data that op
    - [`A-frequency_fusion`](3-freq2clean/A-frequency_fusion) $-$ explores multiple frequency transforms to combine the best features of temporally averaged and denoised videos. Runs a grid search to find a good combination for the coefficients of the frequency combination.
 4. [`4-segmentation`](4-segmentation) $-$ proves that Freq2Clean leads to segmentation predictions that more closely match those obtained from the ground-truth frames. Also proves that Freq2Clean doesn't affect temporal dynamics.
 
+## 🛠️ Installation
+
+Clone repository:
+
+```sh
+git clone https://github.com/MrPio/freq2clean
+cd freq2clean
+```
+
+Create and activate environment:
+
+```sh
+conda create -n freq2clean python=3.12
+conda activate freq2clean
+pip install -r requirements.txt
+```
+
+## 🚀 Inference
+
+1. Download a dataset (use notebooks in [*Section 1*](1-eda/) or add your own dataset into [`DATASETS`](src/dataset/dataset.py)).
+2. Denoise the recording using any denoiser (as in [*Section 2*](2-sota/)) and place the denoised `.tif` file inside the same folder where `x.tif` and `gt.tif` are.
+3. Run the inference with the following command, where:
+   - `--checkpoint` is the name of the subfolder of [`trainings/`](3-freq2clean/trainings) where the checkpoint is located;
+   - `--dataset` is the key of the dataset in [`DATASETS`](src/dataset/dataset.py);
+   - `--denoiser` is the name of the denoised `.tif` file.
+
+```sh
+cd 3-freq2clean
+python freq2clean_test.py \
+  --checkpoint dft1d \
+  --dataset synthetic \
+  --denoiser deepcad \
+  --batch_size 1
+```
+
+## 🏋️ Training
+
+1. Edit [`train_config.json`](3-freq2clean/train_config.json):
+   - `denoiser_variant`: the suffix of the denoised `.tif` file, if any. This is used to train on multiple denoised versions predicted by the same denoiser, but with different hyperparameter configurations;
+   - `frequency_transform`: choose between `dft1d` and `dct3d`;
+   - `patch_t`/`patch_xy`: choose the dimensions of the training patches. Use smaller `patch_t` values for `dct3d` to limit the number of parameters.
+1. Run `cd 3-freq2clean; python freq2clean_train.py`.
+
 ## 💭 Assumptions
 
 1. The input video should be severely noisy, yielding a very low input SNR. Otherwise, there is little margin for improvement with SOTA denoisers.

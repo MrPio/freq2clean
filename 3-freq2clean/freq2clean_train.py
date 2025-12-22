@@ -14,55 +14,25 @@ sys.path.append("..")
 from src import *
 
 # %% Args
-cfg = {
-    # Data
-    "denoiser_name": "deepcad",
-    "denoiser_variant": "_15",
-    "dataset_name": "synthetic",
-    "frequency_transform": "dft1d",
-    # Training
-    "patch_t": 512,
-    "patch_xy": 128,
-    "overlap": 0.3,
-    "avg_win": 1024,  # doesnt affect the training that much
-    "batch_size": 1,
-    "epochs": 50,
-    "learning_rate": 0.05,
-    "save_checkpoints": True,
-    "max_frames": 3000,
-    "weight_decay": 1e-5,
-    "weight_clamp01": True,
-    # Loss
-    "w_l1": 1e-1,
-    "w_mse": 1e-0,
-    "w_corr": 2e-1,
-    "w_reg": 5e-2,
-}
+cfg = json.load(open("train_config.json"))
 device = "cuda" if torch.cuda.is_available() else "cpu"
 cprint("Using device", f"cyan:{device}")
 cprint("Using frequency transform", f"red:{cfg['frequency_transform']}")
 
 # %% Dataset
 clog("Loading and Normalizing dataset...")
-x = Recording(
-    f"dataset/{cfg['dataset_name']}/x.tif",
-    max_frames=cfg["max_frames"],
-    norm=True,
-).np
+meta = DATASETS[cfg["dataset_name"]]
+meta.download()
+x = Recording(meta.x, max_frames=cfg["max_frames"], norm=True).np
 y = Recording(
-    f"dataset/{cfg['dataset_name']}/{cfg['denoiser_name']}{cfg['denoiser_variant']}.tif",
+    meta.dir / f"{cfg['denoiser_name']}{cfg['denoiser_variant']}.tif",
     max_frames=cfg["max_frames"],
     norm=True,
 ).np
-gt = Recording(
-    f"dataset/{cfg['dataset_name']}/gt.tif",
-    max_frames=cfg["max_frames"],
-    norm=True,
-).np
+gt = Recording(meta.gt, max_frames=cfg["max_frames"], norm=True).np
 
 clog("Computing temporal averaged video...")
 x_bar = uniform_filter1d(x, size=cfg["avg_win"], axis=0, mode="reflect")
-# x_avg = np.mean(x, axis=0)
 
 # %% Batching
 clog("Subdividing dataset in overlapping spatiotemporal patches...")
