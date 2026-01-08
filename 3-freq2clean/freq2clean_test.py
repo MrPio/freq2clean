@@ -27,6 +27,7 @@ SAVE_TIFF: bool = False
 SKIP_NET: bool = False
 SKIP_GRID: bool = True
 MAX_FRAMES: int | None = None
+PATCH_XY: int | None = 64
 SSIM3D_STEPS: int | None = 1  # Increase if GPU raises OOM
 SSIM3D_PATCHXY: int | None = 192  # Decrease if GPU raises OOM
 
@@ -34,7 +35,7 @@ SSIM3D_PATCHXY: int | None = 192  # Decrease if GPU raises OOM
 cprint("Loading checkpoint", f"yellow:{args.checkpoint}")
 device = "cuda" if torch.cuda.is_available() else "cpu"
 cfg = json.load(open(f"trainings/{args.checkpoint}/cfg.json"))
-patch_xy = cfg.get("patch_xy", 128)
+patch_xy = PATCH_XY or cfg["patch_xy"]
 out_dir = mkdir(f"results/{args.dataset}/{args.denoiser}{args.variant}")
 clog(f'Loading dataset {args.dataset}, denoiser="{args.denoiser}"{args.variant}"')
 metrics_path = out_dir / f"metrics.json"
@@ -44,18 +45,17 @@ meta.download()
 
 x = Recording(meta.x, max_frames=None, norm=True).np
 y = Recording(
-    meta.dir / f"{args.denoiser}{args.variant}.tif",
+    meta.dir / f"{args.denoiser}{args.variant}.tiff",
     max_frames=MAX_FRAMES,
     norm=True,
 ).np
 gt = Recording(meta.gt, max_frames=MAX_FRAMES, norm=True).np
-if "patch_xy" in cfg:
-    cprint("patch_xy=", cfg["patch_xy"])
-    max_y = cfg["patch_xy"] * (x.shape[1] // cfg["patch_xy"])
-    max_x = cfg["patch_xy"] * (x.shape[2] // cfg["patch_xy"])
-    x = x[:, :max_x, :max_y]
-    y = y[:, :max_x, :max_y]
-    gt = gt[:, :max_x, :max_y]
+cprint("patch_xy=", patch_xy)
+max_y = patch_xy * (x.shape[1] // patch_xy)
+max_x = patch_xy * (x.shape[2] // patch_xy)
+x = x[:, :max_x, :max_y]
+y = y[:, :max_x, :max_y]
+gt = gt[:, :max_x, :max_y]
 
 clog("Computing averaged vid/frame...")
 avg_win = AVG_WIN or cfg["avg_win"]
@@ -130,17 +130,13 @@ if not SKIP_NET:
     # The number of frames in F2C is a multiple of the number of patches
     metrics[args.checkpoint] = {
         "psnr3d": psnr3d(gt[: f2c_net.shape[0]], f2c_net),
-        "ssim3d": ssim3d(
-            gt[: f2c_net.shape[0]], f2c_net, step=SSIM3D_STEPS, patch_xy=SSIM3D_PATCHXY
-        ),
+        "ssim3d": ssim3d(gt[: f2c_net.shape[0]], f2c_net, step=SSIM3D_STEPS, patch_xy=SSIM3D_PATCHXY),
     }
 
 if (k := f"grid_{model.mode}") not in metrics and not SKIP_GRID:
     clog("Running Freq2Clean (grid search) test...")
     model.initialize_mask(device=device)
-    f2c_grid = run_inference(
-        model, dataloader, save_path=out_dir / f"{k}.tiff" if SAVE_TIFF else None
-    )
+    f2c_grid = run_inference(model, dataloader, save_path=out_dir / f"{k}.tiff" if SAVE_TIFF else None)
     imshow(
         {f"Frame:{i}": f2c_grid[i] for i in range(0, f2c_grid.shape[0], 500)},
         size=8,

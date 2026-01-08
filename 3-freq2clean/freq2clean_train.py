@@ -25,7 +25,7 @@ meta = DATASETS[cfg["dataset_name"]]
 meta.download()
 x = Recording(meta.x, max_frames=cfg["max_frames"], norm=True).np
 y = Recording(
-    meta.dir / f"{cfg['denoiser_name']}{cfg['denoiser_variant']}.tif",
+    meta.dir / f"{cfg['denoiser_name']}{cfg['denoiser_variant']}.tiff",
     max_frames=cfg["max_frames"],
     norm=True,
 ).np

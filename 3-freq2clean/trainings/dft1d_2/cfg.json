@@ -1,0 +1,1 @@
+{"denoiser_name": "deepcad", "denoiser_variant": "_15", "dataset_name": "synthetic", "frequency_transform": "dft1d", "patch_t": 3000, "patch_xy": 64, "overlap": 0.25, "avg_win": 1024, "batch_size": 8, "epochs": 15, "learning_rate": 0.01, "save_checkpoints": true, "max_frames": 3000, "weight_decay": 1e-05, "weight_clamp01": true, "w_l1": 1, "w_mse": 1, "w_corr": 0, "w_reg": 0}

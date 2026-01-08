@@ -1,0 +1,1 @@
+python freq2clean_test.py --checkpoint "dft1d_3" --dataset "zebrafish" --denoiser "deepcad" --variant "_10"
